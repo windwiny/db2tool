@@ -1,8 +1,6 @@
 
-This software release under the GPL v3.
+This software release under the GPL
 
-2009,2010
-windwiny.ubt@gmail.com
 
 
 
@@ -14,41 +12,6 @@ and mingw32, and compile it.
 On Linux(Ubuntu 9.10 x86), not test
 
 
-
-
-奇怪的问题
-
-
-
-aa--bb 
-cc  --这  是 注   释 
-asf
- ;
-
-select  ' ''asdf"" "a" ',--a
-'sk'   /*as 
- 
-sf*/ from "DB2INST2  " . " cK; '"   A
-; SElect * 
-from syscat.tables A
-
-" asdf'' asf" , ' ''asdf"a" ' 
-
-
-调试analyse_select_SQL_TableName有问题
-------------------------------------
--- Exception in analyse_select_SQL_TableName ?? local variable 'tabschema' referenced before assignment
--- [SYSCAT.TABLES] <SElect * 
-from syscat.tables A>
--- [DB2INST2." cK; '"] <select  ' ''asdf"" "a" ',--a
-'sk'   /*as 
- 
-sf*/ from "DB2INST2  " . " cK; '"   A>
-unrecognized token: ""' "
--- [SYSCAT.TABLES] <SElect * 
-from syscat.tables A>
----------------------------------------------------------
-分析 SQL查询 中的表名时，有时正常有时提示错
 
 
 -------------

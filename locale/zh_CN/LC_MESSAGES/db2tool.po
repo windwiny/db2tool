@@ -1,0 +1,560 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR ORGANIZATION
+# FIRST AUTHOR <windwiny.ubt@gmail.com>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2010-02-14 15:22+中国标准时间\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <windwiny.ubt@gmail.com>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: GBK\n"
+"Generated-By: pygettext.py 1.5\n"
+
+
+#: mods\mainframe.py:190
+msgid "split H"
+msgstr ""
+
+#: mods\mainframe.py:192
+msgid "split V"
+msgstr ""
+
+#: mods\mainframe.py:198
+msgid "&Find...\tCtrl-F"
+msgstr "查找...\tCtrl-F"
+
+#: mods\mainframe.py:200
+msgid "&Replace...\tCtrl-H"
+msgstr "替换...\tCtrl-H"
+
+#: mods\mainframe.py:210
+msgid "&About ..."
+msgstr "关于(&A)..."
+
+#: mods\mainframe.py:218
+msgid "&Save Selected Text\tCtrl-S"
+msgstr "&S保存选中的文本\tCtrl-S"
+
+#: mods\mainframe.py:220
+msgid "&Reload from config\tCtrl-R"
+msgstr "&R从配置文件读取\tCtrl-R"
+
+#: mods\mainframe.py:222
+msgid "E&xit"
+msgstr "退出(&X)"
+
+#: mods\mainframe.py:235
+msgid "execute selected SQLs\tCtrl-Return"
+msgstr "执行选中的SQL\tCtrl-Return"
+
+#: mods\mainframe.py:238
+msgid "execute selected single\tCtrl-Shift-Return"
+msgstr "执行选中的SQL，单条\tCtrl-Shift-Return"
+
+#: mods\mainframe.py:241
+msgid "format selected SQL\tCtrl-Shift-F"
+msgstr "格式化选中的SQL语句\tCtrl-Shift-F"
+
+#: mods\mainframe.py:259 mods\mainframe.py:269
+msgid "column"
+msgstr "字段"
+
+#: mods\mainframe.py:261 mods\mainframe.py:271
+msgid "data"
+msgstr "数据"
+
+#: mods\mainframe.py:263 mods\mainframe.py:273
+msgid "count"
+msgstr "数据行"
+
+#: mods\mainframe.py:279
+msgid "&1.Welcome"
+msgstr "&1.配置"
+
+#: mods\mainframe.py:281
+msgid "&2.Connect"
+msgstr "&2.连接"
+
+#: mods\mainframe.py:283
+msgid "&C.ode Snippet"
+msgstr "&C.代码片段"
+
+#: mods\mainframe.py:285
+msgid "&P.rocedures"
+msgstr "&P.存储过程"
+
+#: mods\mainframe.py:287
+msgid "&O.bjects"
+msgstr "&O.数据对象"
+
+#: mods\mainframe.py:289
+msgid "&E.xecute sqls"
+msgstr "&E.查询"
+
+#: mods\mainframe.py:291
+msgid "P.&ython"
+msgstr ""
+
+#: mods\mainframe.py:297
+msgid "DBALIAS"
+msgstr "数据编目"
+
+#: mods\mainframe.py:299 mods\mainframe.py:943
+msgid "Log"
+msgstr "日志"
+
+#: mods\mainframe.py:339
+msgid "dbtool"
+msgstr ""
+
+#: mods\mainframe.py:348
+msgid ""
+"234\n"
+"234234234"
+msgstr ""
+
+#: mods\mainframe.py:362
+msgid "Db2"
+msgstr ""
+
+#: mods\mainframe.py:366
+msgid ""
+"# features\n"
+"keep active\n"
+"show table,view,procedures..\n"
+"diff 2 db objects\n"
+"data copy,export\n"
+"change program run status(python)\n"
+"\n"
+"# development\n"
+"python\n"
+"PyDB2\n"
+"wxPython\n"
+"Boa Constructor\n"
+"Eclipse + pyDev\n"
+msgstr ""
+"# features\n"
+"定时保持连接\n"
+"查看表结构，视图，过程等\n"
+"两个数据库对象比较\n"
+"数据复制\n"
+"数据导入导出\n"
+"保存命令片段\n"
+"程序可在运行时修改自身状态(python)\n"
+"\n"
+"# development\n"
+"python\n"
+"PyDB2\n"
+"wxPython\n"
+"Boa Constructor\n"
+"Eclipse + pyDev\n"
+
+#: mods\mainframe.py:375
+msgid "connect setting"
+msgstr "连接配置"
+
+#: mods\mainframe.py:388
+msgid "Change Fonts"
+msgstr "设置字体"
+
+#: mods\mainframe.py:395
+msgid "&Refresh"
+msgstr "刷新(&R)"
+
+#: mods\mainframe.py:400
+msgid "&Save"
+msgstr "保存(&S)"
+
+#: mods\mainframe.py:407
+msgid "Rescan catalog"
+msgstr "重查编目"
+
+#: mods\mainframe.py:410
+msgid "Re scan node,db catalog, use few time."
+msgstr "重新查询节点，数据库编目。需要一些时间"
+
+#: mods\mainframe.py:415
+msgid "Disconnect All"
+msgstr "断开全部连接"
+
+#: mods\mainframe.py:422
+msgid "Keep Active second: "
+msgstr "保持活动：间隔(秒)"
+
+#: mods\mainframe.py:452 mods\mainframe.py:696 mods\mainframe.py:801
+msgid "Reload"
+msgstr "刷新"
+
+#: mods\mainframe.py:459 mods\mainframe.py:701 mods\mainframe.py:807
+msgid "SaveSel"
+msgstr "保存"
+
+#: mods\mainframe.py:466
+msgid "db2 ? sqlXXXX"
+msgstr ""
+
+#: mods\mainframe.py:472
+msgid "button4"
+msgstr ""
+
+#: mods\mainframe.py:504
+msgid "Call Proc"
+msgstr "执行存储过程"
+
+#: mods\mainframe.py:511
+msgid "List All Procedures"
+msgstr "列出存储过程"
+
+#: mods\mainframe.py:540 mods\mainframe.py:4059
+msgid "compare"
+msgstr "比较"
+
+#: mods\mainframe.py:554
+msgid "Link"
+msgstr ""
+
+#: mods\mainframe.py:630
+msgid "Export DDL"
+msgstr "导出DDL"
+
+#: mods\mainframe.py:637
+msgid "format Spaces"
+msgstr "格式化"
+
+#: mods\mainframe.py:643
+msgid "Compare"
+msgstr "比较"
+
+#: mods\mainframe.py:718
+msgid "set execute timeout value (single,multi)"
+msgstr "设置超时时间(秒) (single,multi)"
+
+#: mods\mainframe.py:723
+msgid "query split char"
+msgstr "SQL语句分隔符"
+
+#: mods\mainframe.py:726
+msgid "Log Sqls"
+msgstr "保存SQLs"
+
+#: mods\mainframe.py:729
+msgid "log sql statement to log file"
+msgstr "在日志文件中保存执行过的SQL"
+
+#: mods\mainframe.py:732
+msgid "Show Normal sql Message"
+msgstr "显示SQL"
+
+#: mods\mainframe.py:736
+msgid "show normal execute message to TextCtrl  ! Speed in execute much sqls "
+msgstr "显示执行过的SQL！不显示可加快执行速度"
+
+#: mods\mainframe.py:739
+msgid "E&xec SQLs"
+msgstr "执行(&X)"
+
+#: mods\mainframe.py:741
+msgid "Ctrl-Enter execute selected multi sql statement"
+msgstr "Ctrl-Enter 执行选中的多条SQL"
+
+#: mods\mainframe.py:746
+msgid "Exec 1"
+msgstr "执行1条"
+
+#: mods\mainframe.py:749
+msgid "Shift-Enter execute selected single sql statement "
+msgstr "Shift-Enter 把选中SQL当一条执行"
+
+#: mods\mainframe.py:753
+msgid "Commit"
+msgstr "提交"
+
+#: mods\mainframe.py:760
+msgid "Rollback"
+msgstr "回滚"
+
+#: mods\mainframe.py:813
+msgid "e&xec"
+msgstr "执行(&X)"
+
+#: mods\mainframe.py:815
+msgid "Ctrl-Enter execute selected code"
+msgstr "Ctrl-Enter 执行选中的 PYTHON 语句"
+
+#: mods\mainframe.py:867
+msgid "&File"
+msgstr "文件(&F)"
+
+#: mods\mainframe.py:868
+msgid "&Edit"
+msgstr "编辑(&E)"
+
+#: mods\mainframe.py:869
+msgid "E&xecute"
+msgstr "查询(&X)"
+
+#: mods\mainframe.py:870
+msgid "&Window"
+msgstr "窗口(&W)"
+
+#: mods\mainframe.py:871
+msgid "&Help"
+msgstr "帮助(&H)"
+
+#: mods\mainframe.py:944
+msgid "Result T"
+msgstr "结果 T"
+
+#: mods\mainframe.py:1717
+msgid "No user or password !"
+msgstr "用户或密码错"
+
+#: mods\mainframe.py:1717 mods\mainframe.py:2468 mods\mainframe.py:3125
+#: mods\mainframe.py:4048 mods\mainframe.py:4374 mods\mainframe.py:4381
+#: mods\mainframe.py:4385
+msgid "Error"
+msgstr "错误"
+
+#: mods\mainframe.py:1726
+msgid "connect database ?"
+msgstr "连接"
+
+#: mods\mainframe.py:1730
+msgid "connect ..."
+msgstr "正在连接..."
+
+#: mods\mainframe.py:1768
+msgid "disconnect database ? "
+msgstr "断开"
+
+#: mods\mainframe.py:1774 mods\mainframe.py:1875
+msgid "disconnect ..."
+msgstr "正在断开..."
+
+#: mods\mainframe.py:1935
+msgid " Rescan system DB2 catalog directory ... "
+msgstr "正在查询编目..."
+
+#: mods\mainframe.py:1935 mods\mainframe.py:2048 mods\mainframe.py:2181
+#: mods\mainframe.py:2849 mods\mainframe.py:3150 mods\mainframe.py:3360
+#: mods\mainframe.py:3500
+msgid "Please waiting ..."
+msgstr "请稍候..."
+
+#: mods\mainframe.py:1952
+msgid " Disconnect All  ??"
+msgstr " 断开全部连接 ？"
+
+#: mods\mainframe.py:1952 mods\mainframe.py:2400 mods\mainframe.py:2409
+#: mods\mainframe.py:2932 mods\mainframe.py:3381 mods\mainframe.py:3392
+#: mods\mainframe.py:4389 mods\mainframe.py:4415 mods\mainframe.py:4519
+msgid "Ask"
+msgstr "注意"
+
+#: mods\mainframe.py:2048
+msgid "Sort data, Please waiting ... "
+msgstr "正在排序数据，请稍候..."
+
+#: mods\mainframe.py:2148 mods\mainframe.py:4183
+msgid "Input:"
+msgstr "请输入："
+
+#: mods\mainframe.py:2181 mods\mainframe.py:2189
+msgid "On copy value ( %d / %d ) ..."
+msgstr "正在复制数据 ( %d / %d ) ..."
+
+#: mods\mainframe.py:2191
+msgid "On copy ( %d / %d ) , CANCELED ..."
+msgstr "已复制 ( %d / %d ) ，正在取消 ..."
+
+#: mods\mainframe.py:2350
+msgid "&Copy Selected \tCtrl-C"
+msgstr "&C复制选中的 \tCtrl-C"
+
+#: mods\mainframe.py:2351
+msgid "&Find Value"
+msgstr "&F查找"
+
+#: mods\mainframe.py:2352
+msgid "Select &All"
+msgstr "&A全选"
+
+#: mods\mainframe.py:2353
+msgid "Copy Selected Line(s) Data to &SQL"
+msgstr "&S从选中行生成Insert语句"
+
+#: mods\mainframe.py:2354
+msgid "Create Selec&t SQL condition "
+msgstr "&T从选中块生成条件查询语句"
+
+#: mods\mainframe.py:2355
+msgid "&Export SQL \t\"%s\""
+msgstr "&E导出为 SQL \t\"%s\""
+
+#: mods\mainframe.py:2356
+msgid "&Export DEL \t\"%s\""
+msgstr "&E导出为 DEL \t\"%s\""
+
+#: mods\mainframe.py:2357
+msgid "&Export IXF \t\"%s\""
+msgstr "&导出为 IXF \t\"%s\""
+
+#: mods\mainframe.py:2400
+msgid "Close All Data Page?"
+msgstr "关闭 全部 查询的数据窗口？"
+
+#: mods\mainframe.py:2409
+msgid "Close Other no selected Data Page?"
+msgstr "关闭 其它全部 查询的数据窗口？"
+
+#: mods\mainframe.py:2441
+msgid "Please waiting refresh ..."
+msgstr "正在查询数据，请稍候..."
+
+#: mods\mainframe.py:2463
+msgid "execute sql on other user connect ?"
+msgstr "使用其它用户执行查询？"
+
+#: mods\mainframe.py:2464
+msgid "Info"
+msgstr "注意"
+
+#: mods\mainframe.py:2468
+msgid " Database Disconnected ? "
+msgstr " 连接已断开？"
+
+#: mods\mainframe.py:2550
+msgid "&Show SQL"
+msgstr "&S显示 SQL"
+
+#: mods\mainframe.py:2551
+msgid "&Close Current Page"
+msgstr "&C关闭当前页"
+
+#: mods\mainframe.py:2552
+msgid "Clos&e Other Pages"
+msgstr "&E关闭其它查询页"
+
+#: mods\mainframe.py:2553
+msgid "Close &All Pages"
+msgstr "&A关闭全部查询页"
+
+#: mods\mainframe.py:2554
+msgid "S&witch Log Page"
+msgstr "&W切换日志页"
+
+#: mods\mainframe.py:2555
+msgid "&Refresh Data"
+msgstr "&R重新执行查询"
+
+#: mods\mainframe.py:2603
+msgid " Execute Log"
+msgstr "执行日志"
+
+#: mods\mainframe.py:2605
+msgid " Text format result"
+msgstr "文本格式结果"
+
+#: mods\mainframe.py:2848 mods\mainframe.py:3182
+msgid " ?? unknow split sql "
+msgstr " 无法分割SQL "
+
+#: mods\mainframe.py:2899
+msgid "execute sql success, fetch data ( %d rows ), Please waiting ...   "
+msgstr "执行成功，正在获取数据( %d 行)，请稍候..."
+
+#: mods\mainframe.py:2931
+msgid "fetch %d rows, may be have more rows,  continue?"
+msgstr "已取得 %d 行，可能还有更多，继续吗？"
+
+#: mods\mainframe.py:3125
+msgid "No has database connect  !"
+msgstr "没有选择连接！"
+
+#: mods\mainframe.py:3224 mods\mainframe.py:3229 mods\mainframe.py:3237
+msgid "Error, Continue ? "
+msgstr "出错，继续吗？"
+
+#: mods\mainframe.py:3360
+msgid "in split query statement "
+msgstr "正在分析SQL语句"
+
+#: mods\mainframe.py:3381
+msgid " Commit ?     "
+msgstr " 提交 ？"
+
+#: mods\mainframe.py:3392
+msgid " Rollback ?            A  applied be lost "
+msgstr " 放弃吗？ 上次提交以来执行的修改将丢失！"
+
+#: mods\mainframe.py:3485
+msgid "Save file as ..."
+msgstr "保存为..."
+
+#: mods\mainframe.py:3519
+msgid "open file ?"
+msgstr "打开文件？"
+
+#: mods\mainframe.py:4062
+msgid "message"
+msgstr "信息"
+
+#: mods\mainframe.py:4133
+msgid "exec ..."
+msgstr "正在执行..."
+
+#: mods\mainframe.py:4374
+msgid " no select value"
+msgstr " 没有选择内容"
+
+#: mods\mainframe.py:4376
+msgid "Please input TYPE and NAME, comma split : "
+msgstr "请输入 TYPE 和 NAME，使用逗号(,)分隔"
+
+#: mods\mainframe.py:4381 mods\mainframe.py:4385
+msgid "  input error"
+msgstr " 输入数据错"
+
+#: mods\mainframe.py:4389
+msgid "Data alread exists. override ? "
+msgstr "相同项目已存在，覆盖吗？"
+
+#: mods\mainframe.py:4494
+msgid "Input db2 statcode. SQL1234 "
+msgstr "请输入 SQL1234 格式的错误代码"
+
+#: mods\mainframe.py:4519
+msgid "Exit program ?"
+msgstr "退出程序？"
+
+#: mods\mainframe.py:4564
+msgid "msg"
+msgstr "注意"
+
+#: mods\mainframe.py:4635
+msgid "Find ..."
+msgstr "查找..."
+
+#: mods\mainframe.py:4645
+msgid "Find & Replace ..."
+msgstr "查找/替换..."
+
+#: mods\mainframe.py:4694
+msgid "(C) 2010 Programmers and Coders Everywhere"
+msgstr ""
+
+#: mods\mainframe.py:4696
+msgid "A \"db2 tool\" program is a software program that IBM/DB2 utility tool"
+msgstr ""
+
+#: mods\mainframe.py:4702
+msgid "GPL V2/3"
+msgstr ""
+
+#: mods\mainframe.py:4708
+msgid "testmsg"
+msgstr "testmsg 翻译，测试 "

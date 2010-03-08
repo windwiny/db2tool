@@ -281,7 +281,7 @@ class QueryTokenizer:
                             lostrlen = (len(sql2)-u8strlen)*2 + u8strlen
                         except:
                             lostrlen = u8strlen
-                        sqlss.append((sql.strip(), beforepos, beforepos+lostrlen+split_char_len))
+                        sqlss.append((sql2.strip(), beforepos, beforepos+lostrlen+split_char_len))
                         beforepos += lostrlen+split_char_len
                     lastIndex = index + split_char_len
             else:
@@ -293,7 +293,7 @@ class QueryTokenizer:
                         lostrlen = (len(sql2)-u8strlen)*2 + u8strlen
                     except:
                         lostrlen = u8strlen
-                    sqlss.append((sql.strip(), beforepos, beforepos+lostrlen+split_char_len))
+                    sqlss.append((sql2.strip(), beforepos, beforepos+lostrlen+split_char_len))
                     beforepos += lostrlen+split_char_len
                 break
 

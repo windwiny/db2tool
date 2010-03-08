@@ -1088,6 +1088,7 @@ class dbM(wx.Frame):
         print 'init data\n'
         self.str_time_strf = '%Y%m%d%H%M%S'
         fnnt = time.strftime(self.str_time_strf)
+        self.sqq = open('%s_sqlx.log' % fnnt, 'ab')
         self.logsqlf = open('%s_sql.log' % fnnt, 'ab')
         self.logpgf = open('%s_pg.log' % fnnt[:8], 'ab')
         startstr = '\n---- PROGRAM START AT %s ----\n' % time.strftime(self.str_time_strf)
@@ -1139,6 +1140,8 @@ class dbM(wx.Frame):
         self.logpgf.write(stopstr)
         self.logsqlf.flush()
         self.logsqlf.close()
+        self.sqq.flush()
+        self.sqq.close()
         if os.stat(self.logsqlf.name).st_size == 0:
             self.logpgf.write('no sql\n')
             os.remove(self.logsqlf.name)
@@ -3078,12 +3081,16 @@ class dbM(wx.Frame):
             try:
                 lock.acquire();ds.write('%s ;\n' % sql);lock.release()
                 t1 = time.time()
+                self.sqq.write(sql)
+                self.sqq.write(self.NL)
+                self.sqq.write(self.NL)
                 cs.execute(sql)
                 t2 = time.time()
                 iRes[0][1] += 1
-                if not cs.description is None and len(cs.description) > 0: # select statement
+                if cs.description is not None and len(cs.description) > 0: # select statement
                     if sql[:6].upper() != 'SELECT':
                         print ' = Error - Error - Error = '
+                        print sql
                     m = ''
                     lock.acquire();Res_or_Except.append((True, sql, t2-t1));lock.release()
                     while True:

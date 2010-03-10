@@ -1,6 +1,13 @@
 #Boa:Frame:mainframe
 #-*- coding:utf-8 -*-
 
+# wxpython control text ?? bug
+#
+# sql,log file use system locale
+# all text control, stc control, messagebox ,procressdialog , finddialog user unicode string
+#
+
+
 import os, sys
 import locale
 import sqlite3
@@ -108,7 +115,7 @@ class dbGridTable(wx.grid.PyGridTableBase):
                 self.col = len(description2)
             else:
                 self.col = len(data[0])
-        except:pass
+        except Exception as _ee: pass
         self.data = data
         self.data_change_pos = []
         if len(description2) >0 and type(description2[0]) == type(()):
@@ -136,7 +143,7 @@ class dbGridTable(wx.grid.PyGridTableBase):
     def GetColLabelValue(self, col):
         try:
             return self.desc[col] #[0]
-        except:
+        except Exception as _ee:
             return '_??_'
 
 
@@ -167,8 +174,8 @@ class Db2_connected():
 
 
 [wxID_DBMMENUEXECITEMS_EXEC_SINGLE, wxID_DBMMENUEXECITEMS_EXEC_SQLS, 
- wxID_DBMMENUEXECITEMS_FORMAT_SQL, 
-] = [wx.NewId() for _init_coll_menuExec_Items in range(3)]
+ wxID_DBMMENUEXECITEMS_FORMAT_SQL, wxID_DBMMENUEXECITEMS_EXEC_SQLS11, wxID_DBMMENUEXECITEMS_EXEC_SQLS12, 
+] = [wx.NewId() for _init_coll_menuExec_Items in range(5)]
 
 [wxID_DBMMENUFILEITEMS_RELOAD, wxID_DBMMENUFILEITEMS_SAVE, 
  wxID_DBMMENUFILEITEM_EXIT, 
@@ -239,8 +246,18 @@ class dbM(wx.Frame):
         parent.Append(help='', id=wxID_DBMMENUEXECITEMS_FORMAT_SQL,
               kind=wx.ITEM_NORMAL,
               text=_(u'format selected SQL\tCtrl-Shift-F'))
+        parent.Append(help='', id=wxID_DBMMENUEXECITEMS_EXEC_SQLS11,
+              kind=wx.ITEM_NORMAL,
+              text=_(u'execute 11 unicode'))
+        parent.Append(help='', id=wxID_DBMMENUEXECITEMS_EXEC_SQLS12,
+              kind=wx.ITEM_NORMAL,
+              text=_(u'execute 12 str'))
         self.Bind(wx.EVT_MENU, self.OnMenuExecItems_exec_sqlsMenu,
               id=wxID_DBMMENUEXECITEMS_EXEC_SQLS)
+        self.Bind(wx.EVT_MENU, self.x11,
+              id=wxID_DBMMENUEXECITEMS_EXEC_SQLS11)
+        self.Bind(wx.EVT_MENU, self.x12,
+              id=wxID_DBMMENUEXECITEMS_EXEC_SQLS12)
         self.Bind(wx.EVT_MENU, self.OnMenuExecItems_exec_singleMenu,
               id=wxID_DBMMENUEXECITEMS_EXEC_SINGLE)
         self.Bind(wx.EVT_MENU, self.OnMenuExecItems_format_sqlMenu,
@@ -860,7 +877,7 @@ class dbM(wx.Frame):
             self.icon_conn32.SetSize(wx.Size(32,32))
             self.icon_noconn32 = self.icon_noconn16
             self.icon_noconn32.SetSize(wx.Size(32,32))
-        except: pass
+        except Exception as _ee: pass
 
         # MainFrame
         ms = [
@@ -884,6 +901,7 @@ class dbM(wx.Frame):
         self.init_ctrl(parent)
         self.init_keys()
         self.init_data(parent)
+        #gettext.install(pgname, './locale', False, locale.getdefaultlocale()[1])
 
     def init_ctrl(self, parent):
         # 1
@@ -1045,14 +1063,14 @@ class dbM(wx.Frame):
                 try:
                     if self.RegisterHotKey(i[0], i[1], i[2]):
                         self.Bind(wx.EVT_HOTKEY, i[3], id=i[0])
-                except:
+                except Exception as _ee:
                     pass
 
         else:
             for i in self.hotkeys:
                 try:
                     self.UnregisterHotKey(i[0])
-                except:
+                except Exception as _ee:
                     pass
 
     def hotkey_shift_return(self, event):
@@ -1146,8 +1164,8 @@ class dbM(wx.Frame):
             self.logpgf.write('no sql\n')
             os.remove(self.logsqlf.name)
         self.logpgf.close()
-        try:self.cfg.close()
-        except:pass
+        try: self.cfg.close()
+        except Exception as _ee: pass
         print 'exit ...'
 
     def OnDbMSize(self, event):
@@ -1175,12 +1193,12 @@ class dbM(wx.Frame):
         try:
             self.cfgwrite_dbs()
             self.cfg.commit()
-        except:pass
+        except Exception as _ee: pass
 
         try: self.logsqlf.flush()
-        except:pass
+        except Exception as _ee: pass
         try: self.logpgf.flush()
-        except:pass
+        except Exception as _ee: pass
         pass
 
     def cfgread_dbs(self):
@@ -1236,22 +1254,12 @@ class dbM(wx.Frame):
         self.cfg.dbinfo_save(self.dbs_all, lstChd, tt)
         self.log_pg('  cfgwrite_dbs: change %d username,password\n' % len(lstChd))
 
-    def convraw2uni(self, rawtext):
-        if type(rawtext) != type(''):
-            return rawtext
-        epos = self.stcPythonLog.GetLastPosition()
-        self.stcPythonLog.AppendTextRaw(rawtext)
-        self.stcPythonLog.SetSelection(epos, self.stcPythonLog.GetLastPosition())
-        utext = self.stcPythonLog.GetSelectedText()
-        self.stcPythonLog.Clear()
-        return utext
-    
     def decode(self, msg):
         if self.conf_password is None:
             return msg
         try:
             return zlib.decompress(base64.b64decode(msg))
-        except:
+        except Exception as _ee:
             return msg
 
     def encode(self, msg):
@@ -1259,7 +1267,7 @@ class dbM(wx.Frame):
             return msg
         try:
             return base64.b64encode(zlib.compress(msg))
-        except:
+        except Exception as _ee:
             return msg
 
     def change_ctrl_pos(self):
@@ -1563,7 +1571,7 @@ class dbM(wx.Frame):
                 try:
                     cs.close()
                     db.close()
-                except:pass
+                except Exception as _ee: pass
                 fail_ids.insert(0, i)
                 #self.log_pg(' %s - %s (%s) Error: %s %s %s\n' % (node, dbname, dbuser, ee.args[0], ee.args[1], ee.args[2]))
             except Exception:# as ee:
@@ -1675,7 +1683,7 @@ class dbM(wx.Frame):
                     return cmp(dl, dr)
             else:
                 return cmp(nl, nr)
-        except:
+        except Exception as _ee:
             return 0
 
     def OnGridDbsGridCellChange(self, event):
@@ -1739,10 +1747,10 @@ class dbM(wx.Frame):
                 msg = '%s' % ee.args[2]
                 tap = '%s, %s' % (ee.args[0], ee.args[1])
                 self.log_pg('%s, %s%s\n' % (tap, msg, '--' *50))
-                wx.MessageBox(msg, tap, wx.OK | wx.ICON_ERROR, dlg)
+                wx.MessageBox(msg.decode(self.str_encode), tap, wx.OK | wx.ICON_ERROR, dlg)
                 return
             except Exception as ee:
-                wx.MessageBox(str(ee), '???', wx.OK | wx.ICON_ERROR, dlg)
+                wx.MessageBox(str(ee).decode(self.str_encode), '???', wx.OK | wx.ICON_ERROR, dlg)
                 return
             finally:
                 dlg.Destroy()
@@ -1780,10 +1788,14 @@ class dbM(wx.Frame):
                     db, cs, id_db = item[self.iDB], item[self.iCS], id(item[self.iDB])
                     if id_db == id_str:
                         try:
-                            dlg.Update(50, ' db2 connect reset [%s]' % item[self.iDBNAME])
+                            try:
+                                msgs = '' % item[self.iDBNAME]
+                                msgs = unicode(msgs, self.str_encode)
+                            except Exception: msgs = ' db2 connect reset [ ?? ]'
+                            dlg.Update(50, msgs)
                             cs.close()
                             db.close()
-                        except:pass
+                        except Exception as _ee: pass
                         self.dbs_connected.pop(i)
                         break
             finally:
@@ -1815,7 +1827,7 @@ class dbM(wx.Frame):
                 if len(connstrl) >= 2:
                     try:
                         if not int(connstrl[1]) in ids: reset_lines.append(row)
-                    except:pass
+                    except Exception as _ee: pass
             for row in reset_lines:
                 for col in range(iCol):
                     self.gridDbs.SetCellBackgroundColour(row, col, self.gridDbs_bgc)
@@ -1844,7 +1856,7 @@ class dbM(wx.Frame):
             try:    self.time_keepactive.Start(int(t) * 1000)
             except: self.time_keepactive.Start(180000)
 
-    def get_db2db_from_connect_string(self, connstr, newcs=False):
+    def get_db2db_from_connect_string(self, connstr, newcs=False, conv2=True):
         '''
         @param connstr: choice 's string
         @param newcs: default False,  from db create new cursor
@@ -1868,6 +1880,10 @@ class dbM(wx.Frame):
                 db2db.dbuser = item[self.iDBUSER]
                 db2db.color = item[self.iCOLOR]
                 break
+        if conv2:
+            db2db.node = db2db.node.encode(self.str_encode)
+            db2db.dbname = db2db.dbname.encode(self.str_encode)
+            db2db.dbuser = db2db.dbuser.encode(self.str_encode)
         return db2db
 
     def dis_all_connect(self):
@@ -1881,11 +1897,15 @@ class dbM(wx.Frame):
                 it = self.dbs_connected[i]
                 try:
                     ixx += 1
-                    dlg.Update(ixx, 'db2 connect reset ... [%s]' % it[self.iDBNAME])
+                    try:
+                        msgs = 'db2 connect reset ... [%s]' % it[self.iDBNAME]
+                        msgs = unicode(msgs, self.str_encode)
+                    except Exception: msgs = 'db2 connect reset ... [ ?? ]'
+                    dlg.Update(ixx, msgs)
                     it[self.iCS].close()
                     it[self.iDB].close()
                     print ' Disconnect %s' % id(it[self.iDB])
-                except:pass
+                except Exception as _ee: pass
             self.dbs_connected = []
         finally:
             dlg.Destroy()
@@ -1979,7 +1999,7 @@ class dbM(wx.Frame):
             where procschema not like 'SYS%' and procschema not like 'SQLJ%'
             order by procschema,procname
             ''')
-        except:
+        except Exception as _ee:
             self.textProcedures.AppendText('eoor')
             return
 
@@ -2100,8 +2120,9 @@ class dbM(wx.Frame):
         row, col = event.GetRow(), event.GetCol()
         try:
             startbar.SetStatusText('%d , %d' % (row + 1, col + 1), 1)
-            msg = '%s:%s.%s: %s' % (gridX.dbname, gridX.tabschema, gridX.tabname, '/'.join([str(i) for i in gridX.description2[col]]))
-            startbar.SetStatusText(msg, 2)
+            tag = '%s:%s.%s: ' % (gridX.dbname, gridX.tabschema, gridX.tabname)
+            msg = '/'.join([str(i) for i in gridX.description2[col]])
+            startbar.SetStatusText(tag.encode(self.str_encode)+msg, 2)
         except Exception as ee:
             print ' on_grid_select_cell__show_pos:', ee
 
@@ -2683,10 +2704,10 @@ class dbM(wx.Frame):
                     try:
                         ix = cl.index(description2[ii][0])
                         gridX.SetColSize(ii, sz[ix])
-                    except:pass
+                    except Exception as _ee: pass
             elif len(data) < 100:   # grid.AutoSizeColumns may use long time.
                 gridX.AutoSizeColumns()
-        except:pass
+        except Exception as _ee: pass
 
         if gridx is None:
             # don't in AppPage method set select=True.
@@ -2822,12 +2843,12 @@ class dbM(wx.Frame):
         @param show_dlg_time:
         '''
         try:
-            if type(sql) == type(''):
-                sql = unicode(sql)
+            if type(sql) == type(u''):
+                sql = sql.encode(self.str_encode)
         except UnicodeError as ee:
             print ee
             try:
-                sql = self.convraw2uni(sql)
+                sql = unicode(sql, 'utf-8').encode(self.str_encode)
             except Exception as ee:
                 raise ee
 
@@ -2901,7 +2922,7 @@ class dbM(wx.Frame):
         '''
         msg = _('execute sql success, fetch data ( %d rows ), Please waiting ...   ')
         try:
-            sql2 = sql[:70]
+            sql2 = unicode(sql, self.str_encode)[:70]
         except:
             sql2 = '??'
         dlg = None
@@ -2954,6 +2975,7 @@ class dbM(wx.Frame):
         @param execsql_time: execute select time   t2-t1
         @return: resmsg_0:  message select result and time
         '''
+        ##sql = sql.decode(self.str_encode)
         exec_time = str(execsql_time)
         exec_time = exec_time[:exec_time.find('.')+3]
         self.statusBar_exec.SetStatusText('Selected in %s . Please waiting...' % exec_time)
@@ -2972,7 +2994,6 @@ class dbM(wx.Frame):
 
         try:
             tabschema,tabname=self.analyse_select_SQL_TableName(sql, db2db.dbuser)
-            print '-- [%s.%s] <%s>' % (tabschema,tabname,sql)
         except Exception as ee:
             self.log_pg('-- Exception in analyse_select_SQL_TableName ?? %s\n'  % ee)
         t3 = time.time()
@@ -3021,7 +3042,7 @@ class dbM(wx.Frame):
                 return int(time_out[0]),1
             elif len(time_out)>=1:
                 return int(time_out[0]),int(time_out[1])
-        except:
+        except Exception as _ee:
             return 10,1
 
     def OnBtnExecSqlsButton(self, event):
@@ -3154,7 +3175,7 @@ class dbM(wx.Frame):
         msg2 = ''
         iProgmax = len(sqls)
         dlg = None
-        dlg = wx.ProgressDialog(_('Please waiting ...'), 'execute %s/%s statement %s\n\n\n' % \
+        dlg = wx.ProgressDialog(_('Please waiting ...'), 'execute %3d/%3d statement %s\n\n\n' % \
                 (iSucc + iFail, iSqls, '=='*20), iProgmax+2, self.last_dlg, style=wx.PD_CAN_ABORT | wx.PD_ELAPSED_TIME)
         dlg.Update(1)
         llast_dlg = self.last_dlg
@@ -3179,21 +3200,25 @@ class dbM(wx.Frame):
                         __1, be, ed = sqls[iii]
                         self.stcSQLs.SetSelection(be, ed)
                     lock.release()
-#                    if not dlg and ti > 0.5:
-#                        dlg = wx.ProgressDialog(_('Please waiting ... '), 'execute %s/%s statement                                   \n\n\n' % \
-#                            (iSucc + iFail, iSqls), len(sqls), self, style=wx.PD_CAN_ABORT | wx.PD_ELAPSED_TIME)
-#                        self.last_dlg = dlg
                     try:
-                        sqll = sqls[iii][0].lstrip()[:78]
+                        sqll = sqls[iii][0].lstrip()[:78].decode(self.str_encode)
                     except Exception as ee:
                         sqll = _(' ?? unknow split sql ')
                     if isCancel[0]: # 2@#$&@)#&@)
                         splittime = 0.3
-                        if dlg:    dlg.Update(iSucc + iFail + 1, 'execute %3s ( %3s ) statement. Success %2s, Failed %2s\n\n Cancel, waiting ...' \
+                        if dlg: dlg.Update(iSucc + iFail + 1, 'execute %3d ( %3d ) statement. Success %2d, Failed %2d\n\n Cancel, waiting ...' \
                             % (iSucc + iFail, iSqls, iSucc, iFail))
                         continue
-                    if dlg and not isCancel[0] and not dlg.Update(iSucc + iFail + 1, 'execute %3s ( %3s ) statement. Success %2s, Failed %2s\n\n%s' \
-                            % (iSucc + iFail, iSqls, iSucc, iFail, sqll))[0]:
+                    # wxpython , eclipse+pydev  debug program ProgressDialog.Update  newmsg must unicode
+                    try:
+                        msgs = 'execute %3d ( %3d ) statement. Success %2d, Failed %2d\n\n%s' \
+                            % (iSucc + iFail, iSqls, iSucc, iFail, sqll)
+                        msgs = unicode(msgs, self.str_encode)
+                    except Exception as ee:
+                        print 'wxpython uni EE??', ee
+                        msgs = 'execute %3d ( %3d ) statement. Success %2d, Failed %2d\n\n ?' \
+                            % (iSucc + iFail, iSqls, iSucc, iFail)
+                    if dlg and not isCancel[0] and not dlg.Update(iSucc + iFail + 1, msgs)[0]:
                         isCancel[0] = True
                         print ' execute progress press cancel  '
                     else:
@@ -3228,12 +3253,12 @@ class dbM(wx.Frame):
                                         ds.write('--%s' % m)
                                         es.write('%s ;\n%s' % (re1[1], m))
                                         if iRes[0][1] == 0 and iRes[0][2] >= 1:   # fail.
-                                            ans = wx.MessageBox(m, _('Error, Continue ? '), wx.ICON_ERROR | wx.YES_NO | wx.NO_DEFAULT, self.last_dlg)
+                                            ans = wx.MessageBox(m.decode(self.str_encode), _('Error, Continue ? '), wx.ICON_ERROR | wx.YES_NO | wx.NO_DEFAULT, self.last_dlg)
                                             if ans != wx.YES:
                                                 isCancel[0] = True
                                                 break
                                         elif m.find('SQL1024N') != -1:  # no db connect
-                                            ans = wx.MessageBox(m, _('Error, Continue ? '), wx.ICON_ERROR | wx.YES_NO | wx.NO_DEFAULT, self.last_dlg)
+                                            ans = wx.MessageBox(m.decode(self.str_encode), _('Error, Continue ? '), wx.ICON_ERROR | wx.YES_NO | wx.NO_DEFAULT, self.last_dlg)
                                             if ans != wx.YES:
                                                 isCancel[0] = True
                                                 break
@@ -3241,7 +3266,7 @@ class dbM(wx.Frame):
                                         m = '  # EXCEPT: %s\n' % ee
                                         ds.write('--%s' % m)
                                         es.write('%s ;\n%s' % (re1[1], m))
-                                        ans = wx.MessageBox(m, _('Error, Continue ? '), wx.ICON_ERROR | wx.YES_NO | wx.NO_DEFAULT, self.last_dlg)
+                                        ans = wx.MessageBox(m.decode(self.str_encode), _('Error, Continue ? '), wx.ICON_ERROR | wx.YES_NO | wx.NO_DEFAULT, self.last_dlg)
                                         if ans != wx.YES:
                                             isCancel[0] = True
                                             break
@@ -3256,10 +3281,10 @@ class dbM(wx.Frame):
                             lock.release()
                         if msg != '':
                             if self.islogsql: self.log_usersql2(msg)
-                            if self.isshowsql:self.log_usersql(msg)
+                            if self.isshowsql:self.log_usersql(msg.decode(self.str_encode))
                             msg = ''
                         if msg2 != '':
-                            self.log_usersql(msg2, True, False)
+                            self.log_usersql(msg2.decode(self.str_encode), True, False)
                             msg2 = ''
                 else:
                     break
@@ -3303,21 +3328,21 @@ class dbM(wx.Frame):
                 msg2 = es.getvalue()
                 if msg != '':
                     if self.islogsql: self.log_usersql2(msg)
-                    if self.isshowsql:self.log_usersql(msg)
+                    if self.isshowsql:self.log_usersql(msg.decode(self.str_encode))
                     msg = ''
                 if msg2 != '':
-                    self.log_usersql(msg2, True, False)
+                    self.log_usersql(msg2.decode(self.str_encode), True, False)
                     msg2 = ''
 
                 m = '\n-- * [%s/%s] [%s]      Total: %d sql: Success:%d  Fail:%d\n--** END **%s\n' % \
                     (dbX.dbname, dbX.dbuser, time.strftime(self.str_time_strf), iSucc + iFail, iSucc, iFail, '--'*50)
                 self.log_usersql2(m)
-                self.log_usersql(m)
+                self.log_usersql(m.decode(self.str_encode))
 
                 if self.islogsql and iProgmax > 10:
                     self.logsqlf.flush()
                 dbX.cs.close()
-            except:pass
+            except Exception as _ee: pass
             if not isSingle and not isCancel[0] and eeed:
                 self.stcSQLs.SetSelection(beee, eeed)
             else:
@@ -3327,7 +3352,7 @@ class dbM(wx.Frame):
             if dlg:
                 self.last_dlg = llast_dlg
                 if iFail == 0: dlg.Destroy()
-                else:dlg.Update(iProgmax+2, 'Done. \n\n  execute %3s ( %3s ) statement.\n  Success %2s, Failed %2s  ' \
+                else:dlg.Update(iProgmax+2, 'Done. \n\n  execute %3d ( %3d ) statement.\n  Success %2d, Failed %2d  ' \
                                 % (iSucc + iFail, iSqls, iSucc, iFail))
         pass
 
@@ -3347,7 +3372,7 @@ class dbM(wx.Frame):
                 exsql = exsql.decode(self.str_encode)   # pg local --> unicode
             except UnicodeDecodeError as ee: # may be sql from execPython, string code is unicode,but type is str
                 try:
-                    exsql = self.convraw2uni(exsql)
+                    exsql = unicode(exsql, 'utf-8')
                 except Exception as ee:
                     exsql = ''
                     print ' analyse SQLs Error:', ee
@@ -3357,7 +3382,7 @@ class dbM(wx.Frame):
             print 'no select sql statement'
             return sqls, beee, eeed, 0
         if isSingle:
-            sqls.append((exsql, self.stcSQLs.GetSelectionStart(), self.stcSQLs.GetSelectionEnd()))
+            sqls.append((exsql.encode(self.str_encode), self.stcSQLs.GetSelectionStart(), self.stcSQLs.GetSelectionEnd()))
         else:
             dlg = None
             try:
@@ -3469,7 +3494,7 @@ class dbM(wx.Frame):
         '''
         try:
             data = gridX.GetTable().data
-        except:
+        except Exception as _ee:
             print ' un grid'
             return False
         #print ' get data table ID: %s' % id(data) #check []
@@ -3510,7 +3535,11 @@ class dbM(wx.Frame):
         while True:
             th.join(0.5)
             if th.isAlive():
-                if not isBrk[0] and not dlg.Update(iC[0], msg % iC[0])[0]:
+                try:
+                    msgs = msg % iC[0]
+                    msgs = unicode(msgs, self.str_encode)
+                except Exception: msgs = 'ex'
+                if not isBrk[0] and not dlg.Update(iC[0], msgs)[0]:
                     isBrk[0] = True
             else:
                 break
@@ -3519,14 +3548,15 @@ class dbM(wx.Frame):
         ff.close()
         st = os.stat(ff.name)
         s_time = str(time.time() - t1)
-        self.log_pg('export to "%s" of %s "%s"\n  Write %d bytes, Used %s sec.\n' % \
-                    (ff.name, ftype, gridX.sql, st.st_size, s_time[:s_time.find('.')+3]))
+        msg = 'export to "%s" of %s "%s"\n  Write %d bytes, Used %s sec.\n' % \
+                    (ff.name.encode(self.str_encode), ftype, gridX.sql, st.st_size, s_time[:s_time.find('.')+3])
+        self.log_pg(msg)
         if st.st_size <= 10 * 2**20:
             try:
                 dlg = wx.TextEntryDialog(self, '', _('open file ?'), '%s "%s"' % (self.editor, ff.name))
                 if wx.ID_OK == dlg.ShowModal():
-                    os.system(dlg.GetValue())
-            except:pass
+                    os.system(dlg.GetValue().encode(self.str_encode))
+            except Exception as _ee: pass
             finally:
                 dlg.Destroy()
         return True
@@ -3923,7 +3953,7 @@ class dbM(wx.Frame):
         try:
             pos = event.GetSelection()
             event.Skip()
-        except: #' pubsub lstT1'
+        except Exception as _ee: #' pubsub lstT1'
             pos =self.nbM1.GetSelection()
         if not hasattr(self, 'Obj1'):return
         self.nbchange = True
@@ -3946,7 +3976,7 @@ class dbM(wx.Frame):
         try:
             pos = event.GetSelection()
             event.Skip()
-        except: #' pubsub lstT2'
+        except Exception as _ee: #' pubsub lstT2'
             pos =self.nbM2.GetSelection()
         if not hasattr(self, 'Obj2'):return
         self.nbchange = True
@@ -4010,7 +4040,7 @@ class dbM(wx.Frame):
             try:
                 self.tmpcur.execute(''' create table LL (a)''')
                 self.tmpcur.execute(''' create table RR (a)''')
-            except:pass
+            except Exception as _ee: pass
             self.tmpcur.execute(''' delete from  LL ''')
             self.tmpcur.execute(''' delete from  RR ''')
             self.tmpcur.executemany(''' insert into LL values (?) ''' , [(i,) for i in self.Obj1['value'] ])
@@ -4050,7 +4080,7 @@ class dbM(wx.Frame):
         f1.close()
         f2.close()
         try:
-            os.system('%s %s %s' % (self.difftool, f1.name, f2.name))
+            os.system('%s %s %s' % (self.difftool, f1.name.encode(self.str_encode), f2.name.encode(self.str_encode)))
         except Exception as ee:
             wx.MessageBox(str(ee), _("Error"), wx.OK | wx.ICON_ERROR, self.last_dlg)
 #        os.unlink(f1.name)
@@ -4138,9 +4168,9 @@ class dbM(wx.Frame):
         dlg = None
         try:
             try: dlg = wx.ProgressDialog(_('exec ...'), pystr[:80], 100, self, style=wx.PD_ELAPSED_TIME)
-            except: pass
+            except Exception as _ee: pass
+            llast_dlg = self.last_dlg
             if dlg:
-                llast_dlg = self.last_dlg
                 self.last_dlg = dlg
                 dlg.Update(50)
             #exec(pystr)     # 
@@ -4218,9 +4248,9 @@ class dbM(wx.Frame):
     def log_pg(self, text=''):
         try:
             self.logpgf.write(text)
-            self.textConnMsg.AppendText(text)
+            self.textConnMsg.AppendText(text.decode(self.str_encode))
             self.textConnMsg.ShowPosition(self.textConnMsg.GetLastPosition())
-        except:pass
+        except Exception as _ee: pass
         print text,
 
     def log_usersql(self, text='', isSwitchTab=False, isWriteToFile=False):
@@ -4236,7 +4266,7 @@ class dbM(wx.Frame):
                 self.nbResult.SetSelection(0)
             self.stcExecLog.AppendText(text)
             self.stcExecLog.ShowPosition(self.stcExecLog.GetLastPosition())
-        except:pass
+        except Exception as _ee:pass
 
     def log_usersql2(self, text=''):
         ''' write text to file
@@ -4244,7 +4274,7 @@ class dbM(wx.Frame):
         '''
         try:
             self.logsqlf.write(text)
-        except:pass
+        except Exception as _ee:pass
 
     def log_user(self, text=''):
         print text,
@@ -4336,7 +4366,7 @@ class dbM(wx.Frame):
         name = treectrl.GetItemText(item)
         try:
             val = self.cfg.snippet_table_select_1row(codetype, typestr, name)
-            if type(val) != type(u''): val = self.convraw2uni(val)
+            if type(val) != type(u''): val = unicode(val, 'utf-8')
             if val and val.strip() != stcctrl.GetSelectedText().strip():
                 #li = stcctrl.GetCurrentLine()
                 #pos = stcctrl.GetLineEndPosition(li)
@@ -4399,7 +4429,7 @@ class dbM(wx.Frame):
                             self.cfg.snippet_table_delete(codetype, typestr, name)
                     self.cfg.snippet_table_insert(codetype, typestr, name, code)
                     self.treectrl_add_item(treeCtrl, typestr, name, codetype)
-                except:pass
+                except Exception as _ee:pass
         finally:
             dlg.Destroy()
             textCtrl.SetFocus()
@@ -4418,7 +4448,7 @@ class dbM(wx.Frame):
                 return
             typestr = treeCtrl.GetItemText(itemp)
             name = treeCtrl.GetItemText(item)
-        except:return
+        except Exception as _ee: return
         if wx.YES == wx.MessageBox('Delete [ %s %s ] ?' % (typestr, name), _('Ask'), wx.YES_NO | wx.NO_DEFAULT | wx.ICON_QUESTION, self.last_dlg):
             n = self.cfg.snippet_table_delete(codetype, typestr, name)
             treeCtrl.Delete(item)
@@ -4510,7 +4540,7 @@ class dbM(wx.Frame):
                     self.cfg.snippet_table_insert('code', 'DB2', stxt, lls)
                 self.snippet_refresh_from_table('code', self.treeCodeSnippet)
                 self.treeCodeSnippet.ExpandAll()
-        except:pass
+        except Exception as _ee: pass
         finally:
             dlg.Destroy()
 
@@ -4736,4 +4766,17 @@ class dbM(wx.Frame):
         print be,en
         self.stcSQLs.SetSelection(be,en)
 
-
+    def x11(self, event, S=False):
+        st = self.stcSQLs.GetSelectedText()
+        if S:
+            st = st.encode(self.str_encode)
+        print "SQL:",type(st),st
+        db2db = self.get_db2db_from_connect_string(self.choiceConnectedDbnames.GetStringSelection(),False)
+        db2db.cs.execute(st)
+        va = db2db.cs.fetchall()
+        print "LEN", len(va)
+        pass
+    def x12(self, event):
+        self.x11(event, True)
+        pass
+    

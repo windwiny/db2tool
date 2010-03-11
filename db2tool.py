@@ -4,13 +4,13 @@
 
 import wx
 
-import mods.mainframe as mainframe
+import dbm
 
-modules ={u'mainframe': [1, 'Main frame of Application', u'mainframe.py']}
+modules ={u'dbm': [1, 'Main frame of Application', u'dbm.py']}
 
 class BoaApp(wx.App):
     def OnInit(self):
-        self.main = mainframe.create(None)
+        self.main = dbm.create(None)
         self.main.Show()
         self.SetTopWindow(self.main)
         return True

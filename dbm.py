@@ -1,4 +1,4 @@
-#Boa:Frame:mainframe
+#Boa:Frame:dbm
 #-*- coding:utf-8 -*-
 
 #
@@ -9,6 +9,7 @@
 # sql, table, schema, etc : system locale
 #
 
+pgname = 'db2tool'
 
 import os, sys
 import locale
@@ -23,9 +24,15 @@ import StringIO
 import base64
 import zlib
 import gettext
-import config2
-import sqld
-import sqlformatter
+from mods import config2
+from mods import sqld
+from mods import sqlformatter
+
+try:
+    import DB2
+except:
+    print '''  Not import PyDB2, python setup.py install -c mingw32'''
+    sys.exit(3)
 
 try:
     import wx
@@ -37,19 +44,12 @@ except:
     print '''  Not import wx '''
     sys.exit(2)
 
-import stc2
+from mods import stc2
+from mods import images   # my images
 
-try:
-    import DB2
-except:
-    print '''  Not import PyDB2, python setup.py install -c mingw32'''
-    sys.exit(3)
-
-import images   # my images
-pgname = 'db2tool'
 
 def create(parent):
-    return dbM(parent)
+    return dbm(parent)
 
 [wxID_DBM, wxID_DBMBTNCALLPROC, wxID_DBMBTNCODERELOAD, wxID_DBMBTNCODESAVE, 
  wxID_DBMBTNCOMMIT, wxID_DBMBTNCOMPARE, wxID_DBMBTNDB2HELP, 
@@ -184,8 +184,8 @@ class Db2_connected():
 
 
 [wxID_DBMMENUEXECITEMS_EXEC_SINGLE, wxID_DBMMENUEXECITEMS_EXEC_SQLS, 
- wxID_DBMMENUEXECITEMS_FORMAT_SQL, wxID_DBMMENUEXECITEMS_EXEC_SQLS11, wxID_DBMMENUEXECITEMS_EXEC_SQLS12, 
-] = [wx.NewId() for _init_coll_menuExec_Items in range(5)]
+ wxID_DBMMENUEXECITEMS_FORMAT_SQL, 
+] = [wx.NewId() for _init_coll_menuExec_Items in range(3)]
 
 [wxID_DBMMENUFILEITEMS_RELOAD, wxID_DBMMENUFILEITEMS_SAVE, 
  wxID_DBMMENUFILEITEM_EXIT, 
@@ -199,7 +199,7 @@ class Db2_connected():
 
 [wxID_DBMMENUHELPITEMS_HELP_ABOUT] = [wx.NewId() for _init_coll_menuHelp_Items in range(1)]
 
-class dbM(wx.Frame):
+class dbm(wx.Frame):
     def _init_coll_menuWindow_Items(self, parent):
         # generated method, don't edit
 
@@ -256,18 +256,8 @@ class dbM(wx.Frame):
         parent.Append(help='', id=wxID_DBMMENUEXECITEMS_FORMAT_SQL,
               kind=wx.ITEM_NORMAL,
               text=_(u'format selected SQL\tCtrl-Shift-F'))
-        parent.Append(help='', id=wxID_DBMMENUEXECITEMS_EXEC_SQLS11,
-              kind=wx.ITEM_NORMAL,
-              text=_(u'execute 11 unicode'))
-        parent.Append(help='', id=wxID_DBMMENUEXECITEMS_EXEC_SQLS12,
-              kind=wx.ITEM_NORMAL,
-              text=_(u'execute 12 str'))
         self.Bind(wx.EVT_MENU, self.OnMenuExecItems_exec_sqlsMenu,
               id=wxID_DBMMENUEXECITEMS_EXEC_SQLS)
-        self.Bind(wx.EVT_MENU, self.x11,
-              id=wxID_DBMMENUEXECITEMS_EXEC_SQLS11)
-        self.Bind(wx.EVT_MENU, self.x12,
-              id=wxID_DBMMENUEXECITEMS_EXEC_SQLS12)
         self.Bind(wx.EVT_MENU, self.OnMenuExecItems_exec_singleMenu,
               id=wxID_DBMMENUEXECITEMS_EXEC_SINGLE)
         self.Bind(wx.EVT_MENU, self.OnMenuExecItems_format_sqlMenu,
@@ -361,13 +351,13 @@ class dbM(wx.Frame):
 
     def _init_ctrls(self, prnt):
         # generated method, don't edit
-        wx.Frame.__init__(self, id=wxID_DBM, name=u'dbM', parent=prnt,
-              pos=wx.Point(211, 45), size=wx.Size(1024, 666),
+        wx.Frame.__init__(self, id=wxID_DBM, name=u'dbm', parent=prnt,
+              pos=wx.Point(171, 37), size=wx.Size(1024, 666),
               style=wx.DEFAULT_FRAME_STYLE, title=_(u'dbtool'))
         self._init_utils()
         self.SetClientSize(wx.Size(1016, 638))
-        self.Bind(wx.EVT_CLOSE, self.OnDbMClose)
-        self.Bind(wx.EVT_SIZE, self.OnDbMSize)
+        self.Bind(wx.EVT_CLOSE, self.OnDbmClose)
+        self.Bind(wx.EVT_SIZE, self.OnDbmSize)
 
         self.nbMainFrame = wx.Notebook(id=wxID_DBMNBMAINFRAME,
               name='nbMainFrame', parent=self, pos=wx.Point(0, 0),
@@ -1156,7 +1146,7 @@ class dbM(wx.Frame):
         self.python_exec_redirect_std = True
         pass
 
-    def OnDbMClose(self, event):
+    def OnDbmClose(self, event):
         event.Skip()
         self.on_quit()
         
@@ -1179,7 +1169,7 @@ class dbM(wx.Frame):
             pass
         print 'exit ...'
 
-    def OnDbMSize(self, event):
+    def OnDbmSize(self, event):
         self.time_changectrlpos.Start(100, True)
         event.Skip()
 
@@ -4807,7 +4797,7 @@ class dbM(wx.Frame):
         info.Developers = [u"windwiny.ubt@gmail.com", ]
 
         info.License = wx.lib.wordwrap.wordwrap(
-            _('''GPL V2/3'''), 
+            _('''GPL V2'''), 
             500, wx.ClientDC(self))
 
         wx.AboutBox(info)
@@ -4844,8 +4834,9 @@ class dbM(wx.Frame):
         print "SQL:",type(st),st
         db2db = self.get_db2db_from_connect_string(self.choiceConnectedDbnames.GetStringSelection(),False)
         db2db.cs.execute(st)
-        va = db2db.cs.fetchall()
-        print "LEN", len(va)
+        self.va = db2db.cs.fetchall()
+        print "LEN", len(self.va)
+        print self.va
         pass
     def x12(self, event):
         self.x11(event, True)

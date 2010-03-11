@@ -17,11 +17,11 @@ class dbConfig():
     '''configure file use sqlite3 database
     '''
 
-    def __init__(self):
+    def __init__(self, str_encode):
         '''
         Constructor
         '''
-        self.str_encode = locale.getdefaultlocale()[1]
+        self.str_encode = str_encode
         self.conf_password = None
         fi = sys.path[0] + os.path.sep + 'configd.sqlite3' 
         fs = os.path.isfile(fi)
@@ -44,7 +44,7 @@ class dbConfig():
         try:
             msg =  zlib.decompress(base64.b64decode(msg))
             return pickle.loads(msg)
-        except Exception:
+        except Exception as _ee:
             return msg
 
     decodess = __decodess
@@ -61,14 +61,15 @@ class dbConfig():
         
         try:
             if type(msg) == type('') and convStr2Uni:
-                try: msg = unicode(msg)
-                except Exception: pass
+                try: msg = msg.decode(self.str_encode)
+                except Exception as _ee:
+                    pass
             strs = base64.b64encode(zlib.compress(pickle.dumps(msg,1)))
             if replaceSingleQuote:
                 return strs.replace("'","''")
             else:
                 return strs
-        except Exception:
+        except Exception as _ee:
             return msg
         
     encodess = __encodess
@@ -97,7 +98,7 @@ class dbConfig():
         @param typestr:
         @param name:
         @param autocommit:
-        @return: 'Error' or rowcount
+        @return: 0 or rowcount
         '''
         assert codetype in ['sql', 'python', 'code']
         tablename = codetype + 'snippet'
@@ -108,7 +109,7 @@ class dbConfig():
             return self.__cs1.rowcount
         except Exception as ee:
             print ee
-            return 'Error'
+            return 0
 
     def snippet_table_insert(self, codetype, typestr, name, code, autocommit=True):
         ''' EXEC: insert into $tablename (type,name,code) values ('$typestr', '$name', '$code' )
@@ -408,7 +409,7 @@ class dbConfig():
                 try:
                     n = int(fetchAll)
                     ds = self.__cs1.fetchmany(n)
-                except Exception:
+                except Exception as _ee:
                     ds = self.__cs1.fetchall()
             for i in range(len(ds)):
                 l = []

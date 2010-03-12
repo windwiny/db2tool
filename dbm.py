@@ -1437,7 +1437,7 @@ class dbm(wx.Frame):
         @param status: True/False
         '''
         if status:
-            self.SetTitle(u'[%s] db2 tool' % self.choiceConnectedDbnames.GetStringSelection())
+            self.SetTitle(_('[%s] db2 tool') % self.choiceConnectedDbnames.GetStringSelection())
             if self.icon_conn16: self.SetIcon(self.icon_conn16)
             if self.icon_conn32: self.SetIcon(self.icon_conn32)
             self.textConnMsg.SetEditable(False)
@@ -1465,7 +1465,7 @@ class dbm(wx.Frame):
             self.btnExportDDL.Enable() #
             self.btnCompare.Enable()
         else:
-            self.SetTitle(u'db2tool: no connect')
+            self.SetTitle(_('db2tool: no connect'))
             if self.icon_noconn16: self.SetIcon(self.icon_noconn16)
             if self.icon_noconn32: self.SetIcon(self.icon_noconn32)
             self.textConnMsg.SetEditable(True)
@@ -1759,7 +1759,7 @@ class dbm(wx.Frame):
                 wx.MessageBox(msg.decode(self.str_encode), tap.decode(self.str_encode), wx.OK | wx.ICON_ERROR, dlg)
                 return
             except Exception as ee:
-                wx.MessageBox(str(ee).decode(self.str_encode), u'Exception', wx.OK | wx.ICON_ERROR, dlg)
+                wx.MessageBox(str(ee).decode(self.str_encode), _('Exception'), wx.OK | wx.ICON_ERROR, dlg)
                 return
             finally:
                 dlg.Destroy()
@@ -1792,7 +1792,7 @@ class dbm(wx.Frame):
 
             id_str = int(connstr.split(self.str_connectstr_split)[1])
             try:
-                dlg = wx.ProgressDialog(_('disconnect ...'), u' db2 connect reset [      ]', 100, self, style=wx.PD_ELAPSED_TIME)
+                dlg = wx.ProgressDialog(u' db2 connect reset [      ]', _('disconnect ...'), 100, self, style=wx.PD_ELAPSED_TIME)
                 for i in range(len(self.dbs_connected)):
                     item = self.dbs_connected[i]
                     db, cs, id_db = item[self.iDB], item[self.iCS], id(item[self.iDB])
@@ -2017,7 +2017,7 @@ class dbm(wx.Frame):
             order by procschema,procname
             ''')
         except Exception as _ee:
-            self.textProcedures.AppendText('eoor')
+            self.textProcedures.AppendText(u'eoor')
             return
 
         fd = dbX.cs.fetchall()
@@ -2191,7 +2191,7 @@ class dbm(wx.Frame):
                 ss = u''
             elif type(ss) == type(''):
                 ss = ss.decode(self.str_encode)
-        dlg = wx.TextEntryDialog(self.last_dlg, u'Search Text In Column %s :' % descstr, _('Input:'), ss, style=wx.OK | wx.CANCEL)
+        dlg = wx.TextEntryDialog(self.last_dlg, _('Search Text In Column %s :') % descstr, _('Input:'), ss, style=wx.OK | wx.CANCEL)
         try:
             if wx.ID_OK == dlg.ShowModal():
                 self.str_search = dlg.GetValue()
@@ -2211,7 +2211,7 @@ class dbm(wx.Frame):
                         gridX.SetGridCursor(i, col)
                         gridX.MakeCellVisible(i, col)
                         return
-                wx.MessageBox(u' Not Find "%s" !' % self.str_search, parent=self.last_dlg)
+                wx.MessageBox(_(' Not Find "%s" !') % self.str_search, parent=self.last_dlg)
         finally:
             dlg.Destroy()
             gridX.SetFocus()
@@ -2580,7 +2580,7 @@ class dbm(wx.Frame):
             print ee
 
         gridX.Refresh()
-        self.statusBar_exec.SetStatusText(u'Refreshed. %s ' % gridX.resmsg.decode(self.str_encode))
+        self.statusBar_exec.SetStatusText(_('Refreshed. %s ') % gridX.resmsg.decode(self.str_encode))
         pass
 
     def OnNbResultLeftDclick(self, event):
@@ -2650,7 +2650,7 @@ class dbm(wx.Frame):
     
             if currpos >= 2:
                 gridX = self.nbResult.GetPage(currpos)
-                self.statusBar_exec.SetStatusText(gridX.resmsg)
+                self.statusBar_exec.SetStatusText(gridX.resmsg.decode(self.str_encode))
                 msgs = '%s: %s.%s' % (gridX.dbname, gridX.tabschema, gridX.tabname)
                 self.statusBar_exec.SetStatusText(msgs.decode(self.str_encode), 2) #ok
                 #if len(gridX.sql) > 80:
@@ -2909,7 +2909,7 @@ class dbm(wx.Frame):
                             sqll = sql.lstrip()[:70].encode(self.str_encode)
                         except Exception as ee:
                             sqll = _(' ?? unknow split sql ')
-                        dlg = wx.ProgressDialog(_('Please waiting ...'), u'EXECUTE: %s\n  %s' % \
+                        dlg = wx.ProgressDialog(_('Please waiting ...'), _('EXECUTE: %s\n  %s') % \
                             (u'  '*30, sqll), 100, self.last_dlg, style=wx.PD_ELAPSED_TIME)
                             # | wx.PD_CAN_ABORT)
                     iprog = (iprog + 10) % 100
@@ -3017,7 +3017,7 @@ class dbm(wx.Frame):
         ##sql = sql.decode(self.str_encode)
         exec_time = str(execsql_time)
         exec_time = exec_time[:exec_time.find('.')+3]
-        self.statusBar_exec.SetStatusText(u'Selected in %s . Please waiting...' % exec_time)
+        self.statusBar_exec.SetStatusText(_('Selected in %s . Please waiting...') % exec_time)
         t1 = time.time()
         data, rese = self.fetchData(db2db.cs, sql)
         if rese and len(data) == 0: raise rese
@@ -3027,8 +3027,8 @@ class dbm(wx.Frame):
         #in DB2 v9.5 , except SQL0952N
         # if len(data) == 0
         rows, cols = len(data), len(desc)
-        resmsg_0 = '%d rows (%d cols) selected in %s sec.' % (rows, cols, exec_time)
-        self.statusBar_exec.SetStatusText(u'%s  Please waiting...' % resmsg_0.decode(self.str_encode))
+        resmsg_0 = _('%d rows (%d cols) selected in %s sec.') % (rows, cols, exec_time)
+        self.statusBar_exec.SetStatusText(_('%s  Please waiting...') % resmsg_0)
         tabschema, tabname = '', ''
 
         try:
@@ -3038,16 +3038,16 @@ class dbm(wx.Frame):
         t3 = time.time()
         fetchdata_time = str(time.time() - t1)
         fetchdata_time = fetchdata_time[:fetchdata_time.find('.')+3]
-        resmsg_s = '%s  Ftt: %s' % (resmsg_0, fetchdata_time)
         try:
-            self.new_page__show_data(data, desc, db2db, tabschema, tabname, sql, resmsg_s)
+            resmsg_s = u'%s  Ftt: %s' % (resmsg_0, fetchdata_time)
+            self.new_page__show_data(data, desc, db2db, tabschema, tabname, sql, resmsg_s.encode(self.str_encode))
         except Exception as ee:
             self.log_pg('-- Exception in new_page__show_data: %s\n' % str(ee))
         showdataongrid_time = str(time.time() - t3)
         showdataongrid_time = showdataongrid_time[:showdataongrid_time.find('.')+3]
-        msg = '%s  Ftt: %s Stt: %s' % (resmsg_0, fetchdata_time, showdataongrid_time)
-        self.statusBar_exec.SetStatusText(msg.decode(self.str_encode))
-        return resmsg_0, rese
+        msg = u'%s  Ftt: %s Stt: %s' % (resmsg_0, fetchdata_time, showdataongrid_time)
+        self.statusBar_exec.SetStatusText(msg)
+        return resmsg_0.encode(self.str_encode), rese
 
     # -------- control event --------
     def OnChoiceConnectedDbnamesChoice(self, event):
@@ -3150,8 +3150,8 @@ class dbm(wx.Frame):
                 iRes[0][1] += 1
                 if cs.description is not None and len(cs.description) > 0: # select statement
                     if sql[:6].upper() != 'SELECT':
-                        print ' = Error - Error - Error = '
-                        print sql
+                        self.log_pg(' = Error - Error - Error = ')
+                        self.log_pg(sql)
                     m = ''
                     lock.acquire();Res_or_Except.append((True, sql, t2-t1));lock.release()
                     while True:
@@ -3215,7 +3215,7 @@ class dbm(wx.Frame):
         msg2 = ''
         iProgmax = len(sqls)
         dlg = None
-        dlg = wx.ProgressDialog(_('Please waiting ...'), u'execute %3d/%3d statement %s\n\n\n' % \
+        dlg = wx.ProgressDialog(_('Please waiting ...'), _('execute %3d/%3d statement %s\n\n\n') % \
                 (iSucc + iFail, iSqls, u'=='*20), iProgmax+2, self.last_dlg, style=wx.PD_CAN_ABORT | wx.PD_ELAPSED_TIME)
         dlg.Update(1)
         llast_dlg = self.last_dlg
@@ -3246,10 +3246,10 @@ class dbm(wx.Frame):
                         sqlu = _(' ?? unknow split sql ')
                     if isCancel[0]: # 2@#$&@)#&@)
                         splittime = 0.3
-                        if dlg: dlg.Update(iSucc + iFail + 1, u'execute %3d ( %3d ) statement. Success %2d, Failed %2d\n\n Cancel, waiting ...' \
+                        if dlg: dlg.Update(iSucc + iFail + 1, _('execute %3d ( %3d ) statement. Success %2d, Failed %2d\n\n Cancel, waiting ...') \
                             % (iSucc + iFail, iSqls, iSucc, iFail))
                         continue
-                    msgs = 'execute %3d ( %3d ) statement. Success %2d, Failed %2d\n\n%s' \
+                    msgs = _('execute %3d ( %3d ) statement. Success %2d, Failed %2d\n\n%s') \
                             % (iSucc + iFail, iSqls, iSucc, iFail, sqlu)
                     if dlg and not isCancel[0] and not dlg.Update(iSucc + iFail + 1, msgs)[0]:
                         isCancel[0] = True
@@ -3344,7 +3344,6 @@ class dbm(wx.Frame):
                             ds.write('--%s' % m)
                             es.write(m)
                     else:   # Exception
-                        #wx.MessageBox(' Please Check Program ... 674353 .   not run here', 'ERROR', wx.OK, self.last_dlg)
                         try:
                             raise re1[2]
                         except DB2.Error as ee:
@@ -3386,7 +3385,7 @@ class dbm(wx.Frame):
             if dlg:
                 self.last_dlg = llast_dlg
                 if iFail == 0: dlg.Destroy()
-                else:dlg.Update(iProgmax+2, u'Done. \n\n  execute %3d ( %3d ) statement.\n  Success %2d, Failed %2d  ' \
+                else:dlg.Update(iProgmax+2, _('Done. \n\n  executed %3d ( %3d ) statement.\n  Success %2d, Failed %2d  ') \
                                 % (iSucc + iFail, iSqls, iSucc, iFail))
         pass
 
@@ -4304,7 +4303,10 @@ class dbm(wx.Frame):
             self.textConnMsg.ShowPosition(self.textConnMsg.GetLastPosition())
         except Exception as _ee:
             pass
-        print text,
+        try:
+            print text,
+        except Exception as _ee:
+            pass
 
     def log_usersql(self, text='', isSwitchTab=False, isWriteToFile=False):
         ''' append to stcExecLog,  and or SwitchTab,  and or WriteToFile
@@ -4332,7 +4334,10 @@ class dbm(wx.Frame):
             pass
 
     def log_user(self, text=''):
-        print text,
+        try:
+            print text,
+        except Exception as _ee:
+            pass
 
     def ss_set_icon(self, args=None):
         for i in images.index:
@@ -4373,7 +4378,7 @@ class dbm(wx.Frame):
             while item2:
                 if treeCtrl.GetItemText(item2) == itemname:
                     treeCtrl.Delete(item2)
-                    msg = u' delete %s ( %s, %s ) treeCtrl' % (codetype, itemtype, itemname)
+                    msg = u' treeCtrl: delete %s ( %s, %s )' % (codetype, itemtype, itemname)
                     self.log_pg(msg.encode(self.str_encode))
                     return
                 item2, cookie2 = treeCtrl.GetNextChild(item2, cookie2)
@@ -4406,7 +4411,8 @@ class dbm(wx.Frame):
             treeCtrl.Expand(root)
             treeCtrl.Expand(item)
             treeCtrl.SelectItem(its)
-            print ' add %s , %s ' % (itemtype, itemname)
+            msg = u' treeCtrl: add %s , %s ' % (itemtype, itemname)
+            self.log_pg(msg.encode(self.str_encode))
     
     def treectrl_selected(self, codetype, treectrl, stcctrl, item):
         '''
@@ -4506,7 +4512,7 @@ class dbm(wx.Frame):
             name = treeCtrl.GetItemText(item)
         except Exception as _ee:
             return
-        if wx.YES == wx.MessageBox(u'Delete [ %s %s ] ?' % (typestr, name), _('Ask'), wx.YES_NO | wx.NO_DEFAULT | wx.ICON_QUESTION, self.last_dlg):
+        if wx.YES == wx.MessageBox(_('Delete [ %s %s ] ?') % (typestr, name), _('Ask'), wx.YES_NO | wx.NO_DEFAULT | wx.ICON_QUESTION, self.last_dlg):
             n = self.cfg.snippet_table_delete(codetype, typestr, name)
             treeCtrl.Delete(item)
             treeCtrl.SelectItem(root)
@@ -4657,7 +4663,7 @@ class dbm(wx.Frame):
                 else:
                     ctl.SetSelectionStart(b)
                     ctl.SetSelectionEnd(e)
-                    wx.MessageBox(u"Cann't find the:\n%s" % findTxt, _('msg'), wx.OK, event.GetDialog())
+                    wx.MessageBox(_("Cann't find the:\n%s") % findTxt, _('msg'), wx.OK, event.GetDialog())
             elif issubclass(ctl.__class__, wx.TextCtrl):
                 pass
             elif issubclass(ctl.__class__, wx.grid.Grid):
@@ -4687,7 +4693,7 @@ class dbm(wx.Frame):
                         gridX.SetGridCursor(i, col)
                         gridX.MakeCellVisible(i, col)
                         return
-                wx.MessageBox(u"Cann't find the text at  %s:\n%s" % (descstr, findTxt), u'msg', wx.OK, event.GetDialog())
+                wx.MessageBox(_("Cann't find the text at  %s:\n%s") % (descstr, findTxt), _('msg'), wx.OK, event.GetDialog())
             elif issubclass(ctl.__class__, wx.ListCtrl):
                 pass
             elif issubclass(ctl.__class__, wx.ListBox):
@@ -4704,7 +4710,7 @@ class dbm(wx.Frame):
                         ctl.SetSelection(i)
                         wx.lib.pubsub.Publisher().sendMessage(ctl)
                         return
-                wx.MessageBox(u"Cann't find the :\n%s" % findTxt, u'msg', wx.OK, event.GetDialog())
+                wx.MessageBox(_("Cann't find the:\n%s") % findTxt, _('msg'), wx.OK, event.GetDialog())
             else:
                 pass
         except Exception as ee:
@@ -4805,8 +4811,12 @@ class dbm(wx.Frame):
     def testmsg(self):
         d1 = _('testmsg')
         d2 = 'testmsg'
-        print type(d1),type(d2),d1,d2
         wx.MessageBox(d1,d2,wx.OK)
+        print type(d1),type(d2)
+        try:
+            print d1,d2
+        except:
+            pass
 
     def sqlcr(self ,event):
         print '--sqlcr call'

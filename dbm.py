@@ -1119,8 +1119,12 @@ class dbm(wx.Frame):
 
         print 'self.str_encode = %s' % self.str_encode
         self.logpgf.write(' default locale = %s\n' % self.str_encode)
-        if os.name == 'nt': self.NL='\r\n'
-        else:               self.NL='\n'
+        if os.name == 'nt':
+            self.NL='\r\n'
+            self.iswin = True
+        else:
+            self.NL='\n'
+            self.iswin = False
 
         self.cs_time_out = 100
         self.dbs_all = []
@@ -3150,7 +3154,7 @@ class dbm(wx.Frame):
                 iRes[0][1] += 1
                 if cs.description is not None and len(cs.description) > 0: # select statement
                     if sql[:6].upper() != 'SELECT':
-                        self.log_pg(' = Error - Error - Error = ')
+                        self.log_pg(' = Error - Error - Error = \n')
                         self.log_pg(sql)
                     m = ''
                     lock.acquire();Res_or_Except.append((True, sql, t2-t1));lock.release()
@@ -4298,7 +4302,10 @@ class dbm(wx.Frame):
     # ---------- user functions ----------
     def log_pg(self, text=''):
         try:
-            self.logpgf.write(text)
+            if self.iswin:
+                self.logpgf.write(text.replace(self.NL, '\n'))
+            else:
+                self.logpgf.write(text)
             self.textConnMsg.AppendText(text.decode(self.str_encode))
             self.textConnMsg.ShowPosition(self.textConnMsg.GetLastPosition())
         except Exception as _ee:
@@ -4316,7 +4323,10 @@ class dbm(wx.Frame):
         '''
         try:
             if isWriteToFile:
-                self.logsqlf.write(text)
+                if self.iswin:
+                    self.logsqlf.write(text.replace(self.NL, '\n'))
+                else:
+                    self.logsqlf.write(text)
             if isSwitchTab:
                 self.nbResult.SetSelection(0)
             self.stcExecLog.AppendText(text.decode(self.str_encode))
@@ -4329,7 +4339,10 @@ class dbm(wx.Frame):
         @param text:
         '''
         try:
-            self.logsqlf.write(text)
+            if self.iswin:
+                self.logsqlf.write(text.replace(self.NL, '\n'))
+            else:
+                self.logsqlf.write(text)
         except Exception as _ee:
             pass
 
@@ -4378,7 +4391,7 @@ class dbm(wx.Frame):
             while item2:
                 if treeCtrl.GetItemText(item2) == itemname:
                     treeCtrl.Delete(item2)
-                    msg = u' treeCtrl: delete %s ( %s, %s )' % (codetype, itemtype, itemname)
+                    msg = u' treeCtrl: delete %s ( %s, %s )\n' % (codetype, itemtype, itemname)
                     self.log_pg(msg.encode(self.str_encode))
                     return
                 item2, cookie2 = treeCtrl.GetNextChild(item2, cookie2)
@@ -4411,7 +4424,7 @@ class dbm(wx.Frame):
             treeCtrl.Expand(root)
             treeCtrl.Expand(item)
             treeCtrl.SelectItem(its)
-            msg = u' treeCtrl: add %s , %s ' % (itemtype, itemname)
+            msg = u' treeCtrl: add %s , %s\n' % (itemtype, itemname)
             self.log_pg(msg.encode(self.str_encode))
     
     def treectrl_selected(self, codetype, treectrl, stcctrl, item):

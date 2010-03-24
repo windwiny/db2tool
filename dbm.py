@@ -27,11 +27,13 @@ import gettext
 from mods import config2
 from mods import sqld
 from mods import sqlformatter
+from mods import db2util2
 
 try:
     import DB2
-except:
+except Exception as ee:
     print '''  Not import PyDB2, python setup.py install -c mingw32'''
+    print ee.args[0]
     sys.exit(3)
 
 try:
@@ -40,8 +42,8 @@ try:
     import wx.stc
     import wx.lib.pubsub
     import wx.lib.wordwrap
-except:
-    print '''  Not import wx '''
+except Exception as ee:
+    print '''  Not import wx ''', ee.args[0]
     sys.exit(2)
 
 from mods import stc2
@@ -59,27 +61,27 @@ def create(parent):
  wxID_DBMBTNPYTHONSAVE, wxID_DBMBTNREFRESHDB, wxID_DBMBTNREFRESHDBS, 
  wxID_DBMBTNROLLBACK, wxID_DBMBTNSAVEDBS, wxID_DBMBTNSQLRELOAD, 
  wxID_DBMBTNSQLSAVE, wxID_DBMBUTTON4, wxID_DBMCHKLINK, wxID_DBMCHKLOGSQLS, 
- wxID_DBMCHKSHOWSQLSRES, wxID_DBMCHOICECONNECTEDDBNAMES, wxID_DBMCHOICEDB1, 
- wxID_DBMCHOICEDB2, wxID_DBMCHOICESCHEMA1, wxID_DBMCHOICESCHEMA2, 
- wxID_DBMCHOICETYPE, wxID_DBMGRIDDBS, wxID_DBMGRIDM11, wxID_DBMGRIDM12, 
- wxID_DBMGRIDM13, wxID_DBMGRIDM21, wxID_DBMGRIDM22, wxID_DBMGRIDM23, 
- wxID_DBMLSTPROCEDURES, wxID_DBMLSTT1, wxID_DBMLSTT2, wxID_DBMNBDBS, 
- wxID_DBMNBM1, wxID_DBMNBM2, wxID_DBMNBMAINFRAME, wxID_DBMNBRESULT, 
- wxID_DBMPANELM1, wxID_DBMPANELM2, wxID_DBMPCODESNIPPET, wxID_DBMPCONNECT, 
- wxID_DBMPEXECUTE, wxID_DBMPOBJECTS, wxID_DBMPPROCEDURES, wxID_DBMPPYTHON, 
- wxID_DBMPWELCOME, wxID_DBMSPLITTERWINDOWCODESNIPPET, 
- wxID_DBMSPLITTERWINDOWEXEC, wxID_DBMSPLITTERWINDOWEXEC1, 
- wxID_DBMSPLITTERWINDOWOBJECT, wxID_DBMSPLITTERWINDOWOBJECT1, 
- wxID_DBMSPLITTERWINDOWOBJECT2, wxID_DBMSPLITTERWINDOWPROCEDURES, 
- wxID_DBMSPLITTERWINDOWPYTHON, wxID_DBMSPLITTERWINDOWPYTHON1, 
- wxID_DBMSTATICBITMAP1, wxID_DBMSTATICTEXT1, wxID_DBMSTATICTEXT3, 
- wxID_DBMSTATICTEXT4, wxID_DBMSTATICTEXT7, wxID_DBMSTATICTEXT_MSG, 
- wxID_DBMSTATUSBAR_EXEC, wxID_DBMSTATUSBAR_OBJECT, wxID_DBMTEXTACTSQL, 
- wxID_DBMTEXTCODESNIPPET, wxID_DBMTEXTCONNMSG, wxID_DBMTEXTPROCEDURES, 
- wxID_DBMTREECODESNIPPET, wxID_DBMTREEPYTHON, wxID_DBMTREESQLS, 
- wxID_DBMTXTACTTIME, wxID_DBMTXTI1, wxID_DBMTXTI2, wxID_DBMTXTSPLITCHAR, 
- wxID_DBMTXTTIMEOUT, 
-] = [wx.NewId() for _init_ctrls in range(86)]
+ wxID_DBMCHKSHOWONTEXT, wxID_DBMCHKSHOWSQLSRES, 
+ wxID_DBMCHOICECONNECTEDDBNAMES, wxID_DBMCHOICEDB1, wxID_DBMCHOICEDB2, 
+ wxID_DBMCHOICESCHEMA1, wxID_DBMCHOICESCHEMA2, wxID_DBMCHOICETYPE, 
+ wxID_DBMGRIDDBS, wxID_DBMGRIDM11, wxID_DBMGRIDM12, wxID_DBMGRIDM13, 
+ wxID_DBMGRIDM21, wxID_DBMGRIDM22, wxID_DBMGRIDM23, wxID_DBMLSTPROCEDURES, 
+ wxID_DBMLSTT1, wxID_DBMLSTT2, wxID_DBMNBDBS, wxID_DBMNBM1, wxID_DBMNBM2, 
+ wxID_DBMNBMAINFRAME, wxID_DBMNBRESULT, wxID_DBMPANELM1, wxID_DBMPANELM2, 
+ wxID_DBMPCODESNIPPET, wxID_DBMPCONNECT, wxID_DBMPEXECUTE, wxID_DBMPOBJECTS, 
+ wxID_DBMPPROCEDURES, wxID_DBMPPYTHON, wxID_DBMPWELCOME, 
+ wxID_DBMSPLITTERWINDOWCODESNIPPET, wxID_DBMSPLITTERWINDOWEXEC, 
+ wxID_DBMSPLITTERWINDOWEXEC1, wxID_DBMSPLITTERWINDOWOBJECT, 
+ wxID_DBMSPLITTERWINDOWOBJECT1, wxID_DBMSPLITTERWINDOWOBJECT2, 
+ wxID_DBMSPLITTERWINDOWPROCEDURES, wxID_DBMSPLITTERWINDOWPYTHON, 
+ wxID_DBMSPLITTERWINDOWPYTHON1, wxID_DBMSTATICBITMAP1, wxID_DBMSTATICTEXT1, 
+ wxID_DBMSTATICTEXT3, wxID_DBMSTATICTEXT4, wxID_DBMSTATICTEXT7, 
+ wxID_DBMSTATICTEXT_MSG, wxID_DBMSTATUSBAR_EXEC, wxID_DBMSTATUSBAR_OBJECT, 
+ wxID_DBMTEXTACTSQL, wxID_DBMTEXTCODESNIPPET, wxID_DBMTEXTCONNMSG, 
+ wxID_DBMTEXTPROCEDURES, wxID_DBMTREECODESNIPPET, wxID_DBMTREEPYTHON, 
+ wxID_DBMTREESQLS, wxID_DBMTXTACTTIME, wxID_DBMTXTI1, wxID_DBMTXTI2, 
+ wxID_DBMTXTSPLITCHAR, wxID_DBMTXTTIMEOUT, 
+] = [wx.NewId() for _init_ctrls in range(87)]
 
 [wxID_DBMTIME_CHANGECTRLPOS, wxID_DBMTIME_KEEPACTIVE, 
  wxID_DBMTIME_SETEDITFOCUS, 
@@ -747,10 +749,15 @@ class dbm(wx.Frame):
 
         self.chkShowSqlsRes = wx.CheckBox(id=wxID_DBMCHKSHOWSQLSRES,
               label=_(u'Show Normal sql Message'), name=u'chkShowSqlsRes',
-              parent=self.Pexecute, pos=wx.Point(912, 8), size=wx.Size(160, 22),
+              parent=self.Pexecute, pos=wx.Point(912, 8), size=wx.Size(64, 22),
               style=0)
         self.chkShowSqlsRes.SetValue(True)
         self.chkShowSqlsRes.SetToolTipString(_(u'show normal execute message to TextCtrl  ! Speed in execute much sqls '))
+
+        self.chkShowOnText = wx.CheckBox(id=wxID_DBMCHKSHOWONTEXT,
+              label=_(u'ShowOnText'), name=u'chkShowOnText', parent=self.Pexecute,
+              pos=wx.Point(976, 8), size=wx.Size(72, 22), style=0)
+        self.chkShowOnText.SetToolTipString(_(u'show select result text format'))
 
         self.btnExecSqls = wx.Button(id=wxID_DBMBTNEXECSQLS,
               label=_(u'E&xec SQLs'), name=u'btnExecSqls', parent=self.Pexecute,
@@ -2219,11 +2226,11 @@ class dbm(wx.Frame):
         finally:
             dlg.Destroy()
             gridX.SetFocus()
-
-    def popup2_CopyLineSQL(self, event):
-        self.copy_value_thread(self.copy_line_sql)
         
     def copy_value_thread(self, function):
+        ''' show progress dialog and create thread, watch progress value
+        @param function:
+        '''
         t1 = time.time()
         progress = [-1, 100, False]  # pos, count, Break
         th = threading.Thread(target=function, args=((progress,)))
@@ -2247,6 +2254,9 @@ class dbm(wx.Frame):
         finally:
             if dlg: dlg.Destroy()
         print ' copy', progress[1], 'lines used time:', time.time() - t1
+
+    def popup2_CopyLineSQL(self, event):
+        self.copy_value_thread(self.copy_line_sql)
                 
     def copy_line_sql(self, progress):
         gridX = self.gridX
@@ -2258,28 +2268,26 @@ class dbm(wx.Frame):
         tabname = gridX.tabname
         cols = len(desc)
 
-        inss = ''
-        for col in range(cols):
-            inss += """, %s""" % desc[col][0]
-        inss = inss[2:]
+        inss = ', '.join([i[0] if i[0]==i[0].upper().strip() else '"%s"' % i[0] for i in desc])
         rl = '%s ' % self.NL if len(inss) > 80 else ''
+        inss = 'insert into %s.%s ( %s )%s values ( %%s ) ;%s' % (tabschema, tabname, inss, rl, self.NL)
         inssqls = StringIO.StringIO()
         progress[1] = len(Rows)
         for row in Rows:
             if progress[2]: break
             progress[0] += 1
-            v = ''
+            v = []
             for col in range(cols):
                 if not data[row][col] is None:
                     if desc[col][1] in ['INTEGER', 'SMALLINT', 'BIGINT', 'INT']:
-                        v += ', %d' % data[row][col]
+                        v.append('%d' % data[row][col])
                     elif desc[col][1] in ['DECIMAL', 'REAL', 'DOUBLE']:
-                        v += ', %f' % data[row][col]
+                        v.append('%f' % data[row][col])
                     else:
-                        v += """, '%s'""" % str(data[row][col]).replace("'", "''")
+                        v.append("""'%s'""" % str(data[row][col]).replace("'", "''"))
                 else:
-                    v += ', NULL'
-            inssqls.write('insert into %s.%s ( %s )%s values ( %s ) ;%s' % (tabschema, tabname, inss, rl, v[2:], self.NL))
+                    v.append('NULL')
+            inssqls.write(inss % ', '.join(v))
         self.copy_text_to_clipboard(inssqls)
 
     def popup2_CopyCondSelectSQL(self, event):
@@ -2341,10 +2349,11 @@ class dbm(wx.Frame):
         for i in range(TL[0][0], RB[0][0]+1):
             if progress[2]: break
             progress[0] += 1
-            ls = ''
+            ls = []
             for j in range(TL[0][1], RB[0][1]+1):
-                ls += ',%s' % gridX.GetCellValue(i, j)
-            ds.write('%s%s' % (ls[1:], self.NL))
+                ls.append('%s' % gridX.GetCellValue(i, j))
+            ds.write('%s' % ','.join(ls))
+            ds.write(self.NL)
         self.copy_text_to_clipboard(ds)
         pass
 
@@ -2544,7 +2553,8 @@ class dbm(wx.Frame):
             fetchdata_time = str(time.time() - t1)
             fetchdata_time = fetchdata_time[:fetchdata_time.find('.')+3]
             rows, cols = len(data), len(gridX.description2)
-            gridX.resmsg = '%d rows (%d cols) selected in %s sec.  Ftt: %s' % (rows, cols, exec_time, fetchdata_time)
+            msg = _('%d rows (%d cols) selected in %s sec.') % (rows, cols, exec_time)
+            gridX.resmsg = msg.encode(self.str_encode) + '  Ftt: %s' % (fetchdata_time)
             gridX.desc = [i[0] for i in description2]
             if rese and len(data)>0:
                 cont = True
@@ -2723,7 +2733,8 @@ class dbm(wx.Frame):
             gridX.resmsg = resmsg
         else:
             rows, cols = len(data), len(description2)
-            gridX.resmsg = '%d rows (%d cols) selected in %s sec.' % (rows, cols, 0.0)
+            msg = _('%d rows (%d cols) selected in %s sec.') % (rows, cols, 0.0)
+            gridX.resmsg = msg.encode(self.str_encode)
         if not hasattr(gridX,'dbname'): gridX.dbname = ''
         if not hasattr(gridX,'dbuser'): gridX.dbuser = ''
         if not hasattr(gridX,'tabschema'): gridX.tabschema = ''
@@ -3011,7 +3022,7 @@ class dbm(wx.Frame):
             if dlg: dlg.Destroy()
         return das, rese
 
-    def showData(self, db2db, sql, execsql_time=0.0):
+    def showData(self, db2db, sql, execsql_time=0.0, showtext=False):
         '''show data
         @param db2db: Db2db()
         @param sql: sql
@@ -3035,6 +3046,12 @@ class dbm(wx.Frame):
         self.statusBar_exec.SetStatusText(_('%s  Please waiting...') % resmsg_0)
         tabschema, tabname = '', ''
 
+        if showtext:
+            va = db2util2.cprint(sql, data, desc, self.NL).expandtabs(16)
+            self.stcExecData.AppendText(va.decode(self.str_encode))
+            return resmsg_0.encode(self.str_encode), rese
+        else:
+            pass
         try:
             tabschema,tabname=self.analyse_select_SQL_TableName(sql, db2db.dbuser)
         except Exception as ee:
@@ -3154,8 +3171,10 @@ class dbm(wx.Frame):
                 iRes[0][1] += 1
                 if cs.description is not None and len(cs.description) > 0: # select statement
                     if sql[:6].upper() != 'SELECT':
-                        self.log_pg(' = Error - Error - Error = \n')
+                        self.log_pg('\n = Error - Error - Error = ')
                         self.log_pg(sql)
+                        self.log_pg(str(cs.description))
+                        self.log_pg('Error ==\n')
                     m = ''
                     lock.acquire();Res_or_Except.append((True, sql, t2-t1));lock.release()
                     while True:
@@ -3192,13 +3211,14 @@ class dbm(wx.Frame):
         '''
         assert type(sqlstr) in [type(''), type(u'')]
 
-        dbX = self.get_db2db_from_connect_string(self.choiceConnectedDbnames.GetStringSelection(), True)
+        dbX = self.get_db2db_from_connect_string(newcs=True)
         if not dbX.cs:
             wx.MessageBox(_('No has database connect  !'), _('Error'), wx.OK | wx.ICON_ERROR, self.last_dlg)
             return
 
         self.islogsql = self.chkLogSqls.GetValue()
         self.isshowsql = self.chkShowSqlsRes.GetValue()
+        self.isshowontext = self.chkShowOnText.GetValue()
         isShowCurrentSql = True
         sqls, beee, eeed, spt = self.get_sqls_from_stcSQLs(isSingle, sqlstr)
         if spt > 2: print ' split sqls use', spt
@@ -3266,7 +3286,7 @@ class dbm(wx.Frame):
                                 m = ''
                                 if re1[0]:  #'SELECT'
                                     try:
-                                        remsg, rese = self.showData(dbX, re1[1], re1[2])
+                                        remsg, rese = self.showData(dbX, re1[1], re1[2], self.isshowontext)
                                         m = ' %s\n\n' % remsg
                                         ds.write('--%s' % m)
                                         if rese: raise rese
@@ -3333,7 +3353,7 @@ class dbm(wx.Frame):
                     m = ''
                     if re1[0]:  #'SELECT'
                         try:
-                            remsg, rese = self.showData(dbX, re1[1], re1[2])
+                            remsg, rese = self.showData(dbX, re1[1], re1[2], self.isshowontext)
                             m = '-- %s\n' % remsg
                             ds.write('--%s' % m)
                             if rese: raise rese
@@ -3479,49 +3499,53 @@ class dbm(wx.Frame):
         cols = len(desc)
         if data_type == 1:
             ftype = 'SQL'
-            inss = ''
-            for col in range(cols):
-                inss += """, %s""" % desc[col][0]
-            inss = inss[2:]
+#            inss = ''
+#            for col in range(cols):
+#                inss += """, %s""" % desc[col][0]
+#            inss = inss[2:]
+            inss = ', '.join([i[0] if i[0]==i[0].upper().strip() else '"%s"' % i[0] for i in desc])
             rl = '%s ' % self.NL if len(inss) > 80 else ''
+            inss = 'insert into %s.%s ( %s )%s values ( %%s ) ;%s' % (tabschema, tabname, inss, rl, self.NL)
             for row in range(rows):
-                v = ''
+                v = []
                 for col in range(cols):
                     if not data[row][col] is None:
                         if desc[col][1] in ['INTEGER', 'SMALLINT', 'BIGINT', 'INT']:
-                            v += ', %d' % data[row][col]
+                            v.append('%d' % data[row][col])
                         elif desc[col][1] in ['DECIMAL', 'REAL', 'DOUBLE']: #bug2
-                            v += ', %f' % data[row][col]        # %s > %f
+                            v.append('%f' % data[row][col])        # %s > %f
                         else:
-                            v += """, '%s'""" % str(data[row][col]).replace("'", "''") #bug3
+                            v.append("'%s'" % str(data[row][col]).replace("'", "''")) #bug3
                     else:
-                        v += ', NULL'
+                        v.append('NULL')
                 #v = str(data[i])  # encoding problem
                 #v = v[2:].replace('None', 'NULL')
-                inssql1 = 'insert into %s.%s ( %s )%s values ( %s ) ;%s' % (tabschema, tabname, inss, rl, v[2:], self.NL)
+                inssql1 = inss % ', '.join(v)
                 ff.write(inssql1)
                 iC[0] += 1
                 if isBrk[0]: break
         elif data_type == 2:
             ftype = 'DEL'
             for row in range(rows):
-                v = ''
+                v = []
                 for col in range(cols):
                     if not data[row][col] is None:
                         if desc[col][1] in ['INTEGER', 'SMALLINT', 'BIGINT', 'INT']:
-                            v += ',%d' % data[row][col]
+                            v.append('%d' % data[row][col])
                         elif desc[col][1] in ['DECIMAL', 'REAL', 'DOUBLE']:
-                            v += ',%f' % data[row][col]
+                            v.append('%f' % data[row][col])
                         else:
-                            v += ''',"%s"''' % str(data[row][col]).replace('"', '""')
+                            v.append('''"%s"''' % str(data[row][col]).replace('"', '""'))
                     else:
-                        v += ','
-                ff.write('%s%s' % (v[1:], self.NL))
+                        v.append('')
+                ff.write('%s' % ','.join(v))
+                ff.write(self.NL)
                 iC[0] += 1
                 if isBrk[0]: break
         elif data_type == 3:
             ftype = 'IXF'
-            print 'un implement'
+            print 
+
         return ftype
 
     def export_data(self, data_type, gridX):
@@ -3539,17 +3563,17 @@ class dbm(wx.Frame):
         fext = u'Any files (*.*)|*.*'
         if data_type == 1:
             fext = u'%s|%s' % (u'Insert SQL file (*.sql)|*.sql', fext)
+            ftype = 'SQL'
         elif data_type == 2:
             fext = u'%s|%s' % (u'DB2 DEL file (*.del)|*.del', fext)
+            ftype = 'DEL'
         elif data_type == 3:
             fext = u'%s|%s' % (u'DB2 IXF file (*.ixf)|*.ixf', fext)
+            ftype = 'IXF'
         else:
             print ' Error export type'
             return False
 
-        if data_type == 1:  ftype = 'SQL'
-        elif data_type == 2:ftype = 'DEL'
-        elif data_type == 3:ftype = 'IXF'
         savefile = ''
         dfn = '%s.%s.%s_%s' % (gridX.dbname, gridX.tabschema, gridX.tabname, time.strftime(self.str_time_strf))
         dlg = wx.FileDialog(self, message=_("Save file as ..."),
@@ -3567,24 +3591,31 @@ class dbm(wx.Frame):
         iC = [0]
         isBrk = [False]
         msg = 'export  "%s"."%s"   of  "%s" ' % (gridX.tabschema, gridX.tabname, ftype)  + '  Write %4d' + ' of %d records.' % len(data)
-        dlg = wx.ProgressDialog(_('Please waiting ...'), msg.decode(self.str_encode) % 0, len(data), self, style=wx.PD_CAN_ABORT | wx.PD_ELAPSED_TIME)
-        th = threading.Thread(target=self.export_data_thread, args=(data_type, data, gridX, ff, isBrk, iC))
-        th.start()
-        while True:
-            th.join(0.5)
-            if th.isAlive():
-                try:
-                    msgs = msg % iC[0]
-                    msgs = msgs.decode(self.str_encode)
-                except Exception:
-                    msgs = u'ex'
-                if not isBrk[0] and not dlg.Update(iC[0], msgs)[0]:
-                    isBrk[0] = True
-            else:
-                break
-        dlg.Destroy()
-
-        ff.close()
+        if ftype == 'IXF':
+            ff.close()
+            try:
+                i = gridX.db2db.db.export(ftype, gridX.sql, ff.name.encode(self.str_encode), ff.name.encode(self.str_encode)+'.msg')
+                print i
+            except Exception as _ee:
+                pass
+        else:
+            dlg = wx.ProgressDialog(_('Please waiting ...'), msg.decode(self.str_encode) % 0, len(data), self, style=wx.PD_CAN_ABORT | wx.PD_ELAPSED_TIME)
+            th = threading.Thread(target=self.export_data_thread, args=(data_type, data, gridX, ff, isBrk, iC))
+            th.start()
+            while True:
+                th.join(0.5)
+                if th.isAlive():
+                    try:
+                        msgs = msg % iC[0]
+                        msgs = msgs.decode(self.str_encode)
+                    except Exception:
+                        msgs = u'ex'
+                    if not isBrk[0] and not dlg.Update(iC[0], msgs)[0]:
+                        isBrk[0] = True
+                else:
+                    break
+            dlg.Destroy()
+            ff.close()
         st = os.stat(ff.name)
         s_time = str(time.time() - t1)
         msgs = 'export to "%s" of %s "%s"\n  Write %d bytes, Used %s sec.\n' % \
@@ -3592,7 +3623,9 @@ class dbm(wx.Frame):
         self.log_pg(msgs)
         if st.st_size <= 10 * 2**20:
             try:
-                dlg = wx.TextEntryDialog(self, u'', _('open file ?'), u'%s "%s"' % (self.editor, ff.name))
+                if ftype == 'IXF': fn = ff.name + '.msg'
+                else: fn = ff.name
+                dlg = wx.TextEntryDialog(self, u'', _('open file ?'), u'%s "%s"' % (self.editor, fn))
                 if wx.ID_OK == dlg.ShowModal():
                     os.system(dlg.GetValue().encode(self.str_encode))
             except Exception as _ee:
@@ -4855,7 +4888,7 @@ class dbm(wx.Frame):
         if S:
             st = st.encode(self.str_encode)
         print "SQL:",type(st),st
-        db2db = self.get_db2db_from_connect_string(self.choiceConnectedDbnames.GetStringSelection(),False)
+        db2db = self.get_db2db_from_connect_string()
         db2db.cs.execute(st)
         self.va = db2db.cs.fetchall()
         print "LEN", len(self.va)

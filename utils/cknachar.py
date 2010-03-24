@@ -1,8 +1,6 @@
 #-*- coding:utf-8 -*-
 
 import os, sys
-import gettext
-gettext.install('dbtool', 'locale', True)
 
 if len(sys.argv)>1:
     fn=sys.argv[1]

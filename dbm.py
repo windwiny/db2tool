@@ -2173,15 +2173,15 @@ class dbm(wx.Frame):
     # -------- grid context menu --------
     def popup2_ExportSQL(self, event):
         self.stcSQLs.SetFocus()
-        self.export_data(1,self.gridX)
+        self.export_data(1, self.gridX, wx.GetKeyState(wx.WXK_SHIFT))
 
     def popup2_ExportDEL(self, event):
         self.stcSQLs.SetFocus()
-        self.export_data(2,self.gridX)
+        self.export_data(2, self.gridX, wx.GetKeyState(wx.WXK_SHIFT))
 
     def popup2_ExportIXF(self, event):
         self.stcSQLs.SetFocus()
-        self.export_data(3,self.gridX)
+        self.export_data(3, self.gridX, wx.GetKeyState(wx.WXK_SHIFT))
 
     def popup2_SelectAll(self, event):
         gridX = self.gridX
@@ -2260,7 +2260,16 @@ class dbm(wx.Frame):
                 
     def copy_line_sql(self, progress):
         gridX = self.gridX
-        Rows = gridX.GetSelectedRows()
+        Rows = []
+        CEs = gridX.GetSelectedCells()
+        Rows += [ij[0] for ij in CEs]
+        TLs = gridX.GetSelectionBlockTopLeft()
+        BRs = gridX.GetSelectionBlockBottomRight()
+        for i in range(len(TLs)):
+            Rows += [ij for ij in range(TLs[i][0], BRs[i][0]+1)]
+        Rows += gridX.GetSelectedRows()
+        Rows.sort()
+        Rows = list(set(Rows))
         if len(Rows) <= 0: return
         data = gridX.GetTable().data
         desc = gridX.description2
@@ -2392,9 +2401,6 @@ class dbm(wx.Frame):
         if event.ShiftDown():
             gridX.SelectRow(row, True)
             return
-        TL = gridX.GetSelectionBlockTopLeft()
-        RB = gridX.GetSelectionBlockBottomRight()
-        Rows = gridX.GetSelectedRows()
         if not hasattr(self, "popup2Copy"):
             self.popup2Copy = wx.NewId()
             self.popup2Find = wx.NewId()
@@ -2430,10 +2436,6 @@ class dbm(wx.Frame):
         menu.AppendItem(item2ExportSQL)
         menu.AppendItem(item2ExportDEL)
         menu.AppendItem(item2ExportIXF)
-        if len(Rows) <= 0:
-            item2CopyLineSQL.Enable(False)
-        if (len(TL) <= 0 or len(RB) <=0) and len(Rows) <=0:
-            gridX.SelectRow(row)
         self.PopupMenu(menu)
         menu.Destroy()
 #        print 'cell pos: %d %d' % (event.GetRow(), event.GetCol())
@@ -3488,27 +3490,29 @@ class dbm(wx.Frame):
 
     def export_data_thread(self, *args):
         '''
-        @param *args: ( data_type, data, gridX, ff, isBrk[], iC[] )
+        @param *args: ( data_type, data, gridX, ff, isBrk[], iC[] , colss[])
         '''
-        data_type, data, gridX, ff, isBrk, iC = args
+        data_type, data, gridX, ff, isBrk, iC, colss = args
         # export
         desc = gridX.description2
         tabschema = gridX.tabschema
         tabname = gridX.tabname
-        rows = len(data)
-        cols = len(desc)
+        rowss = range(len(data))
+        if not colss:
+            colss = [i for i in range(len(desc))]
+
         if data_type == 1:
             ftype = 'SQL'
 #            inss = ''
-#            for col in range(cols):
+#            for col in range(len(desc)):
 #                inss += """, %s""" % desc[col][0]
 #            inss = inss[2:]
-            inss = ', '.join([i[0] if i[0]==i[0].upper().strip() else '"%s"' % i[0] for i in desc])
+            inss = ', '.join([desc[i][0] if desc[i][0]==desc[i][0].upper().strip() else '"%s"' % desc[i][0] for i in colss])
             rl = '%s ' % self.NL if len(inss) > 80 else ''
             inss = 'insert into %s.%s ( %s )%s values ( %%s ) ;%s' % (tabschema, tabname, inss, rl, self.NL)
-            for row in range(rows):
+            for row in rowss:
                 v = []
-                for col in range(cols):
+                for col in colss:
                     if not data[row][col] is None:
                         if desc[col][1] in ['INTEGER', 'SMALLINT', 'BIGINT', 'INT']:
                             v.append('%d' % data[row][col])
@@ -3526,9 +3530,9 @@ class dbm(wx.Frame):
                 if isBrk[0]: break
         elif data_type == 2:
             ftype = 'DEL'
-            for row in range(rows):
+            for row in rowss:
                 v = []
-                for col in range(cols):
+                for col in colss:
                     if not data[row][col] is None:
                         if desc[col][1] in ['INTEGER', 'SMALLINT', 'BIGINT', 'INT']:
                             v.append('%d' % data[row][col])
@@ -3548,7 +3552,7 @@ class dbm(wx.Frame):
 
         return ftype
 
-    def export_data(self, data_type, gridX):
+    def export_data(self, data_type, gridX, isSelectColumns=False):
         '''export to data.
         @param data_type: 1: SQL     2: DEL    3: IXF
         @return : True or False
@@ -3559,6 +3563,28 @@ class dbm(wx.Frame):
             print ' un grid'
             return False
         #print ' get data table ID: %s' % id(data) #check []
+
+        colss = None
+        if isSelectColumns:
+            desc = gridX.description2
+            colss = []
+            for i in range(len(desc)):
+                if not desc[i][1] in ['TIMESTAMP', ]:
+                    colss.append(i)
+            dlg = wx.MultiChoiceDialog(self.last_dlg, _('Please choose columns:'), _('Please choose'), 
+                                       ['\t'.join([str(j) for j in i]).expandtabs(24) for i in desc])
+            fts = self.cfg.get_config(u'defaultfontname', u'Courier New')
+            ftss = self.cfg.get_config(u'defaultfontsize', 9)
+            ff = wx.Font(ftss, wx.SWISS, wx.NORMAL, wx.NORMAL, False, fts)
+            dlg.GetChildren()[1].SetFont(ff)
+            dlg.SetSelections(colss)
+            dlg.SetSize(wx.Size(580,400))
+            dlg.Center()
+            if dlg.ShowModal() != wx.ID_OK:
+                return False
+            colss = dlg.GetSelections()
+            if colss == []:
+                return False
 
         fext = u'Any files (*.*)|*.*'
         if data_type == 1:
@@ -3600,7 +3626,7 @@ class dbm(wx.Frame):
                 pass
         else:
             dlg = wx.ProgressDialog(_('Please waiting ...'), msg.decode(self.str_encode) % 0, len(data), self, style=wx.PD_CAN_ABORT | wx.PD_ELAPSED_TIME)
-            th = threading.Thread(target=self.export_data_thread, args=(data_type, data, gridX, ff, isBrk, iC))
+            th = threading.Thread(target=self.export_data_thread, args=(data_type, data, gridX, ff, isBrk, iC, colss))
             th.start()
             while True:
                 th.join(0.5)

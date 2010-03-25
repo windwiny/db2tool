@@ -2268,8 +2268,8 @@ class dbm(wx.Frame):
         for i in range(len(TLs)):
             Rows += [ij for ij in range(TLs[i][0], BRs[i][0]+1)]
         Rows += gridX.GetSelectedRows()
-        Rows.sort()
         Rows = list(set(Rows))
+        Rows.sort()
         if len(Rows) <= 0: return
         data = gridX.GetTable().data
         desc = gridX.description2
@@ -2395,49 +2395,36 @@ class dbm(wx.Frame):
         event.Skip()
         gridX = self.FindWindowById(event.GetId())
         self.gridX = gridX
+        gridX.SetFocus()
         row, col = event.GetRow(), event.GetCol()
         gridX.SetGridCursor(row, col)
         self.gridrightclick = (row, col)
         if event.ShiftDown():
             gridX.SelectRow(row, True)
             return
-        if not hasattr(self, "popup2Copy"):
-            self.popup2Copy = wx.NewId()
-            self.popup2Find = wx.NewId()
-            self.popup2SelectAll = wx.NewId()
-            self.popup2CopyLineSQL = wx.NewId()
-            self.popup2CopyCondSelectSQL = wx.NewId()
-            self.popup2ExportSQL = wx.NewId()
-            self.popup2ExportDEL = wx.NewId()
-            self.popup2ExportIXF = wx.NewId()
-            self.Bind(wx.EVT_MENU, self.popup2_Copy, id=self.popup2Copy)
-            self.Bind(wx.EVT_MENU, self.popup2_Find, id=self.popup2Find)
-            self.Bind(wx.EVT_MENU, self.popup2_SelectAll, id=self.popup2SelectAll)
-            self.Bind(wx.EVT_MENU, self.popup2_CopyLineSQL, id=self.popup2CopyLineSQL)
-            self.Bind(wx.EVT_MENU, self.popup2_CopyCondSelectSQL, id=self.popup2CopyCondSelectSQL)
-            self.Bind(wx.EVT_MENU, self.popup2_ExportSQL, id=self.popup2ExportSQL)
-            self.Bind(wx.EVT_MENU, self.popup2_ExportDEL, id=self.popup2ExportDEL)
-            self.Bind(wx.EVT_MENU, self.popup2_ExportIXF, id=self.popup2ExportIXF)
-        menu = wx.Menu()
-        tbns = self.nbResult.GetPageText(self.nbResult.GetSelection())
-        item2Copy = wx.MenuItem(menu, self.popup2Copy, _("&Copy Selected \tCtrl-C"))
-        item2Find = wx.MenuItem(menu, self.popup2Find, _("&Find Value"))
-        item2SelectAll = wx.MenuItem(menu, self.popup2SelectAll, _("Select &All"))
-        item2CopyLineSQL = wx.MenuItem(menu, self.popup2CopyLineSQL, _("Copy Selected Line(s) Data to &SQL"))
-        item2CopyCondSelectSQL = wx.MenuItem(menu, self.popup2CopyCondSelectSQL, _("Create Selec&t SQL condition "))
-        item2ExportSQL = wx.MenuItem(menu, self.popup2ExportSQL, _('&Export SQL \t"%s"') % tbns)
-        item2ExportDEL = wx.MenuItem(menu, self.popup2ExportDEL, _('&Export DEL \t"%s"') % tbns)
-        item2ExportIXF = wx.MenuItem(menu, self.popup2ExportIXF, _('&Export IXF \t"%s"') % tbns)
-        menu.AppendItem(item2Copy)
-        menu.AppendItem(item2Find)
-        menu.AppendItem(item2SelectAll)
-        menu.AppendItem(item2CopyLineSQL)
-        menu.AppendItem(item2CopyCondSelectSQL)
-        menu.AppendItem(item2ExportSQL)
-        menu.AppendItem(item2ExportDEL)
-        menu.AppendItem(item2ExportIXF)
-        self.PopupMenu(menu)
-        menu.Destroy()
+        
+        iMtext, iMfunc, iMid, iMitem = 0, 1, 2, 3   # MenuItemText, MenuItemFunct, MenuItemId, MenuItem
+        if not hasattr(self, "popupMenuGrid"):
+            self.popupMenuGrid = wx.Menu()
+            self.menttextGrid = [
+                    [_("&Copy Selected Text"),                  self.popup2_Copy,               None, None],
+                    [_("&Find Value"),                          self.popup2_Find,               None, None],
+                    [_("Select &All"),                          self.popup2_SelectAll,          None, None],
+                    [_("Copy Selected Line(s) Data to &SQL"),   self.popup2_CopyLineSQL,        None, None],
+                    [_("Create Selec&t SQL condition "),        self.popup2_CopyCondSelectSQL,  None, None],
+                    [_('&Export to SQL\tor (SHIFT)'),           self.popup2_ExportSQL,          None, None],
+                    [_('&Export to DEL\tor (SHIFT)'),           self.popup2_ExportDEL,          None, None],
+                    [_('&Export to IXF'),                       self.popup2_ExportIXF,          None, None],
+                   ]
+            for m in self.menttextGrid:
+                m[iMid] = wx.NewId()
+                self.Bind(wx.EVT_MENU, m[iMfunc], id=m[iMid])
+                m[iMitem] = wx.MenuItem(self.popupMenuGrid, m[iMid], m[iMtext])
+                self.popupMenuGrid.AppendItem(m[iMitem])
+                
+        self.PopupMenu(self.popupMenuGrid)
+        #popupMenuGrid.Destroy()
+        
 #        print 'cell pos: %d %d' % (event.GetRow(), event.GetCol())
 #        print ' selected status:  Cells, Rows, Cols, LeftTop , BottomRight'
 #        nbX = self.FindWindowById(event.GetId())
@@ -2607,41 +2594,31 @@ class dbm(wx.Frame):
         event.Skip()
         curpos = self.nbResult.HitTest(event.GetPosition())[0]
         self.nbResult.SetSelection(curpos)
-        if not hasattr(self, "popupClose"):
-            self.popupShowSQL = wx.NewId()
-            self.popupClose = wx.NewId()
-            self.popupCloseOther = wx.NewId()
-            self.popupCloseAll = wx.NewId()
-            self.popupSwitchPage = wx.NewId()
-            self.popupRefreshData = wx.NewId()
-            self.Bind(wx.EVT_MENU, self.popup_ShowSQL, id=self.popupShowSQL)
-            self.Bind(wx.EVT_MENU, self.popup_ClosePage, id=self.popupClose)
-            self.Bind(wx.EVT_MENU, self.popup_CloseOtherPage, id=self.popupCloseOther)
-            self.Bind(wx.EVT_MENU, self.popup_CloseAllPage, id=self.popupCloseAll)
-            self.Bind(wx.EVT_MENU, self.popup_SwitchPage, id=self.popupSwitchPage)
-            self.Bind(wx.EVT_MENU, self.popup_RefreshData, id=self.popupRefreshData)
-        menu = wx.Menu()
-        itemShowSQL = wx.MenuItem(menu, self.popupShowSQL, _("&Show SQL"))
-        itemClose = wx.MenuItem(menu, self.popupClose, _('&Close Current Page'))
-        itemCloseOther = wx.MenuItem(menu, self.popupCloseOther, _('Clos&e Other Pages'))
-        itemCloseAll = wx.MenuItem(menu, self.popupCloseAll, _('Close &All Pages'))
-        itemSwitchPage = wx.MenuItem(menu, self.popupSwitchPage, _('S&witch Log Page'))
-        itemRefreshData = wx.MenuItem(menu, self.popupRefreshData, _("&Refresh Data"))
-        menu.AppendItem(itemShowSQL)
-        menu.AppendItem(itemClose)
-        menu.AppendItem(itemCloseOther)
-        menu.AppendItem(itemCloseAll)
-        menu.AppendItem(itemSwitchPage)
-        menu.AppendItem(itemRefreshData)
-        if curpos < 2:
-            itemShowSQL.Enable(False)
-            itemClose.Enable(False)
-            itemRefreshData.Enable(False)
-        if self.nbResult.GetPageCount() <= 2:
-            itemCloseOther.Enable(False)
-            itemCloseAll.Enable(False)
-        self.PopupMenu(menu)
-        menu.Destroy()
+        iMtext, iMfunc, iMid, iMitem = 0, 1, 2, 3   # MenuItemText, MenuItemFunct, MenuItemId, MenuItem
+        if not hasattr(self, "popupMenuNb"):
+            self.popupMenuNb = wx.Menu()
+            self.menttextNb = [
+                    [_("&Show SQL"),            self.popup_ShowSQL,         None, None],
+                    [_('&Close Current Page'),  self.popup_ClosePage,       None, None],
+                    [_('Clos&e Other Pages'),   self.popup_CloseOtherPage,  None, None],
+                    [_('Close &All Pages'),     self.popup_CloseAllPage,    None, None],
+                    [_('S&witch Log Page'),     self.popup_SwitchPage,      None, None],
+                    [_("&Refresh Data"),        self.popup_RefreshData,     None, None],
+                   ]
+            for m in self.menttextNb:
+                m[iMid] = wx.NewId()
+                self.Bind(wx.EVT_MENU, m[iMfunc], id=m[iMid])
+                m[iMitem] = wx.MenuItem(self.popupMenuNb, m[iMid], m[iMtext])
+                self.popupMenuNb.AppendItem(m[iMitem])
+        isLogText = curpos < 2
+        self.menttextNb[0][iMitem].Enable(not isLogText)
+        self.menttextNb[1][iMitem].Enable(not isLogText)
+        self.menttextNb[5][iMitem].Enable(not isLogText)
+        is1page = self.nbResult.GetPageCount() <= 2
+        self.menttextNb[2][iMitem].Enable(not is1page)
+        self.menttextNb[3][iMitem].Enable(not is1page)
+        self.PopupMenu(self.popupMenuNb)
+        #self.popupMenuNb.Destroy()
         pass
 
     def OnNbResultNotebookPageChanged(self, event):
@@ -3548,7 +3525,7 @@ class dbm(wx.Frame):
                 if isBrk[0]: break
         elif data_type == 3:
             ftype = 'IXF'
-            print 
+            print
 
         return ftype
 
@@ -3565,13 +3542,13 @@ class dbm(wx.Frame):
         #print ' get data table ID: %s' % id(data) #check []
 
         colss = None
-        if isSelectColumns:
+        if isSelectColumns and data_type in [1, 2]:
             desc = gridX.description2
             colss = []
             for i in range(len(desc)):
                 if not desc[i][1] in ['TIMESTAMP', ]:
                     colss.append(i)
-            dlg = wx.MultiChoiceDialog(self.last_dlg, _('Please choose columns:'), _('Please choose'), 
+            dlg = wx.MultiChoiceDialog(self.last_dlg, _('Please choose export columns:'), _('Please choose'), 
                                        ['\t'.join([str(j) for j in i]).expandtabs(24) for i in desc])
             fts = self.cfg.get_config(u'defaultfontname', u'Courier New')
             ftss = self.cfg.get_config(u'defaultfontsize', 9)
@@ -3603,7 +3580,7 @@ class dbm(wx.Frame):
         savefile = ''
         dfn = '%s.%s.%s_%s' % (gridX.dbname, gridX.tabschema, gridX.tabname, time.strftime(self.str_time_strf))
         dlg = wx.FileDialog(self, message=_("Save file as ..."),
-                defaultFile=dfn.decode(self.str_encode),
+                defaultFile=dfn.decode(self.str_encode).replace('"',''),
                 wildcard=fext , style=wx.SAVE)
         if dlg.ShowModal() == wx.ID_OK:
             savefile = dlg.GetPath()

@@ -15,113 +15,113 @@ msgstr ""
 "Generated-By: pygettext.py 1.5\n"
 
 
-#: dbm.py:209
+#: dbm.py:238
 msgid "split H"
 msgstr ""
 
-#: dbm.py:211
+#: dbm.py:240
 msgid "split V"
 msgstr ""
 
-#: dbm.py:217
+#: dbm.py:246
 msgid "&Find...\tCtrl-F"
 msgstr "查找...\tCtrl-F"
 
-#: dbm.py:219
+#: dbm.py:248
 msgid "&Replace...\tCtrl-H"
 msgstr "替换...\tCtrl-H"
 
-#: dbm.py:229
+#: dbm.py:258
 msgid "&About ..."
 msgstr "关于(&A)..."
 
-#: dbm.py:237
+#: dbm.py:266
 msgid "&Save Selected Text\tCtrl-S"
 msgstr "&S保存选中的文本\tCtrl-S"
 
-#: dbm.py:239
+#: dbm.py:268
 msgid "&Reload from config\tCtrl-R"
 msgstr "&R从配置文件读取\tCtrl-R"
 
-#: dbm.py:241
+#: dbm.py:270
 msgid "E&xit"
 msgstr "退出(&X)"
 
-#: dbm.py:254
+#: dbm.py:283
 msgid "execute selected SQLs\tCtrl-Return"
 msgstr "执行选中的SQL\tCtrl-Return"
 
-#: dbm.py:257
+#: dbm.py:286
 msgid "execute selected single\tCtrl-Shift-Return"
 msgstr "执行选中的SQL，单条\tCtrl-Shift-Return"
 
-#: dbm.py:260
+#: dbm.py:289
 msgid "format selected SQL\tCtrl-Shift-F"
 msgstr "格式化选中的SQL语句\tCtrl-Shift-F"
 
-#: dbm.py:278 dbm.py:288
+#: dbm.py:307 dbm.py:317
 msgid "column"
 msgstr "字段"
 
-#: dbm.py:280 dbm.py:290
+#: dbm.py:309 dbm.py:319
 msgid "data"
 msgstr "数据"
 
-#: dbm.py:282 dbm.py:292
+#: dbm.py:311 dbm.py:321
 msgid "count"
 msgstr "数据行"
 
-#: dbm.py:298
+#: dbm.py:327
 msgid "&1.Welcome"
 msgstr "&1.配置"
 
-#: dbm.py:300
+#: dbm.py:329
 msgid "&2.Connect"
 msgstr "&2.连接"
 
-#: dbm.py:302
+#: dbm.py:331
 msgid "&C.ode Snippet"
 msgstr "&C.代码片段"
 
-#: dbm.py:304
+#: dbm.py:333
 msgid "&P.rocedures"
 msgstr "&P.存储过程"
 
-#: dbm.py:306
+#: dbm.py:335
 msgid "&O.bjects"
 msgstr "&O.数据对象"
 
-#: dbm.py:308
+#: dbm.py:337
 msgid "&E.xecute sqls"
 msgstr "&E.查询"
 
-#: dbm.py:310
+#: dbm.py:339
 msgid "P.&ython"
 msgstr ""
 
-#: dbm.py:316
+#: dbm.py:345
 msgid "DBALIAS"
 msgstr "数据编目"
 
-#: dbm.py:318 dbm.py:970
+#: dbm.py:347 dbm.py:999
 msgid "Log"
 msgstr "日志"
 
-#: dbm.py:358
+#: dbm.py:387
 msgid "dbtool"
 msgstr ""
 
-#: dbm.py:367
+#: dbm.py:396
 msgid ""
 "234\n"
 "234234234"
 msgstr ""
 
-#: dbm.py:381
+#: dbm.py:410
 msgid "Db2"
 msgstr ""
 
-#: dbm.py:385
+#: dbm.py:414
 msgid ""
 "# features\n"
 "keep active\n"
@@ -153,350 +153,350 @@ msgstr ""
 "Boa Constructor\n"
 "Eclipse + pyDev\n"
 
-#: dbm.py:394
+#: dbm.py:423
 msgid "connect setting"
 msgstr "连接配置"
 
-#: dbm.py:407
+#: dbm.py:436
 msgid "Change Fonts"
 msgstr "设置字体"
 
-#: dbm.py:414
+#: dbm.py:443
 msgid "&Refresh"
 msgstr "刷新(&R)"
 
-#: dbm.py:419
+#: dbm.py:448
 msgid "&Save"
 msgstr "保存(&S)"
 
-#: dbm.py:426
+#: dbm.py:455
 msgid "Rescan catalog"
 msgstr "重查编目"
 
-#: dbm.py:429
+#: dbm.py:458
 msgid "Re scan node,db catalog, use few time."
 msgstr "重新查询节点，数据库编目。需要一些时间"
 
-#: dbm.py:434
+#: dbm.py:463
 msgid "Disconnect All"
 msgstr "断开全部连接"
 
-#: dbm.py:441
+#: dbm.py:470
 msgid "Keep Active second: "
 msgstr "保持活动：间隔(秒)"
 
-#: dbm.py:471 dbm.py:715 dbm.py:825
+#: dbm.py:500 dbm.py:744 dbm.py:854
 msgid "Reload"
 msgstr "刷新"
 
-#: dbm.py:478 dbm.py:720 dbm.py:831
+#: dbm.py:507 dbm.py:749 dbm.py:860
 msgid "SaveSel"
 msgstr "保存"
 
-#: dbm.py:485
+#: dbm.py:514
 msgid "db2 ? sqlXXXX"
 msgstr ""
 
-#: dbm.py:491
+#: dbm.py:520
 msgid "button4"
 msgstr ""
 
-#: dbm.py:523
+#: dbm.py:552
 msgid "Call Proc"
 msgstr "执行存储过程"
 
-#: dbm.py:530
+#: dbm.py:559
 msgid "List All Procedures"
 msgstr "列出存储过程"
 
-#: dbm.py:559 dbm.py:4175
+#: dbm.py:588 dbm.py:4229
 msgid "compare"
 msgstr "比较"
 
-#: dbm.py:573
+#: dbm.py:602
 msgid "Link"
 msgstr ""
 
-#: dbm.py:649
+#: dbm.py:678
 msgid "Export DDL"
 msgstr "导出DDL"
 
-#: dbm.py:656
+#: dbm.py:685
 msgid "format Spaces"
 msgstr "格式化"
 
-#: dbm.py:662
+#: dbm.py:691
 msgid "Compare"
 msgstr "比较"
 
-#: dbm.py:737
+#: dbm.py:766
 msgid "set execute timeout value (single,multi)"
 msgstr "设置超时时间(秒) (single,multi)"
 
-#: dbm.py:742
+#: dbm.py:771
 msgid "query split char"
 msgstr "SQL语句分隔符"
 
-#: dbm.py:745
+#: dbm.py:774
 msgid "Log Sqls"
 msgstr "保存SQLs"
 
-#: dbm.py:748
+#: dbm.py:777
 msgid "log sql statement to log file"
 msgstr "在日志文件中保存执行过的SQL"
 
-#: dbm.py:751
+#: dbm.py:780
 msgid "Show Normal sql Message"
 msgstr "显示SQL"
 
-#: dbm.py:755
+#: dbm.py:784
 msgid "show normal execute message to TextCtrl  ! Speed in execute much sqls "
 msgstr "显示执行过的SQL！不显示可加快执行速度"
 
-#: dbm.py:758
+#: dbm.py:787
 msgid "ShowOnText"
 msgstr "显示为文本"
 
-#: dbm.py:760
+#: dbm.py:789
 msgid "show select result text format"
 msgstr "把查询结果显示为文本"
 
-#: dbm.py:763
+#: dbm.py:792
 msgid "E&xec SQLs"
 msgstr "执行(&X)"
 
-#: dbm.py:765
+#: dbm.py:794
 msgid "Ctrl-Enter execute selected multi sql statement"
 msgstr "Ctrl-Enter 执行选中的多条SQL"
 
-#: dbm.py:770
+#: dbm.py:799
 msgid "Exec 1"
 msgstr "执行1条"
 
-#: dbm.py:773
+#: dbm.py:802
 msgid "Shift-Enter execute selected single sql statement "
 msgstr "Shift-Enter 把选中SQL当一条执行"
 
-#: dbm.py:777
+#: dbm.py:806
 msgid "Commit"
 msgstr "提交"
 
-#: dbm.py:784
+#: dbm.py:813
 msgid "Rollback"
 msgstr "回滚"
 
-#: dbm.py:837
+#: dbm.py:866
 msgid "e&xec"
 msgstr "执行(&X)"
 
-#: dbm.py:839
+#: dbm.py:868
 msgid "Ctrl-Enter execute selected code"
 msgstr "Ctrl-Enter 执行选中的 PYTHON 语句"
 
-#: dbm.py:893
+#: dbm.py:922
 msgid "&File"
 msgstr "文件(&F)"
 
-#: dbm.py:894
+#: dbm.py:923
 msgid "&Edit"
 msgstr "编辑(&E)"
 
-#: dbm.py:895
+#: dbm.py:924
 msgid "E&xecute"
 msgstr "查询(&X)"
 
-#: dbm.py:896
+#: dbm.py:925
 msgid "&Window"
 msgstr "窗口(&W)"
 
-#: dbm.py:897
+#: dbm.py:926
 msgid "&Help"
 msgstr "帮助(&H)"
 
-#: dbm.py:971
+#: dbm.py:1000
 msgid "Result T"
 msgstr "结果 T"
 
-#: dbm.py:1451
+#: dbm.py:1477
 msgid "[%s] db2 tool"
 msgstr ""
 
-#: dbm.py:1479
+#: dbm.py:1505
 msgid "db2tool: no connect"
 msgstr ""
 
-#: dbm.py:1748
+#: dbm.py:1774
 msgid "No user or password !"
 msgstr "用户或密码错"
 
-#: dbm.py:1748 dbm.py:2526 dbm.py:3194 dbm.py:4164 dbm.py:4520 dbm.py:4527
-#: dbm.py:4531
+#: dbm.py:1774 dbm.py:2555 dbm.py:3239 dbm.py:3361 dbm.py:4218 dbm.py:4574
+#: dbm.py:4581 dbm.py:4585
 msgid "Error"
 msgstr "错误"
 
-#: dbm.py:1757
+#: dbm.py:1783
 msgid "connect database ?"
 msgstr "连接"
 
-#: dbm.py:1761
+#: dbm.py:1787
 msgid "connect ..."
 msgstr "正在连接..."
 
-#: dbm.py:1773
+#: dbm.py:1799
 msgid "Exception"
 msgstr "出错"
 
-#: dbm.py:1800
+#: dbm.py:1826
 msgid "disconnect database ? "
 msgstr "断开"
 
-#: dbm.py:1806 dbm.py:1917
+#: dbm.py:1832 dbm.py:1943
 msgid "disconnect ..."
 msgstr "正在断开..."
 
-#: dbm.py:1984
+#: dbm.py:2010
 msgid " Rescan system DB2 catalog directory ... "
 msgstr "正在查询编目..."
 
-#: dbm.py:1984 dbm.py:2099 dbm.py:2238 dbm.py:2905 dbm.py:3220 dbm.py:3427
-#: dbm.py:3604
+#: dbm.py:2010 dbm.py:2127 dbm.py:2266 dbm.py:2934 dbm.py:3286 dbm.py:3467
+#: dbm.py:3658
 msgid "Please waiting ..."
 msgstr "请稍候..."
 
-#: dbm.py:2002
+#: dbm.py:2028
 msgid " Disconnect All  ??"
 msgstr " 断开全部连接 ？"
 
-#: dbm.py:2002 dbm.py:2456 dbm.py:2466 dbm.py:2988 dbm.py:3448 dbm.py:3459
-#: dbm.py:4535 dbm.py:4563 dbm.py:4669
+#: dbm.py:2028 dbm.py:2485 dbm.py:2495 dbm.py:3017 dbm.py:3252 dbm.py:3493
+#: dbm.py:3502 dbm.py:4589 dbm.py:4617 dbm.py:4723
 msgid "Ask"
 msgstr "注意"
 
-#: dbm.py:2099
+#: dbm.py:2127
 msgid "Sort data, Please waiting ... "
 msgstr "正在排序数据，请稍候..."
 
-#: dbm.py:2205
+#: dbm.py:2233
 msgid "Search Text In Column %s :"
 msgstr ""
 
-#: dbm.py:2205 dbm.py:4310
+#: dbm.py:2233 dbm.py:4364
 msgid "Input:"
 msgstr "请输入："
 
-#: dbm.py:2225
+#: dbm.py:2253
 msgid " Not Find \"%s\" !"
 msgstr ""
 
-#: dbm.py:2238 dbm.py:2246
+#: dbm.py:2266 dbm.py:2274
 msgid "On copy value ( %d / %d ) ..."
 msgstr "正在复制数据 ( %d / %d ) ..."
 
-#: dbm.py:2248
+#: dbm.py:2276
 msgid "On copy ( %d / %d ) , CANCELED ..."
 msgstr "已复制 ( %d / %d ) ，正在取消 ..."
 
-#: dbm.py:2409
+#: dbm.py:2438
 msgid "&Copy Selected Text"
 msgstr "&C复制选中的文本"
 
-#: dbm.py:2410
+#: dbm.py:2439
 msgid "&Find Value"
 msgstr "&F查找"
 
-#: dbm.py:2411
+#: dbm.py:2440
 msgid "Select &All"
 msgstr "&A全选"
 
-#: dbm.py:2412
+#: dbm.py:2441
 msgid "Copy Selected Line(s) Data to &SQL"
 msgstr "&S从选中行生成Insert语句"
 
-#: dbm.py:2413
+#: dbm.py:2442
 msgid "Create Selec&t SQL condition "
 msgstr "&T从选中块生成条件查询语句"
 
-#: dbm.py:2414
+#: dbm.py:2443
 msgid "&Export to SQL\tor (SHIFT)"
 msgstr "&E导出为 SQL\t可按 SHIFT"
 
-#: dbm.py:2415
+#: dbm.py:2444
 msgid "&Export to DEL\tor (SHIFT)"
 msgstr "&E导出为 DEL\t可按 SHIFT"
 
-#: dbm.py:2416
+#: dbm.py:2445
 msgid "&Export to IXF"
 msgstr "&E导出为 IXF\t可按 SHIFT"
 
-#: dbm.py:2456
+#: dbm.py:2485
 msgid "Close All Data Page?"
 msgstr "关闭 全部 查询的数据窗口？"
 
-#: dbm.py:2466
+#: dbm.py:2495
 msgid "Close Other no selected Data Page?"
 msgstr "关闭 其它全部 查询的数据窗口？"
 
-#: dbm.py:2499
+#: dbm.py:2528
 msgid "Please waiting refresh ..."
 msgstr "正在查询数据，请稍候..."
 
-#: dbm.py:2521
+#: dbm.py:2550
 msgid "execute sql on other user connect ?"
 msgstr "使用其它用户执行查询？"
 
-#: dbm.py:2522
+#: dbm.py:2551
 msgid "Info"
 msgstr "注意"
 
-#: dbm.py:2526
+#: dbm.py:2555
 msgid " Database Disconnected ? "
 msgstr " 连接已断开？"
 
-#: dbm.py:2544 dbm.py:2714 dbm.py:3023
+#: dbm.py:2573 dbm.py:2743 dbm.py:3052
 msgid "%d rows (%d cols) selected in %s sec."
 msgstr "%d 行 (%d 列), 使用 %s 秒."
 
-#: dbm.py:2585
+#: dbm.py:2614
 msgid "Refreshed. %s "
 msgstr "已刷新. %s"
 
-#: dbm.py:2600
+#: dbm.py:2629
 msgid "&Show SQL"
 msgstr "&S显示 SQL"
 
-#: dbm.py:2601
+#: dbm.py:2630
 msgid "&Close Current Page"
 msgstr "&C关闭当前页"
 
-#: dbm.py:2602
+#: dbm.py:2631
 msgid "Clos&e Other Pages"
 msgstr "&E关闭其它查询页"
 
-#: dbm.py:2603
+#: dbm.py:2632
 msgid "Close &All Pages"
 msgstr "&A关闭全部查询页"
 
-#: dbm.py:2604
+#: dbm.py:2633
 msgid "S&witch Log Page"
 msgstr "&W切换日志页"
 
-#: dbm.py:2605
+#: dbm.py:2634
 msgid "&Refresh Data"
 msgstr "&R重新执行查询"
 
-#: dbm.py:2654
+#: dbm.py:2683
 msgid " Execute Log"
 msgstr "执行日志"
 
-#: dbm.py:2656
+#: dbm.py:2685
 msgid " Text format result"
 msgstr "文本格式结果"
 
-#: dbm.py:2904 dbm.py:3248
+#: dbm.py:2933 dbm.py:3316
 msgid " ?? unknow split sql "
 msgstr " 无法分割SQL "
 
-#: dbm.py:2905
+#: dbm.py:2934
 msgid ""
 "EXECUTE: %s\n"
 "  %s"
@@ -504,27 +504,31 @@ msgstr ""
 "正在执行: %s\n"
 "  %s"
 
-#: dbm.py:2955
+#: dbm.py:2984
 msgid "execute sql success, fetch data ( %d rows ), Please waiting ...   "
 msgstr "执行成功，正在获取数据( %d 行)，请稍候..."
 
-#: dbm.py:2987
+#: dbm.py:3016
 msgid "fetch %d rows, may be have more rows,  continue?"
 msgstr "已取得 %d 行，可能还有更多，继续吗？"
 
-#: dbm.py:3013
+#: dbm.py:3042
 msgid "Selected in %s . Please waiting..."
 msgstr "已查询 %s. 请稍候..."
 
-#: dbm.py:3024
+#: dbm.py:3053
 msgid "%s  Please waiting..."
 msgstr "%s  请稍候..."
 
-#: dbm.py:3194
+#: dbm.py:3239
 msgid "No has database connect  !"
 msgstr "没有选择连接！"
 
-#: dbm.py:3220
+#: dbm.py:3252
+msgid "Auto Commit on ?? rows"
+msgstr "自动提交行数"
+
+#: dbm.py:3286
 msgid ""
 "execute %3d/%3d statement %s\n"
 "\n"
@@ -534,7 +538,7 @@ msgstr ""
 "\n"
 "\n"
 
-#: dbm.py:3251
+#: dbm.py:3319
 msgid ""
 "execute %3d ( %3d ) statement. Success %2d, Failed %2d\n"
 "\n"
@@ -544,7 +548,7 @@ msgstr ""
 "\n"
 " 取消, 请稍候..."
 
-#: dbm.py:3254
+#: dbm.py:3322
 msgid ""
 "execute %3d ( %3d ) statement. Success %2d, Failed %2d\n"
 "\n"
@@ -554,11 +558,11 @@ msgstr ""
 "\n"
 "%s"
 
-#: dbm.py:3291 dbm.py:3296 dbm.py:3304
+#: dbm.py:3365 dbm.py:3376
 msgid "Error, Continue ? "
 msgstr "出错，继续吗？"
 
-#: dbm.py:3390
+#: dbm.py:3430
 msgid ""
 "Done. \n"
 "\n"
@@ -570,75 +574,75 @@ msgstr ""
 "  已执行 %3d ( %3d ) 条语句.\n"
 "  成功 %2d, 出错 %2d  "
 
-#: dbm.py:3427
+#: dbm.py:3467
 msgid "in split query statement "
 msgstr "正在分析SQL语句"
 
-#: dbm.py:3448
+#: dbm.py:3493
 msgid " Commit ?     "
 msgstr " 提交 ？"
 
-#: dbm.py:3459
-msgid " Rollback ?            A  applied be lost "
-msgstr " 放弃吗？ 上次提交以来执行的修改将丢失！"
+#: dbm.py:3502
+msgid " Rollback ?            few change may be lost "
+msgstr " 放弃吗？ 上次提交之后所做的修改将丢失！"
 
-#: dbm.py:3550
+#: dbm.py:3604
 msgid "Please choose"
 msgstr "请选择"
 
-#: dbm.py:3550
+#: dbm.py:3604
 msgid "Please choose export columns:"
 msgstr "请选择要导出的列"
 
-#: dbm.py:3581
+#: dbm.py:3635
 msgid "Save file as ..."
 msgstr "保存为..."
 
-#: dbm.py:3630
+#: dbm.py:3684
 msgid "open file ?"
 msgstr "打开文件？"
 
-#: dbm.py:4178
+#: dbm.py:4232
 msgid "message"
 msgstr "信息"
 
-#: dbm.py:4254
+#: dbm.py:4308
 msgid "exec ..."
 msgstr "正在执行..."
 
-#: dbm.py:4520
+#: dbm.py:4574
 msgid " no select value"
 msgstr " 没有选择内容"
 
-#: dbm.py:4522
+#: dbm.py:4576
 msgid "Please input TYPE and NAME, comma split : "
 msgstr "请输入 TYPE 和 NAME，使用逗号(,)分隔"
 
-#: dbm.py:4527 dbm.py:4531
+#: dbm.py:4581 dbm.py:4585
 msgid "  input error"
 msgstr " 输入数据错"
 
-#: dbm.py:4535
+#: dbm.py:4589
 msgid "Data alread exists. override ? "
 msgstr "相同项目已存在，覆盖吗？"
 
-#: dbm.py:4563
+#: dbm.py:4617
 msgid "Delete [ %s %s ] ?"
 msgstr "要删除 [ %s %s ] 吗？"
 
-#: dbm.py:4643
+#: dbm.py:4697
 msgid "Input db2 statcode. SQL1234 "
 msgstr "请输入 SQL1234 格式的错误代码"
 
-#: dbm.py:4669
+#: dbm.py:4723
 msgid "Exit program ?"
 msgstr "退出程序？"
 
-#: dbm.py:4714 dbm.py:4744 dbm.py:4761
+#: dbm.py:4768 dbm.py:4798 dbm.py:4815
 msgid "msg"
 msgstr "注意"
 
-#: dbm.py:4714 dbm.py:4761
+#: dbm.py:4768 dbm.py:4815
 msgid ""
 "Cann't find the:\n"
 "%s"
@@ -646,7 +650,7 @@ msgstr ""
 "找不到:\n"
 "%s"
 
-#: dbm.py:4744
+#: dbm.py:4798
 msgid ""
 "Cann't find the text at  %s:\n"
 "%s"
@@ -654,26 +658,26 @@ msgstr ""
 "在 %s 找不到:\n"
 "%s"
 
-#: dbm.py:4786
+#: dbm.py:4840
 msgid "Find ..."
 msgstr "查找..."
 
-#: dbm.py:4796
+#: dbm.py:4850
 msgid "Find & Replace ..."
 msgstr "查找/替换..."
 
-#: dbm.py:4846
+#: dbm.py:4900
 msgid "(C) 2010 Programmers and Coders Everywhere"
 msgstr ""
 
-#: dbm.py:4848
+#: dbm.py:4902
 msgid "A \"db2 tool\" program is a software program that IBM/DB2 utility tool"
 msgstr ""
 
-#: dbm.py:4854
+#: dbm.py:4908
 msgid "GPL V2"
 msgstr ""
 
-#: dbm.py:4860
+#: dbm.py:4914
 msgid "testmsg"
 msgstr "testmsg 翻译，测试 "

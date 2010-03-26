@@ -27,7 +27,6 @@ import gettext
 from mods import config2
 from mods import sqld
 from mods import sqlformatter
-from mods import db2util2
 
 try:
     import DB2
@@ -35,6 +34,8 @@ except Exception as ee:
     print '''  Not import PyDB2, python setup.py install -c mingw32'''
     print ee.args[0]
     sys.exit(3)
+
+from mods import db2util2
 
 try:
     import wx
@@ -183,6 +184,34 @@ class Db2_connected():
         self.dbuser = args[4]
         self.password = args[5]
         self.comment = args[6]
+
+class ExecSqlsStatus():
+    '''execute Sqls status'''
+    db = None
+    isAutoCommit = None
+    hasCommitStatus = None
+    iLastCommited = None
+    lock = None
+    cs = None
+    sqls = None
+    iSqls = None
+    iSucc = None
+    iFail = None
+    iCurrent = None
+    isCancel = None
+    Res_or_Except = None
+    ds = None
+    es = None
+    timeout_1 = None
+    timeout_more = None
+    BreakDb2Errors = None
+    IgnoreDb2Errors = None
+    def checkparams(self):
+        drs = dir(self)
+        pars = [eval('self.' + i) for i in drs if not i.startswith('_')]
+        for i in pars:
+            if i == None: return False
+        return True
 
 
 [wxID_DBMMENUEXECITEMS_EXEC_SINGLE, wxID_DBMMENUEXECITEMS_EXEC_SQLS, 
@@ -1732,7 +1761,7 @@ class dbm(wx.Frame):
         iRow, iCol = event.GetRow(), event.GetCol()
         self.db2_connect_or_disconnect(iRow, iCol)
 
-    def db2_connect_or_disconnect(self, iRow, iCol):
+    def db2_connect_or_disconnect(self, iRow, iCol, isMustConfirm=True):
         lconn = len(self.dbs_connected)
         gridX = self.nbDbs.GetPage(0)
         self.gridDbs.SetFocus()
@@ -1753,7 +1782,7 @@ class dbm(wx.Frame):
         self.gridDbs.Refresh()
 
         if connstr.find(self.str_connectstr_split) == -1: #no connect
-            if wx.YES != wx.MessageBox(u'''db2 connect to %s user %s using ******\n\nUSE  "%s"  CONNECT TO  "%s"  'S  "%s [%s]"  ?''' \
+            if isMustConfirm and wx.YES != wx.MessageBox(u'''db2 connect to %s user %s using ******\n\nUSE  "%s"  CONNECT TO  "%s"  'S  "%s [%s]"  ?''' \
                  % (dbname, dbuser, dbuser, node, dbname, comment), _('connect database ?'), wx.YES_NO | wx.ICON_QUESTION, self.last_dlg):
                 return
 
@@ -1797,7 +1826,7 @@ class dbm(wx.Frame):
                 self.gridDbs.SetCellBackgroundColour(iRow, col, conn_color)
             self.gridDbs.Refresh()
         else: # connect reset
-            if wx.YES != wx.MessageBox(u'db2 connect reset ? ', _('disconnect database ? '),
+            if isMustConfirm and wx.YES != wx.MessageBox(u'db2 connect reset ? ', _('disconnect database ? '),
                                        wx.YES_NO | wx.NO_DEFAULT | wx.ICON_EXCLAMATION, self.last_dlg):
                 return
 
@@ -2074,6 +2103,7 @@ class dbm(wx.Frame):
 #            self.btnRollback.Enable()
             self.btnCommit.SetBackgroundColour(wx.Color(0, 255, 0))
             self.btnRollback.SetBackgroundColour(wx.Color(255, 0, 0))
+            self.choiceConnectedDbnames.Enable(False)
         else:
 #            self.btnExec2.Enable()
 #            self.btnExec3.Enable()
@@ -2081,6 +2111,7 @@ class dbm(wx.Frame):
 #            self.btnRollback.Disable()
             self.btnCommit.SetBackgroundColour(bcolor)
             self.btnRollback.SetBackgroundColour(bcolor)
+            self.choiceConnectedDbnames.Enable(True)
         pass
 
     def on_grid_label_right_click__autosizecol(self, event):
@@ -3076,6 +3107,9 @@ class dbm(wx.Frame):
         else:   return ';'
 
     def getts(self):
+        '''
+        @return: exec Single Sql timeout, exec Multi Sqls timeout
+        '''
         try:
             time_out = self.txtTimeout.GetValue().split(',')
             if len(time_out)==1:
@@ -3110,76 +3144,92 @@ class dbm(wx.Frame):
 
     def execute_sqls_thread(self, *args):
         '''
-        @param *args: (cs, sqls, lock, iRes, Res_or_Except, ds)
-        @param cs: 
-        @param sqls: string list
-        @param lock: threading.Lock()
-        @param iRes: [ [iSqls, iSucc, iFail, iCurrent in sqls position],  False,  ]
-        @param isCancel: a list have a elementitem, [ True | False ]
-        @param Res_or_Escept: select res [ (True,sql,time) ],     Except: [ (False, sql, Exception as ee ) ]
-        @param ds: StringIO.String()
+        @param  *args: ExecSqlsStatus
         '''
-        cs, sqls, lock, iRes, isCancel, Res_or_Except, ds = args #ds.write
-        iRes[0][0] = len(sqls)
-        tts1, tts2 = self.getts()
-        if iRes[0][0] <= 1: cs.set_timeout(tts1)
-        else:               cs.set_timeout(tts2)
+        Rst, = args
+        if not isinstance(Rst, ExecSqlsStatus) or not Rst.checkparams():
+            print 'Param Error'
+            return
+        Rst.iSqls = len(Rst.sqls)
+        if Rst.iSqls <= 1:  Rst.cs.set_timeout(Rst.timeout_1)
+        else:               Rst.cs.set_timeout(Rst.timeout_more)
         az = sqld.QueryTokenizer()
-        for ss in sqls:
-            if isCancel[0]:
+        for ss in Rst.sqls:
+            if Rst.isCancel:
                 print ' canceled thread... '
-                lock.acquire();ds.write('-- execute progress cancel\n\n');lock.release()
+                Rst.lock.acquire();Rst.ds.write('-- execute progress cancel\n\n');Rst.lock.release()
                 break
-            lock.acquire()
-            iRes[0][3] += 1
-            lock.release()
+            Rst.lock.acquire()
+            Rst.iCurrent += 1
+            if Rst.isAutoCommit and Rst.iCurrent > 0 and Rst.iCurrent % Rst.isAutoCommit == 0:
+                self.db2_commit_or_rollback(True, False)
+                Rst.hasCommitStatus = False
+                Rst.iLastCommited = Rst.iCurrent
+            Rst.lock.release()
             sql = ss[0]
 
             sql2 = az.removeAllCommentsFromQuery(sql)#self.removeSQLComment(sql)
             if sql2 == '':
-                iRes[0][0] -= 1
+                Rst.iSqls -= 1
                 continue
             try:
-                lock.acquire();ds.write('%s ;\n' % sql);lock.release()
+                Rst.lock.acquire();Rst.ds.write('%s ;\n' % sql);Rst.lock.release()
                 t1 = time.time()
                 self.sqq.write(sql)
                 self.sqq.write(self.NL)
                 self.sqq.write(self.NL)
-                cs.execute(sql)
+                Rst.cs.execute(sql)
                 t2 = time.time()
-                iRes[0][1] += 1
-                if cs.description is not None and len(cs.description) > 0: # select statement
+                Rst.iSucc += 1
+                if Rst.cs.description is not None and len(Rst.cs.description) > 0: # select statement
                     if sql[:6].upper() != 'SELECT':
                         self.log_pg('\n = Error - Error - Error = ')
                         self.log_pg(sql)
-                        self.log_pg(str(cs.description))
+                        self.log_pg(str(Rst.cs.description))
                         self.log_pg('Error ==\n')
                     m = ''
-                    lock.acquire();Res_or_Except.append((True, sql, t2-t1));lock.release()
+                    Rst.lock.acquire();Rst.Res_or_Except.append((True, sql, t2-t1));Rst.lock.release()
                     while True:
-                        lock.acquire();il = len(Res_or_Except);lock.release()
-                        if il == 0 or isCancel[0]: break
+                        Rst.lock.acquire();il = len(Rst.Res_or_Except);Rst.lock.release()
+                        if il == 0 or Rst.isCancel: break
                         else:   time.sleep(0.02)
                 else:   # other sql statement
                     exec_time = str(t2 - t1)
                     exec_time = exec_time[:exec_time.find('.') + 3]
-                    if cs.rowcount == -1:
-                        self.set_commit_btn_status(True)
+                    if Rst.cs.rowcount == -1:
+                        Rst.hasCommitStatus = True
                         m = 'Processed in %s sec. ' % exec_time
-                    elif cs.rowcount == 0:
+                    elif Rst.cs.rowcount == 0:
                         m = '0 row applied in %s sec.' % exec_time
                     else:
-                        self.set_commit_btn_status(True)
-                        m = '%d rows applied in %s sec.' % (cs.rowcount, exec_time)
+                        Rst.hasCommitStatus = True
+                        m = '%d rows applied in %s sec.' % (Rst.cs.rowcount, exec_time)
                 # all
                 if m != '':
-                    lock.acquire();ds.write('-- %s\n\n' % m);lock.release()
-            except Exception as ee:
-                iRes[0][2] += 1
-                lock.acquire();Res_or_Except.append((False, sql, ee));lock.release()
+                    Rst.lock.acquire();Rst.ds.write('-- %s\n\n' % m);Rst.lock.release()
+            except DB2.Error as ee:
+                Rst.lock.acquire()
+                try:
+                    Rst.iFail += 1
+                    if ee.args[1] in Rst.BreakDb2Errors:
+                        return
+                    elif ee.args[1] in Rst.IgnoreDb2Errors:
+                        continue
+                finally:
+                    Rst.Res_or_Except.append((False, sql, ee))
+                    Rst.lock.release()
+                
                 while True:
-                    lock.acquire();il = len(Res_or_Except);lock.release()
-                    if il == 0 or isCancel[0]: break
+                    Rst.lock.acquire();il = len(Rst.Res_or_Except);Rst.lock.release()
+                    if il == 0 or Rst.isCancel: break
+                    else:   time.sleep(0.02)
+            except Exception as ee:
+                Rst.iFail += 1
+
+                Rst.lock.acquire();Rst.Res_or_Except.append((False, sql, ee));Rst.lock.release()
+                while True:
+                    Rst.lock.acquire();il = len(Rst.Res_or_Except);Rst.lock.release()
+                    if il == 0 or Rst.isCancel: break
                     else:   time.sleep(0.02)
         pass
 
@@ -3202,119 +3252,146 @@ class dbm(wx.Frame):
         sqls, beee, eeed, spt = self.get_sqls_from_stcSQLs(isSingle, sqlstr)
         if spt > 2: print ' split sqls use', spt
         if not sqls: return
+        isAutoCommit = False
+        li = self.cfg.get_config(u'iAutoCommitLine', 300)
+        if len(sqls) > li:
+            dlg = wx.TextEntryDialog(self.last_dlg, _('Auto Commit on ?? rows'), _('Ask'), str(li))
+            if wx.ID_OK == dlg.ShowModal():
+                try: li = int(dlg.GetValue())
+                except: li = li
+            else:
+                li = li
+            isAutoCommit = li
+                
 
         m = '\n--** BEGIN %s\n-- * [%s/%s] [%s] *\n' % \
                 ('**'*34, dbX.dbname, dbX.dbuser, time.strftime(self.str_time_strf))
         self.log_usersql2(m)
         self.log_usersql(m)
 
-        iSqls, iSucc, iFail, iii = 0, 0, 0, -1
-        iRes = [[iSqls, iSucc, iFail, iii], False, ]
-        isCancel = [False]
-        Res_or_Except = []
-        ds = StringIO.StringIO()
-        es = StringIO.StringIO()
+        Rst = ExecSqlsStatus()
+        Rst.db = dbX.db
+        Rst.isAutoCommit = isAutoCommit
+        Rst.hasCommitStatus = False
+        Rst.iLastCommited = 0
+        Rst.lock = threading.Lock()
+        Rst.cs = dbX.cs
+        Rst.sqls = sqls
+        Rst.iSqls, Rst.iSucc, Rst.iFail, Rst.iCurrent = 0, 0, 0, -1
+        Rst.isCancel = False
+        Rst.Res_or_Except = []
+        Rst.timeout_1, Rst.timeout_more = self.getts()
+        Rst.ds = StringIO.StringIO()
+        Rst.es = StringIO.StringIO()
+        Rst.BreakDb2Errors = [-1024,]
+        Rst.IgnoreDb2Errors = []
         msg = ''
         msg2 = ''
         iProgmax = len(sqls)
         dlg = None
         dlg = wx.ProgressDialog(_('Please waiting ...'), _('execute %3d/%3d statement %s\n\n\n') % \
-                (iSucc + iFail, iSqls, u'=='*20), iProgmax+2, self.last_dlg, style=wx.PD_CAN_ABORT | wx.PD_ELAPSED_TIME)
+                (Rst.iSucc + Rst.iFail, Rst.iSqls, u'=='*20), iProgmax+2, self.last_dlg, style=wx.PD_CAN_ABORT | wx.PD_ELAPSED_TIME)
         dlg.Update(1)
         llast_dlg = self.last_dlg
         self.last_dlg = dlg
-        pt = dlg.GetPosition()
-        sz = dlg.GetSize()
-        dlg.SetPosition(wx.Point(pt.x, pt.y - sz.y/2))
-        lock = threading.Lock()
-        th = threading.Thread(target=self.execute_sqls_thread, args= \
-                (dbX.cs, sqls, lock, iRes, isCancel, Res_or_Except, ds))
+        dlg.Center()
+        th = threading.Thread(target=self.execute_sqls_thread, args= (Rst,))
         th.start()
         ti = 0.0
         splittime = 0.05
         try:
+            last1 = False
             while True:
                 th.join(splittime)
                 ti += splittime
-                if th.isAlive():
-                    lock.acquire()
-                    iSqls, iSucc, iFail, iii = iRes[0]
+                if not th.isAlive():
+                    if not last1:
+                        last1 = True
+                    else:
+                        break
+
+                if True:
+                    Rst.lock.acquire()
                     if isShowCurrentSql and not isSingle:
-                        __1, be, ed = sqls[iii]
+                        __1, be, ed = sqls[Rst.iCurrent]
                         self.stcSQLs.SetSelection(be, ed)
-                    lock.release()
+                    Rst.lock.release()
                     try:
-                        sqlu = sqls[iii][0].lstrip()[:78].decode(self.str_encode)
+                        sqlu = sqls[Rst.iCurrent][0].lstrip()[:78].decode(self.str_encode)
                     except Exception as ee:
                         sqlu = _(' ?? unknow split sql ')
-                    if isCancel[0]: # 2@#$&@)#&@)
+                    if Rst.isCancel: # 2@#$&@)#&@)
                         splittime = 0.3
-                        if dlg: dlg.Update(iSucc + iFail + 1, _('execute %3d ( %3d ) statement. Success %2d, Failed %2d\n\n Cancel, waiting ...') \
-                            % (iSucc + iFail, iSqls, iSucc, iFail))
+                        if dlg: dlg.Update(Rst.iSucc + Rst.iFail + 1, _('execute %3d ( %3d ) statement. Success %2d, Failed %2d\n\n Cancel, waiting ...') \
+                            % (Rst.iSucc + Rst.iFail, Rst.iSqls, Rst.iSucc, Rst.iFail))
                         continue
                     msgs = _('execute %3d ( %3d ) statement. Success %2d, Failed %2d\n\n%s') \
-                            % (iSucc + iFail, iSqls, iSucc, iFail, sqlu)
-                    if dlg and not isCancel[0] and not dlg.Update(iSucc + iFail + 1, msgs)[0]:
-                        isCancel[0] = True
+                            % (Rst.iSucc + Rst.iFail, Rst.iSqls, Rst.iSucc, Rst.iFail, sqlu)
+                    if dlg and not Rst.isCancel and not dlg.Update(Rst.iSucc + Rst.iFail + 1, msgs)[0]:
+                        Rst.isCancel = True
                         print ' execute progress press cancel  '
                     else:
-                        lock.acquire()
+                        Rst.lock.acquire()
                         try:
-                            for __i in range(len(Res_or_Except)):
-                                re1 = Res_or_Except.pop(0)
+                            confirm = False
+                            for __i in range(len(Rst.Res_or_Except)):
+                                re1 = Rst.Res_or_Except.pop(0)
                                 m = ''
                                 if re1[0]:  #'SELECT'
                                     try:
                                         remsg, rese = self.showData(dbX, re1[1], re1[2], self.isshowontext)
                                         m = ' %s\n\n' % remsg
-                                        ds.write('--%s' % m)
+                                        Rst.ds.write('--%s' % m)
                                         if rese: raise rese
                                     except DB2.Error as ee:
-                                        iRes[0][1] -= 1; iRes[0][2] += 1
-                                        m = '  # DB2: %s %s %s\n' % (ee.args[0], ee.args[1], ee.args[2])
-                                        if m.find('SQL0952N') > 0:
+                                        Rst.iSucc -= 1; Rst.iFail += 1
+                                        m = '  # DB2: %s, %s, %s\n' % (ee.args[0], ee.args[1], ee.args[2])
+                                        if ee.args[1] == -952:
                                             m = '  # DB2: Timeout or Break.  SQL0952N %s %s\n' % (ee.args[0], ee.args[1])
-                                        ds.write('--%s' % m)
-                                        es.write(m)
+                                        Rst.ds.write('--%s' % m)
+                                        Rst.es.write(m)
                                     except Exception as ee:
-                                        iRes[0][1] -= 1; iRes[0][2] += 1
+                                        Rst.iSucc -= 1; Rst.iFail += 1
                                         m = '  # EXCEPT Ex: %s\n' % ee
-                                        ds.write('--%s' % m)
-                                        es.write(m)
+                                        Rst.ds.write('--%s' % m)
+                                        Rst.es.write(m)
                                 else:   # Exception
                                     try:
                                         raise re1[2]
                                     except DB2.Error as ee:
-                                        m = '  # DB2: %s %s %s\n' % (ee.args[0], ee.args[1], ee.args[2])
-                                        ds.write('--%s' % m)
-                                        es.write('%s ;\n%s' % (re1[1], m))
-                                        if iRes[0][1] == 0 and iRes[0][2] >= 1:   # fail.
+                                        m = '  # DB2: %s, %s, %s\n' % (ee.args[0], ee.args[1], ee.args[2])
+                                        Rst.ds.write('--%s' % m)
+                                        Rst.es.write('%s ;\n%s' % (re1[1], m))
+                                        if confirm: continue
+                                        if ee.args[1] in Rst.BreakDb2Errors:
+                                            wx.MessageBox(m.decode(self.str_encode), _('Error'), wx.ICON_ERROR | wx.OK, self.last_dlg)
+                                            Rst.isCancel = True
+                                            confirm = True
+                                        else:
                                             ans = wx.MessageBox(m.decode(self.str_encode), _('Error, Continue ? '), wx.ICON_ERROR | wx.YES_NO | wx.NO_DEFAULT, self.last_dlg)
-                                            if ans != wx.YES:
-                                                isCancel[0] = True
-                                                break
-                                        elif m.find('SQL1024N') != -1:  # no db connect
-                                            ans = wx.MessageBox(m.decode(self.str_encode), _('Error, Continue ? '), wx.ICON_ERROR | wx.YES_NO | wx.NO_DEFAULT, self.last_dlg)
-                                            if ans != wx.YES:
-                                                isCancel[0] = True
-                                                break
+                                            if ans == wx.NO:
+                                                Rst.isCancel = True
+                                                confirm = True
+                                            elif ans == wx.YES:
+                                                Rst.IgnoreDb2Errors.append(ee.args[1])
                                     except Exception as ee:
                                         m = '  # EXCEPT: %s\n' % str(ee)
-                                        ds.write('--%s' % m)
-                                        es.write('%s ;\n%s' % (re1[1], m))
+                                        Rst.ds.write('--%s' % m)
+                                        Rst.es.write('%s ;\n%s' % (re1[1], m))
+                                        if confirm: continue
                                         ans = wx.MessageBox(m.decode(self.str_encode), _('Error, Continue ? '), wx.ICON_ERROR | wx.YES_NO | wx.NO_DEFAULT, self.last_dlg)
                                         if ans != wx.YES:
-                                            isCancel[0] = True
-                                            break
+                                            Rst.isCancel = True
+                                            confirm = True
                             # end for Result_Select_Stmt_or_Except
-                            if ds.len > 0:
-                                msg = ds.getvalue()
-                                ds.truncate(0)
-                            if es.len > 0:
-                                msg2 = es.getvalue()
-                                es.truncate(0)
+                            if Rst.ds.len > 0:
+                                msg = Rst.ds.getvalue()
+                                Rst.ds.truncate(0)
+                            if Rst.es.len > 0:
+                                msg2 = Rst.es.getvalue()
+                                Rst.es.truncate(0)
                         finally:
-                            lock.release()
+                            Rst.lock.release()
                         if msg != '':
                             if self.islogsql: self.log_usersql2(msg)
                             if self.isshowsql:self.log_usersql(msg)
@@ -3322,55 +3399,19 @@ class dbm(wx.Frame):
                         if msg2 != '':
                             self.log_usersql(msg2, True, False)
                             msg2 = ''
-                else:
-                    break
+                # if True
+                self.set_commit_btn_status(Rst.hasCommitStatus)
+            pass # while True
         finally:
             try:
-                iSqls, iSucc, iFail, iii = iRes[0]
-                for __i in range(len(Res_or_Except)):
-                    re1 = Res_or_Except.pop(0)
-                    m = ''
-                    if re1[0]:  #'SELECT'
-                        try:
-                            remsg, rese = self.showData(dbX, re1[1], re1[2], self.isshowontext)
-                            m = '-- %s\n' % remsg
-                            ds.write('--%s' % m)
-                            if rese: raise rese
-                        except DB2.Error as ee:
-                            m = '  # DB2: %s %s %s\n' % (ee.args[0], ee.args[1], ee.args[2])
-                            if m.find('SQL0952N') > 0:
-                                m = '  # DB2: Timeout or Break.  SQL0952N %s %s\n' % (ee.args[0], ee.args[1])
-                            ds.write('--%s' % m)
-                            es.write(m)
-                        except Exception as ee:
-                            m = '  # EXCEPT Ex: %s\n' % ee
-                            ds.write('--%s' % m)
-                            es.write(m)
-                    else:   # Exception
-                        try:
-                            raise re1[2]
-                        except DB2.Error as ee:
-                            iRes[0][2] += 1
-                            m = '  # DB2: %s %s %s\n' % (ee.args[0], ee.args[1], ee.args[2])
-                            ds.write('--%s' % m)
-                            es.write('%s ;\n%s' % (re1[1], m))
-                        except Exception as ee:
-                            iRes[0][2] += 1
-                            m = '  # EXCEPT: %s\n' % ee
-                            ds.write('--%s' % m)
-                            es.write('%s ;\n%s' % (re1[1], m))
-                msg = ds.getvalue()
-                msg2 = es.getvalue()
-                if msg != '':
-                    if self.islogsql: self.log_usersql2(msg)
-                    if self.isshowsql:self.log_usersql(msg)
-                    msg = ''
-                if msg2 != '':
-                    self.log_usersql(msg2, True, False)
-                    msg2 = ''
+                if len(Rst.Res_or_Except) != 0 or Rst.ds.len != 0 or Rst.es.len != 0:
+                    # not run here
+                    print 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n' * 10
+                    self.log_usersql('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n' * 10, True, True)
+                    wx.MessageBox("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", "XXXXXXXXXXXXX", wx.OK, self.last_dlg)
 
                 m = '\n-- * [%s/%s] [%s]      Total: %d sql: Success:%d  Fail:%d\n--** END **%s\n' % \
-                    (dbX.dbname, dbX.dbuser, time.strftime(self.str_time_strf), iSucc + iFail, iSucc, iFail, '--'*50)
+                    (dbX.dbname, dbX.dbuser, time.strftime(self.str_time_strf), Rst.iSucc + Rst.iFail, Rst.iSucc, Rst.iFail, '--'*50)
                 self.log_usersql2(m)
                 self.log_usersql(m)
 
@@ -3379,17 +3420,21 @@ class dbm(wx.Frame):
                 dbX.cs.close()
             except Exception as _ee:
                 pass
-            if not isSingle and not isCancel[0] and eeed:
-                self.stcSQLs.SetSelection(beee, eeed)
+
+            if not isSingle and not Rst.isCancel and eeed:
+                if Rst.iLastCommited == 0:  #no auto commit
+                    self.stcSQLs.SetSelection(beee, eeed)
+                else:   # auto commit ON, Show last not commit sqls
+                    self.stcSQLs.SetSelection(sqls[Rst.iLastCommited][1], eeed)
             else:
                 if isShowCurrentSql and not isSingle:
-                    __1, be, ed = sqls[iRes[0][3]]
+                    __1, be, ed = sqls[Rst.iCurrent]
                     self.stcSQLs.SetSelection(be, ed)
             if dlg:
                 self.last_dlg = llast_dlg
-                if iFail == 0: dlg.Destroy()
+                if Rst.iFail == 0: dlg.Destroy()
                 else:dlg.Update(iProgmax+2, _('Done. \n\n  executed %3d ( %3d ) statement.\n  Success %2d, Failed %2d  ') \
-                                % (iSucc + iFail, iSqls, iSucc, iFail))
+                                % (Rst.iSucc + Rst.iFail, Rst.iSqls, Rst.iSucc, Rst.iFail))
         pass
 
     def get_sqls_from_stcSQLs(self, isSingle=False, exsql=''):
@@ -3442,28 +3487,42 @@ class dbm(wx.Frame):
                 if dlg: dlg.Destroy()
 
         return sqls, beee, eeed, time.time() - t1
+    
+    def db2_commit_or_rollback(self, Commit, isMustConfirm=True):
+        '''
+        @param Commit: COMMIT True,   ROLLBACK False
+        @param isMustConfirm: True/ False
+        '''
+        self.stcSQLs.SetFocus()
+        dbX = self.get_db2db_from_connect_string()
+        if Commit:
+            if isMustConfirm and wx.YES != wx.MessageBox(_(' Commit ?     '), _('Ask'), wx.YES_NO | wx.NO_DEFAULT | wx.ICON_ERROR, self.last_dlg):
+                return
+            self.set_commit_btn_status(False)
+            self.log_usersql('COMMIT ; # COMMIT \n-- on %s at %s\n\n' % (dbX.dbname, time.strftime(self.str_time_strf)), False, True)
+            try:
+                dbX.db.commit()
+            except DB2.Error as ee:
+                self.log_usersql('  # %s, %s, %s\n' % (ee.args[0], ee.args[1], ee.args[2]), False, True)
+        else:
+            if isMustConfirm and wx.YES != wx.MessageBox(_(' Rollback ?            A  applied be lost '), _('Ask'), wx.YES_NO | wx.NO_DEFAULT | wx.ICON_ERROR, self.last_dlg):
+                return
+            self.set_commit_btn_status(False)
+            self.log_usersql('ROLLBACK ; # ROLLBACK \n-- on %s at %s\n\n' % (dbX.dbname, time.strftime(self.str_time_strf)), False, True)
+            try:
+                dbX.db.rollback()
+            except DB2.Error as ee:
+                self.log_usersql('  # %s, %s, %s\n' % (ee.args[0], ee.args[1], ee.args[2]), False, True)
 
     def OnBtnCommitButton(self, event):
-        self.stcSQLs.SetFocus()
         event.Skip()
-        if wx.YES != wx.MessageBox(_(' Commit ?     '), _('Ask'), wx.YES_NO | wx.NO_DEFAULT | wx.ICON_ERROR, self.last_dlg):
-            return
-        dbX = self.get_db2db_from_connect_string()
-        dbX.db.commit()
-        self.set_commit_btn_status(False)
-        self.log_usersql('COMMIT ;\n-- on %s at %s\n\n' % (dbX.dbname, time.strftime(self.str_time_strf)), False, True)
+        self.db2_commit_or_rollback(True)
 
 
     def OnBtnRollbackButton(self, event):
-        self.stcSQLs.SetFocus()
         event.Skip()
-        if wx.YES != wx.MessageBox(_(' Rollback ?            A  applied be lost '), _('Ask'), wx.YES_NO | wx.NO_DEFAULT | wx.ICON_ERROR, self.last_dlg):
-            return
-        dbX = self.get_db2db_from_connect_string()
-        dbX.db.rollback()
-        self.set_commit_btn_status(False)
-        self.log_usersql('ROLLBACK ;\n-- on %s at %s\n\n' % (dbX.dbname, time.strftime(self.str_time_strf)), False, True)
-        event.Skip()
+        self.db2_commit_or_rollback(False)
+            
 
     def export_data_thread(self, *args):
         '''

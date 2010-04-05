@@ -14,11 +14,16 @@ On Linux(Ubuntu 9.10 x86), not test
 
 
 
+#
+# python source file coding : utf-8
+#  gettext.install : unicode
+# wxpython control text , label, message: unicode
+# log file : system locale
+# sql, table, schema, etc : system locale
+#
+
 -------------
 python f:\ux\python26\Tools\i18n\pygettext.py dbm.py 
 python utils\merge_po.py x messages.pot locale\zh_CN\LC_MESSAGES\db2tool.po locale\zh_CN\LC_MESSAGES\db2tool2
 python f:\ux\python26\Tools\i18n\msgfmt.py locale\zh_CN\LC_MESSAGES\db2tool2.po
 
-TODO:
-SELECT NAME, VALUE, DEFERRED_VALUE, DATATYPE, DBPARTITIONNUM FROM SYSIBMADM.DBCFG WHERE NAME IN ( 'maxappls'  )
-SELECT NAME, VALUE, DEFERRED_VALUE, DATATYPE, DBPARTITIONNUM FROM SYSIBMADM.DBMCFG WHERE NAME IN ( 'maxappls'  )

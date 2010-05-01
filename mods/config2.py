@@ -354,8 +354,11 @@ class dbConfig():
         @return: boolean
         '''
         try:
+            tbn, cln = self.__encodess(tabname), self.__encodess(colname)
+            self.__cs1.execute('''delete from colsize where tabname='%s' and colname='%s' ''' % (
+                                    tbn, cln) )
             self.__cs1.execute('''insert into colsize (tabname,colname,size) values ('%s','%s',%d)  ''' % (
-                                    self.__encodess(tabname), self.__encodess(colname), size) )
+                                    tbn, cln, size) )
             if autocommit: self.__db1.commit()
             return True
         except Exception as ee:

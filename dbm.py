@@ -130,16 +130,23 @@ class dbGridTable(wx.grid.PyGridTableBase):
             return self.data[row][col] is None
     def GetValue(self, row, col):
         #print 'get value ', row, col
-        if self.data:
-            if self.data[row][col] is None:
-                return self.nullstr
-            else:
-                dd = self.data[row][col]
-                try: dd = unicode(self.data[row][col], self.str_encode)
-                except:
-                    pass
-                return dd
+        if row > self.row or col > self.col:
+            return self.nullstr
+        try:
+            if self.data:
+                if self.data[row][col] is None:
+                    return self.nullstr
+                else:
+                    dd = self.data[row][col]
+                    try: dd = unicode(self.data[row][col], self.str_encode)
+                    except Exception as _ee:
+                        pass
+                    return dd
+        except Exception as _ee:
+            return self.nullstr
     def SetValue(self, row, col, value):
+        if row > self.row or col > self.col:
+            return
         self.data_change_pos.append((row, col))
         if type(self.data[row]) != type([]):
             self.data[row] = [i for i in self.data[row]]
@@ -150,6 +157,12 @@ class dbGridTable(wx.grid.PyGridTableBase):
             return unicode(self.desc[col], self.str_encode) #[0]
         except Exception as _ee:
             return '_??_'
+    def DeleteRows(self, pos=0, numRows=1, updateLabels=True):
+        self.row = len(self.data) - numRows
+        return True
+    def DeleteCols(self, pos=0, numColss=1, updateLabels=True):
+        self.col = len(self.desc) - numColss
+        return True
 
 
 class Db2db():
@@ -2166,7 +2179,6 @@ class dbm(wx.Frame):
                 colname = gridX.GetTable().desc[col]
                 if gridX.issort and gridX.sortcol == col:
                     colname = colname[:-5]
-                self.cfg.colsize_delete(gridX.tabname, colname, False)
                 self.cfg.colsize_insert(gridX.tabname, colname, gridX.GetColSize(col), True)
             except Exception as ee:
                 print ' EX: on_grid_col_size__save_size:', ee
@@ -2195,11 +2207,11 @@ class dbm(wx.Frame):
             startbar =   self.statusBar_object
         else:startbar = self.statusBar_exec
         #print gridX.dbname, gridX.dbuser, gridX.tabname, gridX.sql, gridX.resmsg
-        LT = gridX.GetSelectionBlockTopLeft()
+        TL = gridX.GetSelectionBlockTopLeft()
         BR = gridX.GetSelectionBlockBottomRight()
         try:
-            if len(LT) > 0 and len(BR) > 0:
-                msg = '%s, %s [%d, %d]' % (LT[0], BR[0], BR[0][0] - LT[0][0] + 1 , BR[0][1] - LT[0][1] + 1)
+            if len(TL) > 0 and len(BR) > 0:
+                msg = '%s, %s [%d, %d]' % (TL[0], BR[0], BR[0][0] - TL[0][0] + 1 , BR[0][1] - TL[0][1] + 1)
                 startbar.SetStatusText(msg.decode(self.str_encode), 1)
         except Exception as ee:
             print ' EX: on_grid_range_selection__show_range:', ee
@@ -2619,6 +2631,14 @@ class dbm(wx.Frame):
         gridX.Refresh()
         self.statusBar_exec.SetStatusText(_('Refreshed. %s ') % gridX.resmsg.decode(self.str_encode))
         pass
+    
+    def popup_RenameLabel(self, args=None):
+        pos = self.nbResult.GetSelection()
+        lab = self.nbResult.GetPageText(pos)
+        dlg = wx.TextEntryDialog(self.last_dlg, _('Please input new Label text:'), _('Ask'), lab)
+        if wx.ID_OK == dlg.ShowModal():
+            lab = dlg.GetValue()
+            self.nbResult.SetPageText(pos, lab)
 
     def OnNbResultLeftDclick(self, event):
         event.Skip()
@@ -2638,6 +2658,7 @@ class dbm(wx.Frame):
                     [_('Close &All Pages'),     self.popup_CloseAllPage,    None, None],
                     [_('S&witch Log Page'),     self.popup_SwitchPage,      None, None],
                     [_("&Refresh Data"),        self.popup_RefreshData,     None, None],
+                    [_("Rename La&bel"),        self.popup_RenameLabel,     None, None],
                    ]
             for m in self.menttextNb:
                 m[iMid] = wx.NewId()
@@ -2766,7 +2787,7 @@ class dbm(wx.Frame):
             if cl:
                 for ii in range(len(description2)):
                     try:
-                        ix = cl.index(description2[ii][0])
+                        ix = cl.index(description2[ii][0].decode(self.str_encode))
                         gridX.SetColSize(ii, sz[ix])
                     except Exception as _ee:
                         pass
@@ -4856,34 +4877,44 @@ class dbm(wx.Frame):
                 
 
     def dis_find(self, status):
-        iss = self.menuEdit.GetMenuItems()
-        for i in iss:
-            if i.GetId() in [wxID_DBMMENUEDITITEMS_FIND, wxID_DBMMENUEDITITEMS_REPLACE]:
-                i.Enable(status)
+        pass
+#        iss = self.menuEdit.GetMenuItems()
+#        for i in iss:
+#            if i.GetId() in [wxID_DBMMENUEDITITEMS_FIND, wxID_DBMMENUEDITITEMS_REPLACE]:
+#                i.Enable(status)
 
     def OnFindClose(self, event):
-        dlg = event.GetDialog()
-        if dlg: dlg.Destroy()
+        #dlg = event.GetDialog()
+        #assert dlg == self.fdlg
+        if self.fdlg:
+            self.fdlg.Destroy()
+            self.fdlg = None
         self.dis_find(True)
 
     def OnMenuEditItems_findMenu(self, event):
+        if hasattr(self,'fdlg') and self.fdlg:
+            self.fdlg.SetFocus()
+            return
         data = wx.FindReplaceData()
         data.SetFlags(wx.FR_DOWN)
         data.SetFindString(self.findTxt)
-        dlg = wx.FindReplaceDialog(self, data, _('Find ...'))
-        dlg.data = data
+        self.fdlg = wx.FindReplaceDialog(self, data, _('Find ...'))
+        self.fdlg.data = data
         self.ctl = self.FindFocus()
-        dlg.Show(True)
+        self.fdlg.Show(True)
         self.dis_find(False)
 
     def OnMenuEditItems_replaceMenu(self, event):
+        if hasattr(self,'fdlg') and self.fdlg:
+            self.fdlg.SetFocus()
+            return
         data = wx.FindReplaceData()
         data.SetFlags(wx.FR_DOWN)
         data.SetFindString(self.findTxt)
-        dlg = wx.FindReplaceDialog(self, data, _('Find & Replace ...'), wx.FR_REPLACEDIALOG)
-        dlg.data = data
+        self.fdlg = wx.FindReplaceDialog(self, data, _('Find & Replace ...'), wx.FR_REPLACEDIALOG)
+        self.fdlg.data = data
         self.ctl = self.FindFocus()
-        dlg.Show(True)
+        self.fdlg.Show(True)
         self.dis_find(False)
 
     def OnUpdateMenuExec(self, event):

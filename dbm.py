@@ -1688,7 +1688,7 @@ class dbm(wx.Frame):
 
     # ------------------------------------------------------------------------
     # ---------- connect page ----------
-    def OnBtnSaveDbsButton(self, event):
+    def OnBtnSaveDbsButton(self, event=None):
         self.cfgwrite()
         event.Skip()
 
@@ -2138,9 +2138,13 @@ class dbm(wx.Frame):
         gridX = self.FindWindowById(event.GetId())
         col = event.GetCol()
         #gridX.SetColSize(col, gridX.description2[col][2] * self.fontw)
-        if len(gridX.GetTable().data) < 100000:
-            gridX.AutoSizeColumn(col, False)
+        if event.ShiftDown():
+            gridX.SetColSize(col, 100)
             gridX.ForceRefresh()
+        else:
+            if len(gridX.GetTable().data) < 100000:
+                gridX.AutoSizeColumn(col, False)
+                gridX.ForceRefresh()
 
     def on_grid_label_left_click__sort(self, event):
         '''sort col value'''
@@ -2749,6 +2753,7 @@ class dbm(wx.Frame):
             gridX.SetColLabelSize(24)
             gridX.SetRowLabelSize(50)
             gridX.SetColLabelAlignment(wx.ALIGN_LEFT, wx.ALIGN_CENTRE)
+            gridX.SetColMinimalAcceptableWidth(0)
 
             if db2db:
                 gridX.bgc = db2db.color
@@ -2799,7 +2804,7 @@ class dbm(wx.Frame):
                     except Exception as _ee:
                         pass
             elif len(data) < 100:   # grid.AutoSizeColumns may use long time.
-                gridX.AutoSizeColumns()
+                gridX.AutoSizeColumns(False)
         except Exception as _ee:
             pass
 
@@ -3926,6 +3931,7 @@ class dbm(wx.Frame):
             if objs:
                 self.lstT1.Clear()
                 self.lstT1.AppendItems(objs)
+                self.OnTxtI1Text()
         elif L == 2:
             cs = self.Obj2['dbX'].cs
             schema = self.choiceSchema2.GetStringSelection()
@@ -3936,6 +3942,7 @@ class dbm(wx.Frame):
             if objs:
                 self.lstT2.Clear()
                 self.lstT2.AppendItems(objs)
+                self.OnTxtI2Text()
         else:
             print 'unknow '
 
@@ -3957,15 +3964,15 @@ class dbm(wx.Frame):
                 match.append(i)
         return match
 
-    def OnTxtI1Text(self, event):
-        event.Skip()
+    def OnTxtI1Text(self, event=None):
+        if event: event.Skip()
         matchstr = self.txtI1.GetValue()
         new = self.get_match_list(self.Obj1['value'], matchstr)
         self.lstT1.Clear()
         self.lstT1.SetItems(new)
 
-    def OnTxtI2Text(self, event):
-        event.Skip()
+    def OnTxtI2Text(self, event=None):
+        if event: event.Skip()
         matchstr = self.txtI2.GetValue()
         new = self.get_match_list(self.Obj2['value'], matchstr)
         self.lstT2.Clear()
@@ -4775,7 +4782,7 @@ class dbm(wx.Frame):
     # -----------------------------------------------------------
     # -------- menu ----------------------
     def OnMenuFileItems_saveMenu(self, event):
-        print ''' OnMenuFileItems_saveMenu'''
+        self.OnBtnSaveDbsButton()
 
     def OnMenuFileItems_reloadMenu(self, event):
         print ''' OnMenuFileItems_reloadMenu'''

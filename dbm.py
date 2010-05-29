@@ -2141,6 +2141,9 @@ class dbm(wx.Frame):
         if event.ShiftDown():
             gridX.SetColSize(col, 100)
             gridX.ForceRefresh()
+        elif event.ControlDown():
+            gridX.SetColSize(col, 0)
+            gridX.ForceRefresh()
         else:
             if len(gridX.GetTable().data) < 100000:
                 gridX.AutoSizeColumn(col, False)
@@ -2322,9 +2325,12 @@ class dbm(wx.Frame):
         for i in range(len(TLs)):
             Rows += [ij for ij in range(TLs[i][0], BRs[i][0]+1)]
         Rows += gridX.GetSelectedRows()
+        Rows.append(gridX.GetGridCursorRow())
         Rows = list(set(Rows))
         Rows.sort()
-        if len(Rows) <= 0: return
+        if len(Rows) <= 0:
+            return
+    
         data = gridX.GetTable().data
         desc = gridX.description2
         tabschema = gridX.tabschema
@@ -2365,7 +2371,11 @@ class dbm(wx.Frame):
         TL = gridX.GetSelectionBlockTopLeft()
         RB = gridX.GetSelectionBlockBottomRight()
         if len(TL) <= 0 or len(RB) <=0:
-            return
+            x = gridX.GetGridCursorRow()
+            y = gridX.GetGridCursorCol()
+            TL.append([x, y])
+            RB.append([x, y])
+        
         ds = StringIO.StringIO()
         if RB[0][1] - TL[0][1] > 1:
             pass    #TODO
@@ -2492,7 +2502,6 @@ class dbm(wx.Frame):
 #        print gridX.GetSelectedCols()
 #        print gridX.GetSelectionBlockTopLeft()
 #        print gridX.GetSelectionBlockBottomRight()
-        # TODO
 
     # -------- notebook context menu --------
     def popup_ShowSQL(self, args=None):

@@ -31,12 +31,14 @@ from mods import db2util2
 
 try:
     import wx
+    if not hasattr(wx,'Color') and hasattr(wx,'Colour'):
+        wx.Color = wx.Colour
     import wx.grid
     import wx.stc
     import wx.lib.pubsub
     import wx.lib.wordwrap
 except Exception as ee:
-    print '''  Not import wx ''', ee.args[0]
+    print ''' *IMPORT WX EXCEPT* ''', ee.args[0]
     sys.exit(2)
 
 from mods import stc2

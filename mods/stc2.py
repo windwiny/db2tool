@@ -9,12 +9,19 @@ __cvsid__ = "$Id:  $"
 __revision__ = "$Revision: 2010 $"[11:-2]
 
 import wx
+if not hasattr(wx,'Color') and hasattr(wx,'Colour'):
+    wx.Color = wx.Colour
 from wx import stc
 
 import os
 import sys
 import time
-
+try:
+    import S
+except:
+    class S(object):
+        def send(self, *args):
+            pass
 
 
 kwlist_unknow = []
@@ -108,9 +115,9 @@ class EditWindow(stc.StyledTextCtrl):
 
     revision = __revision__
 
-#    def __init__(self, parent, id=-1, pos=wx.DefaultPosition,
-#                 size=wx.DefaultSize, style=wx.CLIP_CHILDREN | wx.SUNKEN_BORDER, name=''):
-    def __init__(self, parent, id, pos, size, style, name, typestr, kwlist=None):
+    def __init__(self, parent, id=-1, pos=wx.DefaultPosition,
+                 size=wx.DefaultSize, style=wx.CLIP_CHILDREN | wx.SUNKEN_BORDER, name='',
+                 typestr='', kwlist=None):
         """Create EditWindow instance."""
         stc.StyledTextCtrl.__init__(self, parent, id, pos, size, style, name)
         self.typestr = str(typestr).upper()
@@ -126,6 +133,16 @@ class EditWindow(stc.StyledTextCtrl):
             self.kwlist = kwlist
         self.__config()
         stc.EVT_STC_UPDATEUI(self, id, self.OnUpdateUI)
+        stc.EVT_STC_STYLENEEDED(self, id, self.OnStyleNeeded)
+        
+        if wx.version().startswith('2.9.1'):
+            self.showoccurrences = True
+            self.lastshowstr = ''
+            self.lastshowstrlist = []
+            self.last_beg = 0
+            self.last_end = 0
+        else:
+            self.showoccurrences = False
 
     def _fontsizer(self, signal):
         """Receiver for Font* signals."""
@@ -202,9 +219,10 @@ class EditWindow(stc.StyledTextCtrl):
         else:
             pass
         
-    def setStyles_common(self, faces):
+    def setStyles_common(self, faces=None):
         """Configure font size, typeface and color for lexer."""
-
+        if faces is None:
+            faces = FACES
         # Default style
         self.StyleSetSpec(stc.STC_STYLE_DEFAULT, "face:%(mono)s,size:%(size)d,back:%(backcol)s" % faces)
 
@@ -217,8 +235,11 @@ class EditWindow(stc.StyledTextCtrl):
         self.StyleSetSpec(stc.STC_STYLE_BRACELIGHT, "fore:#0000FF,back:#FFFF88")
         self.StyleSetSpec(stc.STC_STYLE_BRACEBAD, "fore:#FF0000,back:#FFFF88")
 
-    def setStyles_sql(self, faces):
+    def setStyles_sql(self, faces=None):
         # sql styles
+        if faces is None:
+            faces = FACES
+
         self.StyleSetSpec(stc.STC_SQL_DEFAULT, "face:%(mono)s" % faces)     # DEFAULT
         self.StyleSetSpec(stc.STC_SQL_IDENTIFIER, "face:%(mono)s" % faces)  # TABNEME
 
@@ -245,8 +266,11 @@ class EditWindow(stc.StyledTextCtrl):
         self.StyleSetSpec(stc.STC_SQL_COMMENTDOCKEYWORD, "back:#AAFFAA")
         self.StyleSetSpec(stc.STC_SQL_COMMENTDOCKEYWORDERROR, "back:#AAFFAA")
 
-    def setStyles_python(self, faces):
+    def setStyles_python(self, faces=None):
         # python styles
+        if faces is None:
+            faces = FACES
+        
         self.StyleSetSpec(stc.STC_P_DEFAULT, "face:%(mono)s" % faces)
         self.StyleSetSpec(stc.STC_P_COMMENTLINE, "back:#AAFFAA")
         self.StyleSetSpec(stc.STC_P_COMMENTBLOCK, "back:#AAFFAA")
@@ -296,6 +320,87 @@ class EditWindow(stc.StyledTextCtrl):
             self.BraceBadLight(braceAtCaret)
         else:
             self.BraceHighlight(braceAtCaret, braceOpposite)
+            
+        S.send('OnUpdateUI')
+        try:
+            if self.showoccurrences:
+#                ost = self.GetSelectedText()
+#                if ost == self.lastshowstr:
+#                    return
+#                else:
+#                    self.IndicatorClearRange(0, self.GetLength())
+#                    if self.lastshowstrlist:
+#                        for i in self.lastshowstrlist:
+#                            #self.Colourise(i, len(self.lastshowstr))
+#                            self.
+#                        self.lastshowstrlist = []
+#                if len(ost) == '':
+#                    return
+#                st = ost.strip()
+                beg, end = self.GetSelection()
+                if beg == self.last_beg and end == self.last_end:
+                    return
+                self.last_beg, self.last_end = beg, end
+                ost = st = self.GetTextRange(beg, end)
+                
+                eof = self.GetLength()
+                self.IndicatorClearRange(0, eof)
+                lst = abs(end - beg);
+                if lst <= 0:
+                    return
+                    #self.IndicatorSetForeground(1,wx.Color(255,0,0))
+                
+#                beginLine = self.GetFirstVisibleLine()
+#                nr = min(self.LinesOnScreen(), self.GetLineCount()) + 1
+#                lastLine = beginLine + nr
+#                beginPos = self.PositionFromLine(beginLine)
+#                lastPos = self.PositionFromLine(lastLine)
+        
+                flag = 0
+                if False:
+                    flag |= wx.stc.STC_FIND_MATCHCASE
+                sss = '_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+                if False: #not ost[:1] in sss and not ost[-1:] in sss:
+                    flag |= wx.stc.STC_FIND_WHOLEWORD
+                ipos = -lst
+                icount = 0
+                ind = 10
+                self.SetIndicatorCurrent(ind)
+                self.IndicatorSetStyle(ind, 31)
+                self.IndicatorSetAlpha(ind, 50)
+                self.IndicatorSetForeground(ind, wx.Colour(255, 0, 128))
+                self.IndicatorSetUnder(ind, True)
+                while True:
+                    ipos = self.FindText(ipos + lst, eof, st, flag)
+                    if ipos == -1:
+                        break
+                    self.IndicatorFillRange(ipos, lst)
+                    icount += 1
+                    if icount % 10 == 0:
+                        S.send(icount)
+                    if icount > 999:
+                        S.send('999 ???? Dead while ???')
+                        break
+                    #self.lastshowstrlist.append(ipos)
+                    #self.StartStyling(ipos, 31)
+                    #style=wx.stc.STC_P_STRING
+                    #for pos in range(ipos, ipos+lst):
+                    #    self.SetStyling(pos, style)
+                    #self.SetStyling(ipos, style)
+#                S.send( 'bl:%d el:%d   bp:%d ep:%d    count:%d length:%d' % 
+#                (beginLine, lastLine, beginPos, lastPos, icount, lst))
+                self.Colourise(0, eof)
+                self.Refresh()
+                S.send( '  count:%d length:%d' %  (icount, lst))
+            else:
+                pass
+            #event.skip()
+            S.send( '  cos')
+        except Exception as ee:
+            S.send('EE*** %s' % str(ee))
+    
+    def OnStyleNeeded(self, event):
+        S.send('***OnStyleNeeded' +str(self) + str(event))
 
     def CanCopy(self):
         """Return True if text is selected and can be copied."""

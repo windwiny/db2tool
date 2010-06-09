@@ -3,6 +3,7 @@
 #Boa:App:BoaApp
 
 import wx
+print 'wx.version():', wx.version()
 
 import dbm
 

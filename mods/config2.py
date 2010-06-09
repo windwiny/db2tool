@@ -255,7 +255,7 @@ class dbConfig():
             '' COMMENT
             from nodes N,dbs D
             where D.node = N.node
-            order by IP, NODE, DSN ''')
+            order by IP, D.NODE, DSN ''')
         db2 = self.__cs1.fetchall()
         dbs = []
         for i in range(len(db1)):

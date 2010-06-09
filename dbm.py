@@ -220,16 +220,17 @@ class ExecSqlsStatus():
 
 
 [wxID_DBMMENUEXECITEMS_EXEC_SINGLE, wxID_DBMMENUEXECITEMS_EXEC_SQLS, 
- wxID_DBMMENUEXECITEMS_FORMAT_SQL, wxID_DBMMENUEXECITEMS_GET_DB_CFG,
- wxID_DBMMENUEXECITEMS_GET_DBM_CFG
+ wxID_DBMMENUEXECITEMS_FORMAT_SQL, wxID_DBMMENUEXECITEMS_GET_DBM_CFG, 
+ wxID_DBMMENUEXECITEMS_GET_DB_CFG, 
 ] = [wx.NewId() for _init_coll_menuExec_Items in range(5)]
 
 [wxID_DBMMENUFILEITEMS_RELOAD, wxID_DBMMENUFILEITEMS_SAVE, 
  wxID_DBMMENUFILEITEM_EXIT, 
 ] = [wx.NewId() for _init_coll_menuFile_Items in range(3)]
 
-[wxID_DBMMENUEDITITEMS_FIND, wxID_DBMMENUEDITITEMS_REPLACE, 
-] = [wx.NewId() for _init_coll_menuEdit_Items in range(2)]
+[wxID_DBMMENUEDITITEMS_COPY, wxID_DBMMENUEDITITEMS_FIND, 
+ wxID_DBMMENUEDITITEMS_REPLACE, 
+] = [wx.NewId() for _init_coll_menuEdit_Items in range(3)]
 
 [wxID_DBMMENUWINDOWITEMS_H, wxID_DBMMENUWINDOWITEMS_V, 
 ] = [wx.NewId() for _init_coll_menuWindow_Items in range(2)]
@@ -248,12 +249,16 @@ class dbm(wx.Frame):
     def _init_coll_menuEdit_Items(self, parent):
         # generated method, don't edit
 
+        parent.Append(help='', id=wxID_DBMMENUEDITITEMS_COPY,
+              kind=wx.ITEM_NORMAL, text=_(u'&Copy\tCtrl-C'))
         parent.Append(help='', id=wxID_DBMMENUEDITITEMS_FIND,
               kind=wx.ITEM_NORMAL, text=_(u'&Find...\tCtrl-F'))
         parent.Append(help='', id=wxID_DBMMENUEDITITEMS_REPLACE,
               kind=wx.ITEM_NORMAL, text=_(u'&Replace...\tCtrl-H'))
         self.Bind(wx.EVT_MENU, self.OnMenuEditItems_findMenu,
               id=wxID_DBMMENUEDITITEMS_FIND)
+        self.Bind(wx.EVT_MENU, self.OnMenuEditItems_copyMenu,
+              id=wxID_DBMMENUEDITITEMS_COPY)
         self.Bind(wx.EVT_MENU, self.OnMenuEditItems_replaceMenu,
               id=wxID_DBMMENUEDITITEMS_REPLACE)
 
@@ -294,11 +299,9 @@ class dbm(wx.Frame):
               kind=wx.ITEM_NORMAL,
               text=_(u'format selected SQL\tCtrl-Shift-F'))
         parent.Append(help='', id=wxID_DBMMENUEXECITEMS_GET_DB_CFG,
-              kind=wx.ITEM_NORMAL,
-              text=_(u'show database cfg'))
+              kind=wx.ITEM_NORMAL, text=_(u'show database cfg'))
         parent.Append(help='', id=wxID_DBMMENUEXECITEMS_GET_DBM_CFG,
-              kind=wx.ITEM_NORMAL,
-              text=_(u'show database manager cfg'))
+              kind=wx.ITEM_NORMAL, text=_(u'show database manager cfg'))
         self.Bind(wx.EVT_MENU, self.OnMenuExecItems_exec_sqlsMenu,
               id=wxID_DBMMENUEXECITEMS_EXEC_SQLS)
         self.Bind(wx.EVT_MENU, self.OnMenuExecItems_exec_singleMenu,
@@ -800,8 +803,9 @@ class dbm(wx.Frame):
         self.chkShowSqlsRes.SetToolTipString(_(u'show normal execute message to TextCtrl  ! Speed in execute much sqls '))
 
         self.chkShowOnText = wx.CheckBox(id=wxID_DBMCHKSHOWONTEXT,
-              label=_(u'ShowOnText'), name=u'chkShowOnText', parent=self.Pexecute,
-              pos=wx.Point(976, 8), size=wx.Size(72, 22), style=0)
+              label=_(u'ShowOnText'), name=u'chkShowOnText',
+              parent=self.Pexecute, pos=wx.Point(976, 8), size=wx.Size(72, 22),
+              style=0)
         self.chkShowOnText.SetToolTipString(_(u'show select result text format'))
 
         self.btnExecSqls = wx.Button(id=wxID_DBMBTNEXECSQLS,
@@ -2219,22 +2223,22 @@ class dbm(wx.Frame):
     # -------- grid context menu --------
     def popup2_ExportSQL(self, event):
         self.stcSQLs.SetFocus()
-        self.export_data(1, self.gridX, wx.GetKeyState(wx.WXK_SHIFT))
+        self.export_data(1, self.current_active_gridX, wx.GetKeyState(wx.WXK_SHIFT))
 
     def popup2_ExportDEL(self, event):
         self.stcSQLs.SetFocus()
-        self.export_data(2, self.gridX, wx.GetKeyState(wx.WXK_SHIFT))
+        self.export_data(2, self.current_active_gridX, wx.GetKeyState(wx.WXK_SHIFT))
 
     def popup2_ExportIXF(self, event):
         self.stcSQLs.SetFocus()
-        self.export_data(3, self.gridX, wx.GetKeyState(wx.WXK_SHIFT))
+        self.export_data(3, self.current_active_gridX, wx.GetKeyState(wx.WXK_SHIFT))
 
     def popup2_SelectAll(self, event):
-        gridX = self.gridX
+        gridX = self.current_active_gridX
         gridX.SelectAll()
 
     def popup2_Find(self, event):
-        gridX = self.gridX
+        gridX = self.current_active_gridX
         row, col = self.gridrightclick
         data = gridX.GetTable().data
         desc = gridX.description2[col]
@@ -2305,7 +2309,7 @@ class dbm(wx.Frame):
         self.copy_value_thread(self.copy_line_sql)
                 
     def copy_line_sql(self, progress):
-        gridX = self.gridX
+        gridX = self.current_active_gridX
         Rows = []
         CEs = gridX.GetSelectedCells()
         Rows += [ij[0] for ij in CEs]
@@ -2349,7 +2353,7 @@ class dbm(wx.Frame):
         self.copy_value_thread(self.copy_cond_sql)
         
     def copy_cond_sql(self, progress):
-        gridX = self.gridX
+        gridX = self.current_active_gridX
         print gridX.dbname, gridX.dbuser, gridX.tabname, gridX.sql, gridX.resmsg
         print gridX.GetSelectedCells()
         print gridX.GetSelectedRows()
@@ -2385,17 +2389,20 @@ class dbm(wx.Frame):
                     (gridX.tabschema, gridX.tabname, colname, self.NL, ds.getvalue()[:-(len(self.NL)+1)], self.NL, self.NL))
         pass
 
-    def popup2_Copy(self, event):
+    def popup2_CopyString(self, event=None):
         self.copy_value_thread(self.copy_string)
         
     def copy_string(self, progress):
-        gridX = self.gridX
+        gridX = self.current_active_gridX
         TL = gridX.GetSelectionBlockTopLeft()
         RB = gridX.GetSelectionBlockBottomRight()
         if len(TL) <= 0 or len(RB) <=0:
             Rows = gridX.GetSelectedRows()
             if len(Rows) <= 0:
-                return
+                x = gridX.GetGridCursorRow()
+                y = gridX.GetGridCursorCol()
+                TL.append([x, y])
+                RB.append([x, y])
             else:
                 TL.append([Rows[0], 0])
                 RB.append([Rows[0], len(gridX.description2)-1])
@@ -2440,7 +2447,7 @@ class dbm(wx.Frame):
         ''' show menu or add line to select '''
         event.Skip()
         gridX = self.FindWindowById(event.GetId())
-        self.gridX = gridX
+        self.current_active_gridX = gridX
         gridX.SetFocus()
         row, col = event.GetRow(), event.GetCol()
         gridX.SetGridCursor(row, col)
@@ -2453,7 +2460,7 @@ class dbm(wx.Frame):
         if not hasattr(self, "popupMenuGrid"):
             self.popupMenuGrid = wx.Menu()
             self.menttextGrid = [
-                    [_("&Copy Selected Text"),                  self.popup2_Copy,               None, None],
+                    [_("&Copy Selected Text"),                  self.popup2_CopyString,         None, None],
                     [_("&Find Value"),                          self.popup2_Find,               None, None],
                     [_("Select &All"),                          self.popup2_SelectAll,          None, None],
                     [_("Copy Selected Line(s) Data to &SQL"),   self.popup2_CopyLineSQL,        None, None],
@@ -4891,6 +4898,36 @@ class dbm(wx.Frame):
             self.fdlg = None
         self.dis_find(True)
 
+    def OnMenuEditItems_copyMenu(self, event):
+        ctl = self.ctl
+        if not ctl:
+            return
+        if ctl.GetName() == 'grid window':
+            gridX = self.FindWindowById(ctl.GetId()).GetParent()
+            self.current_active_gridX = gridX
+            print gridX.GetName()
+            self.popup2_CopyString()
+        elif isinstance(ctl, wx.stc.StyledTextCtrl):
+            text = ctl.GetSelectedText()
+            self.copy_text_to_clipboard(text)
+        elif isinstance(ctl, wx.TextCtrl):
+            text = ctl.GetStringSelection()
+            self.copy_text_to_clipboard(text)
+        elif isinstance(ctl, wx.ListBox):
+            text = ctl.GetStringSelection()
+            self.copy_text_to_clipboard(text)
+        elif isinstance(ctl, wx.TreeCtrl):
+            text = ctl.GetItemText(ctl.GetSelection())
+            self.copy_text_to_clipboard(text)
+        elif isinstance(ctl, wx.Button):
+            text = ctl.GetLabelText()
+            self.copy_text_to_clipboard(text)
+        elif isinstance(ctl, wx.Notebook):
+            text = ctl.GetPageText(ctl.GetSelection())
+            self.copy_text_to_clipboard(text)
+        else:
+            print 'un implemnet copy source control'
+            
     def OnMenuEditItems_findMenu(self, event):
         if hasattr(self,'fdlg') and self.fdlg:
             self.fdlg.SetFocus()

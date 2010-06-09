@@ -3841,39 +3841,6 @@ class dbm(wx.Frame):
         dlg = None
         dlg = wx.ProgressDialog(_('Please wait...'), _('query database objects...'), 100, self.last_dlg, style=wx.PD_ELAPSED_TIME|wx.PD_CAN_ABORT)
         dlg.Update(50)
-        vts = [
-        (DbObj.Bufferpools,     r'''select * from SYSCAT.BUFFERPOOLS''',    'BPNAME'),
-        (DbObj.Tablespaces,     r'''select * from SYSCAT.TABLESPACES''',    'TBSPACE'),
-        (DbObj.Wrappers,        r'''select * from SYSCAT.WRAPPERS''',       'WRAPNAME'),
-        (DbObj.Servers,         r'''select * from SYSCAT.SERVERS''',        'SERVERNAME'),
-        (DbObj.User_Mappings,   r'''select * from SYSCAT.USEROPTIONS''',    'AUTHID'),
-        
-        ]
-        for types, sql, name in vts:
-            item = treeC.AppendItem(rootitem, types.decode(self.str_encode))
-            try:
-                treeC.Freeze()
-                if types+'_db' not in DbInfo:
-                    t1 = time.time()
-                    dbX.cs.execute(sql)
-                    data = dbX.cs.fetchall()
-                    desc = dbX.cs._description2()
-                    sqltime.append(time.time()-t1)
-                    DbInfo[types+'_db'] = (data, desc)
-                else:
-                    data, desc = DbInfo[types+'_db']
-                iX = [x[0].upper().strip() for x in desc].index(name.upper())
-                data = [x[iX] for x in data]
-                data.sort()
-                DbInfo[types] = data
-                for i in data:
-                    treeC.AppendItem(item, i.decode(self.str_encode))
-                S.send('appenditem %3d %s' % (len(data), types))
-            except Exception as ee:
-                S.send('show_db_objects_tree %s %s' % (types, str(ee)) )
-            finally:
-                treeC.Thaw()
-
         try:
             treeC.Freeze()
             if 'ANSTV_db' not in DbInfo:
@@ -3890,7 +3857,7 @@ class dbm(wx.Frame):
             iY = [i[0].upper().strip() for i in desc].index('TABNAME')
             iZ = [i[0].upper().strip() for i in desc].index('TYPE')
             
-            for types in [DbObj.Aliases, DbObj.Nicknames, DbObj.Summary_Tables, DbObj.Tables, DbObj.Views]:
+            for types in [DbObj.Summary_Tables, DbObj.Tables, DbObj.Views, DbObj.Aliases, DbObj.Nicknames]:
                 item1 = treeC.AppendItem(rootitem, types.decode(self.str_encode))
                 objects = [(x[iX],x[iY]) for x in data if x[iZ] == types[0]]
                 schemas = list(set([x[0] for x in objects]))
@@ -3919,6 +3886,39 @@ class dbm(wx.Frame):
             S.send('show_db_objects_tree %s %s' % ('tab view nickn alias summary', str(ee)) )
         finally:
             treeC.Thaw()
+
+        vts = [
+        (DbObj.Servers,         r'''select * from SYSCAT.SERVERS''',        'SERVERNAME'),
+        (DbObj.Wrappers,        r'''select * from SYSCAT.WRAPPERS''',       'WRAPNAME'),
+        (DbObj.User_Mappings,   r'''select * from SYSCAT.USEROPTIONS''',    'AUTHID'),
+        (DbObj.Bufferpools,     r'''select * from SYSCAT.BUFFERPOOLS''',    'BPNAME'),
+        (DbObj.Tablespaces,     r'''select * from SYSCAT.TABLESPACES''',    'TBSPACE'),
+
+        ]
+        for types, sql, name in vts:
+            item = treeC.AppendItem(rootitem, types.decode(self.str_encode))
+            try:
+                treeC.Freeze()
+                if types+'_db' not in DbInfo:
+                    t1 = time.time()
+                    dbX.cs.execute(sql)
+                    data = dbX.cs.fetchall()
+                    desc = dbX.cs._description2()
+                    sqltime.append(time.time()-t1)
+                    DbInfo[types+'_db'] = (data, desc)
+                else:
+                    data, desc = DbInfo[types+'_db']
+                iX = [x[0].upper().strip() for x in desc].index(name.upper())
+                data = [x[iX] for x in data]
+                data.sort()
+                DbInfo[types] = data
+                for i in data:
+                    treeC.AppendItem(item, i.decode(self.str_encode))
+                S.send('appenditem %3d %s' % (len(data), types))
+            except Exception as ee:
+                S.send('show_db_objects_tree %s %s' % (types, str(ee)) )
+            finally:
+                treeC.Thaw()
 
         for types in [DbObj.Functions, DbObj.Procedures, DbObj.Triggers]:
             try:

@@ -1225,12 +1225,7 @@ class dbm(wx.Frame):
 
         self.tmpdb = sqlite3.connect(':memory:')
         self.tmpcur = self.tmpdb.cursor()
-        self.Obj1 = {}
-        self.Obj2 = {}
-        self.Obj1['dbX'] = None
-        self.Obj2['dbX'] = None
-        self.Obj1['type'] = self.Obj1['value'] = ''
-        self.Obj2['type'] = self.Obj2['value'] = ''
+        self.db_objects = {}
 
         self.ctl = self.nbMainFrame
         self.tree_root = None
@@ -1951,8 +1946,6 @@ class dbm(wx.Frame):
             obj.Clear()
             obj.AppendItems(its)
             obj.SetStringSelection(oriselstr)
-        if self.choiceDb1.GetSelection() == -1: self.Obj1['dbX']=None
-        if self.choiceDb2.GetSelection() == -1: self.Obj2['dbX']=None
 
         if len(self.dbs_connected) == 0:
             self.set_btn_status(False)
@@ -4007,104 +4000,16 @@ class dbm(wx.Frame):
         
         return
 
-    def query_schemas(self, cs, typestr):
-        ''' user cursor query schema
-        @param cs: cursor
-        @param typestr: string TABLE  VIEW SERVER ...
-        @return:  None   or    schema objects string list   or   (objects , ) tuple
-        '''
-        isR = False
-        isSingleLine = True
-        if typestr == 'TABLE':
-            vt = '''select rtrim(TABSCHEMA) from SYSCAT.TABLES where TYPE='T' group by TABSCHEMA order by TABSCHEMA'''
-        elif typestr == 'VIEW':
-            vt = '''select rtrim(TABSCHEMA) from SYSCAT.TABLES where TYPE='V' group by TABSCHEMA order by TABSCHEMA'''
-        elif typestr == 'SUMMARY TABLE':
-            vt = '''select rtrim(TABSCHEMA) from SYSCAT.TABLES where TYPE='S' group by TABSCHEMA order by TABSCHEMA'''
-        elif typestr == 'SERVER':
-            vt = '''select * from SYSCAT.SERVERS order by SERVERNAME'''
-            isSingleLine = False
-        elif typestr == 'DRAP':
-            vt = '''select * from SYSCAT.SERVERS order by SERVERNAME'''
-            isR = True
-        elif typestr == 'NICKNAME':
-            vt = '''select TABSCHEMA from SYSCAT.NICKNAMES group by TABSCHEMA order by TABSCHEMA'''
-        elif typestr == 'BUFFERPOOL':
-            vt = '''select * from SYSCAT.BUFFERPOOLS order by BPNAME'''
-            isSingleLine = False
-        elif typestr == 'TABLESPACE':
-            vt = '''select TBSPACEID,TBSPACE,DEFINER,TBSPACETYPE,DATATYPE,EXTENTSIZE,DBPGNAME,BUFFERPOOLID,DROP_RECOVERY,NGNAME from SYSCAT.TABLESPACES order by TBSPACE'''
-            isSingleLine = False
-        elif typestr == 'FUNCTION':
-            vt = '''select rtrim(FUNCSCHEMA) from SYSCAT.FUNCTIONS group by FUNCSCHEMA order by FUNCSCHEMA'''
-        elif typestr == 'TRIGGER':
-            vt = '''select rtrim(TRIGSCHEMA) from SYSCAT.TRIGGERS  group by TRIGSCHEMA order by TRIGSCHEMA'''
-        elif typestr == 'PROCEDURE':
-            vt = '''select rtrim(PROCSCHEMA) from SYSCAT.PROCEDURES  group by PROCSCHEMA order by PROCSCHEMA'''
-        else:
-            vt = ''
-            print '  unknow implement select '
-            isR = True
-
-        if not isR:
-            try:
-                f1 = []
-                cs.execute(vt)
-                f1 = cs.fetchall()
-            except DB2.Error as ee:
-                m = ' DB2: %s, %s, %s' % (ee.args[0], ee.args[1], ee.args[2])
-                wx.MessageBox(m.decode(self.str_encode), u'query_schemas error', wx.OK, self.last_dlg)
-                return None
-
-            if isSingleLine:
-                return [f1[i][0] for i in range(len(f1))]
-            else:
-                return (f1, )
-
-    def query_schemas_and_show(self, L):
-        typestr = self.choiceType.GetStringSelection()
-        if typestr == '':  return
-        if L == 1:
-            if not self.Obj1['dbX']: return
-            objs = self.query_schemas(self.Obj1['dbX'].cs, typestr)
-            if objs:
-                if type(objs) == type(()):
-                    self.stcM1.SetValue(str(objs[0]))
-                    self.set_obj_ctrl_s(True)
-                else:
-                    self.choiceSchema1.Clear()
-                    self.choiceSchema1.AppendItems(objs)
-                    self.set_obj_ctrl_s(False)
-        elif L == 2:
-            if not self.Obj2['dbX']: return
-            objs = self.query_schemas(self.Obj2['dbX'].cs, typestr)
-            if objs:
-                if type(objs) == type(()):
-                    self.stcM2.SetValue(str(objs[0]))
-                    self.set_obj_ctrl_s(True)
-                else:
-                    self.choiceSchema2.Clear()
-                    self.choiceSchema2.AppendItems(objs)
-                    self.set_obj_ctrl_s(False)
-        else:
-            print 'unknow'
-
     def OnChoiceTypeChoice(self, event):
         event.Skip()
-        self.query_schemas_and_show(1)
-        self.query_schemas_and_show(2)
 
     def OnChoiceDb1Choice(self, event):
         event.Skip()
-        self.Obj1['dbX'] = self.get_db2db_from_connect_string(self.choiceDb1.GetStringSelection())
         self.show_db_objects_tree(self.choiceDb1, self.txtI1, self.lstT1)
-        #self.query_schemas_and_show(1)
 
     def OnChoiceDb2Choice(self, event):
         event.Skip()
-        self.Obj2['dbX'] = self.get_db2db_from_connect_string(self.choiceDb2.GetStringSelection())
         self.show_db_objects_tree(self.choiceDb2, self.txtI2, self.lstT2)
-        #self.query_schemas_and_show(2)
 
     # -------- schema objects --------
     def query_schema_objects(self, cs, typestr, schema):
@@ -4144,42 +4049,11 @@ class dbm(wx.Frame):
             wx.MessageBox(m.decode(self.str_encode), u'query_schema_objects error', wx.OK, self.last_dlg)
             return None
 
-    def query_schema_objects_and_show(self, L):
-        typestr = self.choiceType.GetStringSelection()
-        if typestr == '':  return
-        if L == 1:
-            cs = self.Obj1['dbX'].cs
-            schema = self.choiceSchema1.GetStringSelection()
-            if not cs or schema == '':  return
-            objs = self.query_schema_objects(cs, typestr, schema)
-            self.Obj1['type'] = typestr
-            self.Obj1['value'] = objs
-            if objs:
-                self.lstT1.Clear()
-                self.lstT1.AppendItems(objs)
-                self.OnTxtI1Text()
-        elif L == 2:
-            cs = self.Obj2['dbX'].cs
-            schema = self.choiceSchema2.GetStringSelection()
-            if not cs or schema == '':  return
-            objs = self.query_schema_objects(cs, typestr, schema)
-            self.Obj2['type'] = typestr
-            self.Obj2['value'] = objs
-            if objs:
-                self.lstT2.Clear()
-                self.lstT2.AppendItems(objs)
-                self.OnTxtI2Text()
-        else:
-            print 'unknow '
-
     def OnChoiceSchema1Choice(self, event):
         event.Skip()
-        self.query_schema_objects_and_show(1)
-
 
     def OnChoiceSchema2Choice(self, event):
         event.Skip()
-        self.query_schema_objects_and_show(2)
 
     # -------- filter --------
     def get_match_list(self, ori, matchstr, uni=True):
@@ -4244,7 +4118,7 @@ class dbm(wx.Frame):
         textMsg.ClearAll()
         isR = False
 
-        if typestr == 'TABLE':
+        if typestr == DbObj.Tables:
             vts = [
                 """select COLNAME, TYPENAME, LENGTH, SCALE, DEFAULT, NULLS
                     from SYSCAT.COLUMNS where TABSCHEMA='%s' and TABNAME='%s' order by COLNAME""" % (owner2, objname2),
@@ -4269,19 +4143,19 @@ class dbm(wx.Frame):
                     wx.MessageBox(m.decode(self.str_encode), u'query_schema_object_detail error', wx.OK, self.last_dlg)
                     textMsg.AppendText(m.decode(self.str_encode))
             isR = True
-        elif typestr == 'VIEW':
+        elif typestr == DbObj.Views:
             vt = """select TEXT from SYSCAT.VIEWS where VIEWSCHEMA='%s' and VIEWNAME='%s'""" % (owner2, objname2)
-        elif typestr == 'SUMMARY TABLE':
+        elif typestr == DbObj.Summary_Tables:
             msg = """  'SUMMARY TABLE': %s %s """ % (schema, objname)
             textMsg.AppendText(msg.decode(self.str_encode))
             isR = True
-        elif typestr == 'NICKNAME':
+        elif typestr == DbObj.Nicknames:
             vt = """select SERVERNAME || ':' || REMOTE_SCHEMA || ':' || REMOTE_TABLE from SYSCAT.NICKNAMES where TABSCHEMA='%s' and TABNAME='%s'""" % (owner2, objname2)
-        elif typestr == 'FUNCTION':
+        elif typestr == DbObj.Functions:
             vt = """select BODY from SYSCAT.FUNCTIONS where FUNCSCHEMA='%s' and FUNCNAME='%s'""" % (owner2, objname2)
-        elif typestr == 'TRIGGER':
+        elif typestr == DbObj.Triggers:
             vt = """select TEXT from SYSCAT.TRIGGERS where TRIGSCHEMA='%s' and TRIGNAME='%s'""" % (owner2, objname2)
-        elif typestr == 'PROCEDURE':
+        elif typestr == DbObj.Procedures:
             vt = """select TEXT from SYSCAT.PROCEDURES where PROCSCHEMA='%s' and PROCNAME='%s'""" % (owner2, objname2)
         else:
             print '   unknown  ??? '
@@ -4298,12 +4172,13 @@ class dbm(wx.Frame):
                 wx.MessageBox(m.decode(self.str_encode), u'query_schema_object_detail error', wx.OK, self.last_dlg)
         textMsg.ShowPosition(0)
 
-    def query_schema_object_detail_and_show(self, L):
+    def query_schema_object_detail_and_show(self, L, treePath=[]):
+        if len(treePath) < 4:
+            return
         if L == 1:
-            cs = self.Obj1['dbX'].cs
-            typestr = self.Obj1['type']
-            schema1 = self.choiceSchema1.GetStringSelection()
-            objname1 = self.lstT1.GetStringSelection()
+            dbX = self.get_db2db_from_connect_string(self.choiceDb1.GetStringSelection())
+            cs = dbX.cs
+            typestr,schema1,objname1 = treePath[1:4]
             if not cs or len(typestr) == 0  or len(schema1) == 0 or len(objname1) == 0:
                 return
             self.query_schema_object_detail(cs, typestr, schema1.encode(self.str_encode), objname1.encode(self.str_encode), self.stcM1)
@@ -4312,7 +4187,7 @@ class dbm(wx.Frame):
                 try:
                     i = self.lstT2.GetItems().index(objname1)
                     self.lstT2.SetSelection(i)
-                    cs = self.Obj1['dbX'].cs
+                    cs = dbX.cs
                     schema2 = self.choiceSchema2.GetStringSelection()
                     if not cs or len(schema2) == 0 or len(objname1) == 0:
                         return
@@ -4324,10 +4199,9 @@ class dbm(wx.Frame):
                     return
                 self.compare_text(schema1,objname1,schema2)
         elif L == 2:
-            cs = self.Obj2['dbX'].cs
-            typestr = self.Obj2['type']
-            schema2 = self.choiceSchema2.GetStringSelection()
-            objname2 = self.lstT2.GetStringSelection()
+            dbX = self.get_db2db_from_connect_string(self.choiceDb2.GetStringSelection())
+            cs = dbX.cs
+            typestr,schema2,objname2 = treePath[1:4]
             if not cs or len(typestr) == 0   or len(schema2) == 0 or len(objname2) == 0:
                 return
             self.query_schema_object_detail(cs, typestr, schema2.encode(self.str_encode), objname2.encode(self.str_encode), self.stcM2)
@@ -4336,7 +4210,7 @@ class dbm(wx.Frame):
                 try:
                     i = self.lstT1.GetItems().index(objname2)
                     self.lstT1.SetSelection(i)
-                    cs = self.Obj2['dbX'].cs
+                    cs = dbX.cs
                     schema1 = self.choiceSchema1.GetStringSelection()
                     if not cs or len(schema1) == 0 or len(objname2) == 0:
                         return
@@ -4368,7 +4242,7 @@ class dbm(wx.Frame):
         @param typeid: 1 table view columns    2 data     3  count
         '''
         cs = db2db.cs
-        if typestr == 'TABLE' or typestr == 'VIEW' or typestr == 'SUMMARY TABLE' or typestr == 'NICKNAME':
+        if typestr in [DbObj.Tables, DbObj.Views, DbObj.Summary_Tables, DbObj.Nicknames, DbObj.Aliases]:
             if typeid == 1:
                 vt = """select COLNAME, TYPENAME, LENGTH, SCALE, DEFAULT, NULLS from SYSCAT.COLUMNS 
                     where TABSCHEMA='%s' and TABNAME='%s' order by COLNAME""" % (schema.replace("'","''"), tabname.replace("'","''"))
@@ -4404,22 +4278,26 @@ class dbm(wx.Frame):
             event.Skip()
         except Exception as _ee: #' pubsub lstT1'
             pos =self.nbM1.GetSelection()
-        if not hasattr(self, 'Obj1'):return
-        self.nbchange = True
-        dbX = self.Obj1['dbX']
-        typestr = self.Obj1['type']
-        schema1 = self.choiceSchema1.GetStringSelection()
-        objname1 = self.lstT1.GetStringSelection()
-        if not dbX or len(typestr) == 0  or len(schema1) == 0 or len(objname1) == 0:
+        if not hasattr(self, 'db_objects'):
             return
+        self.nbchange = True
+        dbX = self.get_db2db_from_connect_string(self.choiceDb1.GetStringSelection())
+        if dbX.cs is None:
+            S.send('OnNbM1NotebookPageChanged  not dbX ')
+            return
+        treePath = self.func_GetTreePath(self.lstT1, self.lstT1.GetRootItem(), self.lstT1.GetSelection())
+        S.send('OnNbM1NotebookPageChanged %s pos:%d' % (str(treePath), pos))
+        if not dbX or len(treePath) < 4:
+            return
+        typestr,schema1,objname1 = treePath[1:4]
         if pos == 0:
             self.query_schema_object_detail_and_show(1)
         elif pos == 1:
-            self.query_schema_object_table(dbX, typestr, schema1.encode(self.str_encode), objname1.encode(self.str_encode), self.gridM11, pos)
+            self.query_schema_object_table(dbX, typestr, schema1, objname1, self.gridM11, pos)
         elif pos == 2:
-            self.query_schema_object_table(dbX, typestr, schema1.encode(self.str_encode), objname1.encode(self.str_encode), self.gridM12, pos)
+            self.query_schema_object_table(dbX, typestr, schema1, objname1, self.gridM12, pos)
         elif pos == 3:
-            self.query_schema_object_table(dbX, typestr, schema1.encode(self.str_encode), objname1.encode(self.str_encode), self.gridM13, pos)
+            self.query_schema_object_table(dbX, typestr, schema1, objname1, self.gridM13, pos)
 
     def OnNbM2NotebookPageChanged(self, event=None):
         try:
@@ -4427,22 +4305,89 @@ class dbm(wx.Frame):
             event.Skip()
         except Exception as _ee: #' pubsub lstT2'
             pos =self.nbM2.GetSelection()
-        if not hasattr(self, 'Obj2'):return
-        self.nbchange = True
-        dbX = self.Obj2['dbX']
-        typestr = self.Obj2['type']
-        schema1 = self.choiceSchema2.GetStringSelection()
-        objname1 = self.lstT2.GetStringSelection()
-        if not dbX or len(typestr) == 0  or len(schema1) == 0 or len(objname1) == 0:
+        if not hasattr(self, 'db_objects'):
             return
+        self.nbchange = True
+        dbX = self.get_db2db_from_connect_string(self.choiceDb2.GetStringSelection())
+        if dbX.cs is None:
+            S.send('OnNbM2NotebookPageChanged  not dbX ')
+            return
+        treePath = self.func_GetTreePath(self.lstT2, self.lstT2.GetRootItem(), self.lstT2.GetSelection())
+        S.send('OnNbM2NotebookPageChanged  %s pos:%d' % (str(treePath), pos))
+        if not dbX or len(treePath) < 4:
+            return
+        typestr,schema1,objname1 = treePath[1:4]
         if pos == 0:
             self.query_schema_object_detail_and_show(2)
         elif pos == 1:
-            self.query_schema_object_table(dbX, typestr, schema1.encode(self.str_encode), objname1.encode(self.str_encode), self.gridM21, pos)
+            self.query_schema_object_table(dbX, typestr, schema1, objname1, self.gridM21, pos)
         elif pos == 2:
-            self.query_schema_object_table(dbX, typestr, schema1.encode(self.str_encode), objname1.encode(self.str_encode), self.gridM22, pos)
+            self.query_schema_object_table(dbX, typestr, schema1, objname1, self.gridM22, pos)
         elif pos == 3:
-            self.query_schema_object_table(dbX, typestr, schema1.encode(self.str_encode), objname1.encode(self.str_encode), self.gridM23, pos)
+            self.query_schema_object_table(dbX, typestr, schema1, objname1, self.gridM23, pos)
+    
+    def func_GetTreePath(self, treeC, root, item):
+        path = []
+        try:
+            path.insert(0, treeC.GetItemText(item).encode(self.str_encode))
+            while item != root:
+                item = treeC.GetItemParent(item)
+                path.insert(0, treeC.GetItemText(item).encode(self.str_encode))
+        except Exception as ee:
+            S.send('func_GetTreePath  Except:%s' % str(ee))
+        return path
+        
+    def treeitemselchanged(self, treeCtrl, L, event):
+        try:
+            root = treeCtrl.GetRootItem()
+            item = event.GetItem()
+            path = self.func_GetTreePath(treeCtrl, root, item)
+            S.send('path: %s' % str(path))
+            itemp = treeCtrl.GetItemParent(item)
+            if len(path) == 1:
+                S.send(' lstTx select root')
+            elif len(path) == 2:
+                S.send(' lstTx select root/1')
+            else:
+                if len(path) == 4:
+                    #self.query_schema_object_detail_and_show(L, path)
+                    if L==1:
+                        self.OnNbM1NotebookPageChanged()
+                    else:
+                        self.OnNbM2NotebookPageChanged()
+        except Exception as ee:
+            S.send('lstTx select Except : %s' % str(ee))
+        return
+        
+    def treeitemrightclick(self, treeCtrl, L, event):
+        try:
+            root = treeCtrl.GetRootItem()
+            item = event.GetItem()
+            itemp = treeCtrl.GetItemParent(item)
+            if item == root:
+                S.send(' lstTx right click root')
+            elif itemp == root:
+                S.send(' lstTx right click root/1')
+            else:
+                typestr = treeCtrl.GetItemText(itemp)
+                name = treeCtrl.GetItemText(item)
+                S.send('%s %s ' % (typestr.encode(self.str_encode), name.encode(self.str_encode)))
+        except Exception as ee:
+            S.send('lstTx right click Except : %s' % str(ee))
+        return
+    
+    def OnTreelstT1TreeSelChanged(self, event):
+        self.treeitemselchanged(self.lstT1, 1, event)
+    
+    def OnTreelstT1TreeItemRightClick(self, event):
+        self.treeitemrightclick(self.lstT1, 1, event)
+    
+    def OnTreelstT2TreeSelChanged(self, event):
+        self.treeitemselchanged(self.lstT2, 2, event)
+    
+    def OnTreelstT2TreeItemRightClick(self, event):
+        self.treeitemrightclick(self.lstT2, 2, event)
+    
 
     def OnSplitterWindowObject1LeftDclick(self, event):
         event.Skip()
@@ -5319,55 +5264,3 @@ class dbm(wx.Frame):
         self.x11(event, True)
         pass
 
-    def GetTreePath(self, treeC, root, item):
-        path = []
-        path.insert(0, treeC.GetItemText(item))
-        while item != root:
-            item = treeC.GetItemParent(item)
-            path.insert(0, treeC.GetItemText(item))
-        return path
-    
-    def OnTreelstT1TreeSelChanged(self, event):
-        treeCtrl = self.lstT1
-        try:
-            root = treeCtrl.GetRootItem()
-            item = event.GetItem()
-            path = self.GetTreePath(treeCtrl, root, item)
-            S.send('path: %s' % str(path))
-            itemp = treeCtrl.GetItemParent(item)
-            if len(path) == 1:
-                S.send(' lstT1 select root')
-            elif len(path) == 2:
-                S.send(' lstT1 select root/1')
-            else:
-                typestr = treeCtrl.GetItemText(itemp)
-                name = treeCtrl.GetItemText(item)
-                S.send('%s %s ' % (typestr.encode(self.str_encode), name.encode(self.str_encode)))
-        except Exception as ee:
-            S.send('lstT1 select Except : %s' % str(ee))
-        return
-
-    def OnTreelstT1TreeItemRightClick(self, event):
-        treeCtrl = self.lstT1
-        try:
-            root = treeCtrl.GetRootItem()
-            item = event.GetItem()
-            itemp = treeCtrl.GetItemParent(item)
-            if item == root:
-                S.send(' lstT1 right click root')
-            elif itemp == root:
-                S.send(' lstT1 right click root/1')
-            else:
-                typestr = treeCtrl.GetItemText(itemp)
-                name = treeCtrl.GetItemText(item)
-                S.send('%s %s ' % (typestr.encode(self.str_encode), name.encode(self.str_encode)))
-        except Exception as ee:
-            S.send('lstT1 right click Except : %s' % str(ee))
-        return
-    
-    def OnTreelstT2TreeSelChanged(self, event):
-        pass
-
-    
-    def OnTreelstT2TreeItemRightClick(self, event):
-        pass

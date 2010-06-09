@@ -474,7 +474,7 @@ class dbm(wx.Frame):
 
         self.txtActtime = wx.TextCtrl(id=wxID_DBMTXTACTTIME, name=u'txtActtime',
               parent=self.Pconnect, pos=wx.Point(144, 32), size=wx.Size(48, 22),
-              style=0, value=u'180')
+              style=0, value=u'59')
 
         self.textActsql = wx.TextCtrl(id=wxID_DBMTEXTACTSQL, name=u'textActsql',
               parent=self.Pconnect, pos=wx.Point(192, 32), size=wx.Size(640,
@@ -702,8 +702,6 @@ class dbm(wx.Frame):
               self.OnTreelstT1TreeItemRightClick, id=wxID_DBMLSTT1)
         self.lstT1.Bind(wx.EVT_TREE_SEL_CHANGED,
               self.OnTreelstT1TreeSelChanged, id=wxID_DBMLSTT1)
-        
-        #self.lstT1.Bind(wx.EVT_LISTBOX, self.OnLstT1Listbox, id=wxID_DBMLSTT1)
 
         self.choiceDb2 = wx.Choice(choices=[], id=wxID_DBMCHOICEDB2,
               name=u'choiceDb2', parent=self.panelM2, pos=wx.Point(0, 0),
@@ -729,8 +727,6 @@ class dbm(wx.Frame):
               self.OnTreelstT2TreeItemRightClick, id=wxID_DBMLSTT2)
         self.lstT2.Bind(wx.EVT_TREE_SEL_CHANGED,
               self.OnTreelstT2TreeSelChanged, id=wxID_DBMLSTT2)
-        
-        #self.lstT2.Bind(wx.EVT_LISTBOX, self.OnLstT2Listbox, id=wxID_DBMLSTT2)
 
         self.btnExportDDL = wx.Button(id=wxID_DBMBTNEXPORTDDL,
               label=_(u'Export DDL'), name=u'btnExportDDL',
@@ -3839,13 +3835,15 @@ class dbm(wx.Frame):
         treeC.Expand(rootitem)
         
         dlg = None
-        dlg = wx.ProgressDialog(_('Please wait...'), _('query database objects...'), 100, self.last_dlg, style=wx.PD_ELAPSED_TIME|wx.PD_CAN_ABORT)
-        dlg.Update(50)
+        dlg = wx.ProgressDialog(_('Please wait...'), _('query database objects...           '), 
+                100, self.last_dlg, style=wx.PD_ELAPSED_TIME|wx.PD_CAN_ABORT)
+        dlg.Update(1)
         try:
             treeC.Freeze()
             if 'ANSTV_db' not in DbInfo:
                 t1 = time.time()
                 sql = r'''select * from SYSCAT.TABLES order by TYPE'''
+                dlg.Update(10, sql.decode(self.str_encode))
                 dbX.cs.execute(sql)
                 data = dbX.cs.fetchall()
                 desc = dbX.cs._description2()
@@ -3902,6 +3900,7 @@ class dbm(wx.Frame):
                 if types+'_db' not in DbInfo:
                     t1 = time.time()
                     dbX.cs.execute(sql)
+                    dlg.Update(50, sql.decode(self.str_encode))
                     data = dbX.cs.fetchall()
                     desc = dbX.cs._description2()
                     sqltime.append(time.time()-t1)
@@ -3927,6 +3926,7 @@ class dbm(wx.Frame):
                 if ty1+'_db' not in DbInfo:
                     t1 = time.time()
                     sql = r'''select * from SYSCAT.%s''' % types
+                    dlg.Update(80, sql.decode(self.str_encode))
                     dbX.cs.execute(sql)
                     data = dbX.cs.fetchall()
                     desc = dbX.cs._description2()
@@ -4076,6 +4076,10 @@ class dbm(wx.Frame):
         DbInfo = self.db_objects[id(dbX.db)]
         matchstr = textC.GetValue().encode(self.str_encode)
         rootitem = treeC.GetRootItem()
+        citem = treeC.GetSelection()
+        treePath = self.func_GetTreePath(treeC, rootitem, citem)
+        if len(treePath) >= 4:
+            treeC.SelectItem(treeC.GetItemParent(citem))
         for types in [DbObj.Functions, DbObj.Procedures, DbObj.Triggers,
             DbObj.Aliases, DbObj.Nicknames, DbObj.Summary_Tables, DbObj.Tables, DbObj.Views]:
             item,cookie = treeC.GetFirstChild(rootitem)
@@ -4229,14 +4233,6 @@ class dbm(wx.Frame):
         else:
             print 'unknow '
 
-    def OnLstT1Listbox(self, event):
-        event.Skip()
-        self.OnNbM1NotebookPageChanged(None)
-
-    def OnLstT2Listbox(self, event):
-        event.Skip()
-        self.OnNbM2NotebookPageChanged(None)
-
     def query_schema_object_table(self, db2db, typestr, schema, tabname, gridX, typeid):
         '''query_schema_object_detail
         @param db2db: Db2db()
@@ -4355,7 +4351,6 @@ class dbm(wx.Frame):
                 S.send(' lstTx select root/1')
             else:
                 if len(path) == 4:
-                    #self.query_schema_object_detail_and_show(L, path)
                     if L==1:
                         self.OnNbM1NotebookPageChanged()
                     else:
@@ -4436,41 +4431,7 @@ class dbm(wx.Frame):
 
 
     def OnBtnCompareButton(self, event):
-        if self.lstT1.GetStringSelection() == '' and self.lstT2.GetStringSelection() == '':
-            print '  Comare: no select'
-            try:
-                self.tmpcur.execute(''' create table LL (a)''')
-                self.tmpcur.execute(''' create table RR (a)''')
-            except Exception as _ee:
-                pass
-            self.tmpcur.execute(''' delete from  LL ''')
-            self.tmpcur.execute(''' delete from  RR ''')
-            self.tmpcur.executemany(''' insert into LL values (?) ''' , [(i,) for i in self.Obj1['value'] ])
-            self.tmpcur.executemany(''' insert into RR values (?) ''' , [(i,) for i in self.Obj2['value'] ])
-
-            typestr = self.choiceType.GetStringSelection()
-            try:
-                self.tmpcur.execute('''select a from LL where a not in (select a from RR) ''')
-                f = self.tmpcur.fetchall()
-                ows = self.choiceSchema1.GetStringSelection()
-                ow = u'' if ows == u'' else u'"%s".' % ows.encode(self.str_encode)
-                self.stcM1.SetValue(u'\n'.join([ u'drop %s  %s"%s" ; ' % (typestr, ow, str(s[0]).decode(self.str_encode)) for s in f]))
-            except Exception as ee:
-                print '11 %s' % str(ee)
-
-            try:
-                self.tmpcur.execute('''select a from RR where a not in (select a from LL) ''')
-                f = self.tmpcur.fetchall()
-                ows = self.choiceSchema2.GetStringSelection()
-                ow = u'' if ows == u'' else u'"%s".' % ows.encode(self.str_encode)
-                self.stcM2.SetValue(u'\n'.join([ u'drop %s  %s"%s" ; ' % (typestr, ow, str(s[0]).decode(self.str_encode)) for s in f]))
-            except Exception as ee:
-                print '22 %s' % str(ee)
-        else:
-            print '  Compare: diff text'
-            self.compare_text_used_file()
-
-        self.tmpdb.commit()
+        self.compare_text_used_file()
         event.Skip()
 
     def compare_text_used_file(self):

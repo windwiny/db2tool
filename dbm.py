@@ -3838,6 +3838,9 @@ class dbm(wx.Frame):
         rootitem = treeC.AddRoot(dbX.dbname.decode(self.str_encode))
         treeC.Expand(rootitem)
         
+        dlg = None
+        dlg = wx.ProgressDialog(_('Please wait...'), _('query database objects...'), 100, self.last_dlg, style=wx.PD_ELAPSED_TIME|wx.PD_CAN_ABORT)
+        dlg.Update(50)
         vts = [
         (DbObj.Bufferpools,     r'''select * from SYSCAT.BUFFERPOOLS''',    'BPNAME'),
         (DbObj.Tablespaces,     r'''select * from SYSCAT.TABLESPACES''',    'TBSPACE'),
@@ -3963,6 +3966,8 @@ class dbm(wx.Frame):
             finally:
                 treeC.Thaw()
 
+        if dlg:
+            dlg.Destroy()
         S.send('All time:%s;  sqt:(%d)%s;  lst:%s' % (time.time()-btime, len(sqltime), sum(sqltime), str(sqltime)))
         treeC.Expand(rootitem)    
         return
@@ -4172,7 +4177,7 @@ class dbm(wx.Frame):
                 wx.MessageBox(m.decode(self.str_encode), u'query_schema_object_detail error', wx.OK, self.last_dlg)
         textMsg.ShowPosition(0)
 
-    def query_schema_object_detail_and_show(self, L, treePath=[]):
+    def query_schema_object_detail_and_show(self, L, treePath):
         if len(treePath) < 4:
             return
         if L == 1:
@@ -4291,7 +4296,7 @@ class dbm(wx.Frame):
             return
         typestr,schema1,objname1 = treePath[1:4]
         if pos == 0:
-            self.query_schema_object_detail_and_show(1)
+            self.query_schema_object_detail_and_show(1, treePath)
         elif pos == 1:
             self.query_schema_object_table(dbX, typestr, schema1, objname1, self.gridM11, pos)
         elif pos == 2:
@@ -4318,7 +4323,7 @@ class dbm(wx.Frame):
             return
         typestr,schema1,objname1 = treePath[1:4]
         if pos == 0:
-            self.query_schema_object_detail_and_show(2)
+            self.query_schema_object_detail_and_show(2, treePath)
         elif pos == 1:
             self.query_schema_object_table(dbX, typestr, schema1, objname1, self.gridM21, pos)
         elif pos == 2:

@@ -19,6 +19,7 @@ import gettext
 from mods import config2
 from mods import sqld
 from mods import sqlformatter
+import S
 
 try:
     import DB2
@@ -43,6 +44,32 @@ except Exception as ee:
 
 from mods import stc2
 from mods import images   # my images
+
+class DbObj():
+    ALL                       = 'ALL'
+    Aliases                   = 'Aliases'
+    Bufferpools               = 'Bufferpools'
+    Database_Partition_Groups = 'Database Partition Groups'
+    Distinct_Types            = 'Distinct Types'
+    Functions                 = 'Functions'
+    Indexes                   = 'Indexes'
+    Nicknames                 = 'Nicknames'
+    Object_Lists              = 'Object Lists'
+    Packages                  = 'Packages'
+    Procedures                = 'Procedures'
+    Reports                   = 'Reports'
+    Schemas                   = 'Schemas'
+    Sequences                 = 'Sequences'
+    Servers                   = 'Servers'
+    Summary_Tables            = 'Summary Tables'
+    Tables                    = 'Tables'
+    Tablespaces               = 'Tablespaces'
+    Triggers                  = 'Triggers'
+    Users                     = 'Users'
+    User_Groups               = 'User Groups'
+    User_Mappings             = 'User Mappings'
+    Views                     = 'Views'
+    Wrappers                  = 'Wrappers'
 
 
 def create(parent):
@@ -668,10 +695,15 @@ class dbm(wx.Frame):
               style=0, value=u'')
         self.txtI1.Bind(wx.EVT_TEXT, self.OnTxtI1Text, id=wxID_DBMTXTI1)
 
-        self.lstT1 = wx.ListBox(choices=[], id=wxID_DBMLSTT1, name=u'lstT1',
+        self.lstT1 = wx.TreeCtrl(id=wxID_DBMLSTT1, name=u'lstT1',
               parent=self.panelM1, pos=wx.Point(0, 66), size=wx.Size(200, 120),
-              style=0)
-        self.lstT1.Bind(wx.EVT_LISTBOX, self.OnLstT1Listbox, id=wxID_DBMLSTT1)
+              style=wx.TR_HAS_BUTTONS | wx.TR_DEFAULT_STYLE)
+        self.lstT1.Bind(wx.EVT_TREE_ITEM_RIGHT_CLICK,
+              self.OnTreelstT1TreeItemRightClick, id=wxID_DBMLSTT1)
+        self.lstT1.Bind(wx.EVT_TREE_SEL_CHANGED,
+              self.OnTreelstT1TreeSelChanged, id=wxID_DBMLSTT1)
+        
+        #self.lstT1.Bind(wx.EVT_LISTBOX, self.OnLstT1Listbox, id=wxID_DBMLSTT1)
 
         self.choiceDb2 = wx.Choice(choices=[], id=wxID_DBMCHOICEDB2,
               name=u'choiceDb2', parent=self.panelM2, pos=wx.Point(0, 0),
@@ -690,10 +722,15 @@ class dbm(wx.Frame):
               style=0, value=u'')
         self.txtI2.Bind(wx.EVT_TEXT, self.OnTxtI2Text, id=wxID_DBMTXTI2)
 
-        self.lstT2 = wx.ListBox(choices=[], id=wxID_DBMLSTT2, name=u'lstT2',
+        self.lstT2 = wx.TreeCtrl(id=wxID_DBMLSTT2, name=u'lstT2',
               parent=self.panelM2, pos=wx.Point(0, 66), size=wx.Size(200, 120),
-              style=0)
-        self.lstT2.Bind(wx.EVT_LISTBOX, self.OnLstT2Listbox, id=wxID_DBMLSTT2)
+              style=wx.TR_HAS_BUTTONS | wx.TR_DEFAULT_STYLE)
+        self.lstT2.Bind(wx.EVT_TREE_ITEM_RIGHT_CLICK,
+              self.OnTreelstT2TreeItemRightClick, id=wxID_DBMLSTT2)
+        self.lstT2.Bind(wx.EVT_TREE_SEL_CHANGED,
+              self.OnTreelstT2TreeSelChanged, id=wxID_DBMLSTT2)
+        
+        #self.lstT2.Bind(wx.EVT_LISTBOX, self.OnLstT2Listbox, id=wxID_DBMLSTT2)
 
         self.btnExportDDL = wx.Button(id=wxID_DBMBTNEXPORTDDL,
               label=_(u'Export DDL'), name=u'btnExportDDL',
@@ -983,10 +1020,7 @@ class dbm(wx.Frame):
         self.splitterWindowProcedures.SetSashPosition(200)
 
         # Pobjects
-        self.choiceType.AppendItems(['TABLE', 'VIEW', 'SUMMARY TABLE',
-            'SERVER', 'DRDA', 'NICKNAME', 'BUFFERPOOL', 'TABLESPACE',
-            'FUNCTION', 'TRIGGER', 'PROCEDURE',
-            ])
+        self.choiceType.AppendItems([i for i in dir(DbObj) if not i.startswith('__')])
         self.splitterWindowObject.SplitVertically(self.splitterWindowObject1, self.splitterWindowObject2)
         self.splitterWindowObject.SetMinimumPaneSize(1)
         self.splitterWindowObject.SetSashPosition(210)
@@ -3794,6 +3828,140 @@ class dbm(wx.Frame):
 #            self.choiceSchema2.Clear()
 #            self.choiceSchema2.AppendItems([f2[i][0] for i in range(len(f2))])
 
+    def show_db_objects_tree(self, dbX, tree):
+        dbX.cs.set_timeout(5)
+        dbinfo = {}
+        tree.DeleteAllItems()
+        rootitem = tree.AddRoot(dbX.dbname.decode(self.str_encode))
+        tree.Expand(rootitem)
+        
+        vts = [
+        (DbObj.Bufferpools,     r'''select * from SYSCAT.BUFFERPOOLS''',    'BPNAME'),
+        (DbObj.Tablespaces,     r'''select * from SYSCAT.TABLESPACES''',    'TBSPACE'),
+        (DbObj.Wrappers,        r'''select * from SYSCAT.WRAPPERS''',       'WRAPNAME'),
+        (DbObj.Servers,         r'''select * from SYSCAT.SERVERS''',        'SERVERNAME'),
+        (DbObj.User_Mappings,   r'''select * from SYSCAT.USEROPTIONS''',    'AUTHID'),
+        
+        ]
+        for types, sql, name in vts:
+            item = tree.AppendItem(rootitem, types)
+            try:
+                dbX.cs.execute(sql)
+                data = dbX.cs.fetchall()
+                desc = dbX.cs._description2()
+                dbinfo[types+'_db'] = (data, desc)
+                iX = [x[0].upper().strip() for x in desc].index(name.upper())
+                data = [x[iX] for x in data]
+                data.sort()
+                dbinfo[types] = data
+                for i in data:
+                    tree.AppendItem(item, i)
+                S.send('appenditem %3d %s' % (len(data), types))
+            except Exception as ee:
+                S.send('show_db_objects_tree %s %s' % (types, str(ee)) )
+
+        try:
+            sql = r'''select * from SYSCAT.TABLES order by TYPE'''
+            dbX.cs.execute(sql)
+            data = dbX.cs.fetchall()
+            desc = dbX.cs._description2()
+            dbinfo['ANSTV_db'] = (data, desc)
+            iX = [i[0].upper().strip() for i in desc].index('TABSCHEMA')
+            iY = [i[0].upper().strip() for i in desc].index('TABNAME')
+            iZ = [i[0].upper().strip() for i in desc].index('TYPE')
+            
+            for types in [DbObj.Aliases, DbObj.Nicknames, DbObj.Summary_Tables, DbObj.Tables, DbObj.Views]:
+                item1 = tree.AppendItem(rootitem, types)
+                objects = [(x[iX],x[iY]) for x in data if x[iZ] == types[0]]
+                schemas = list(set([x[0] for x in objects]))
+                schemas.sort()
+                info = {}
+                for schema in schemas:
+                    tb = [x[1] for x in objects if x[0]==schema]
+                    tb.sort()
+                    schema = schema.rstrip()
+                    if schema.upper() != schema or schema.lstrip() != schema:
+                        schema = '"%s"' % schema
+                    item2 = tree.AppendItem(item1, schema)
+                    info[schema] = tb
+                    for t in tb:
+                        if t.upper() != t or t.lstrip() != t:
+                            t = '"%s"' % t
+                        tree.AppendItem(item2, t)
+                dbinfo[types] = info
+                S.send('appenditem %3d %s' % (len(objects), types))
+        except Exception as ee:
+            S.send('show_db_objects_tree %s %s' % ('tab view nickn alias summary', str(ee)) )
+
+        for types in [DbObj.Functions, DbObj.Procedures, DbObj.Triggers]:
+            try:
+                sql = r'''select * from SYSCAT.%s''' % types
+                dbX.cs.execute(sql)
+                data = dbX.cs.fetchall()
+                desc = dbX.cs._description2()
+                dbinfo['FPT_db'] = (data, desc)
+                iX = [i[0].upper().strip() for i in desc].index('%sSCHEMA' % types[:4].upper())
+                iY = [i[0].upper().strip() for i in desc].index('%sNAME' % types[:4].upper())
+                
+                item1 = tree.AppendItem(rootitem, types)
+                objects = [(x[iX],x[iY]) for x in data]
+                schemas = list(set([x[0] for x in objects]))
+                schemas.sort()
+                info = {}
+                for schema in schemas:
+                    tb = [x[1] for x in objects if x[0]==schema]
+                    tb.sort()
+                    schema = schema.rstrip()
+                    if schema.upper() != schema or schema.lstrip() != schema:
+                        schema = '"%s"' % schema
+                    item2 = tree.AppendItem(item1, schema)
+                    info[schema] = tb
+                    for t in tb:
+                        if t.upper() != t or t.lstrip() != t:
+                            t = '"%s"' % t
+                        tree.AppendItem(item2, t)
+                dbinfo[types] = info
+                S.send('appenditem %3d %s' % (len(objects), types))
+            except Exception as ee:
+                S.send('show_db_objects_tree %s %s' % ('func proc trig', str(ee)) )    
+
+            
+        tree.Expand(rootitem)    
+        return
+    
+        vts = [
+        (DbObj.Bufferpools,     r'''select * from SYSCAT.BUFFERPOOLS order by BPNAME'''),
+        (DbObj.Tablespaces,     r'''select TBSPACEID,TBSPACE,DEFINER,TBSPACETYPE,DATATYPE,EXTENTSIZE,DBPGNAME,BUFFERPOOLID,DROP_RECOVERY,NGNAME ''' \
+                                 '''from SYSCAT.TABLESPACES order by TBSPACE'''),
+
+        (DbObj.Wrappers,        r'''select * from SYSCAT.SERVERS order by SERVERNAME'''),
+        (DbObj.Servers,         r'''select * from SYSCAT.SERVERS order by SERVERNAME'''),
+        (DbObj.User_Mappings,   r''''''),
+        (DbObj.Nicknames,       r''''''),
+
+        (DbObj.Tables,          r'''select rtrim(TABSCHEMA) from SYSCAT.TABLES where TYPE='T' group by TABSCHEMA order by TABSCHEMA'''),
+        (DbObj.Summary_Tables,  r'''select rtrim(TABSCHEMA) from SYSCAT.TABLES where TYPE='S' group by TABSCHEMA order by TABSCHEMA'''),
+        (DbObj.Functions,       r'''select rtrim(FUNCSCHEMA) from SYSCAT.FUNCTIONS group by FUNCSCHEMA order by FUNCSCHEMA'''),
+        (DbObj.Views,           r'''select rtrim(TABSCHEMA) from SYSCAT.TABLES where TYPE='V' group by TABSCHEMA order by TABSCHEMA'''),
+        (DbObj.Procedures,      r'''select rtrim(PROCSCHEMA) from SYSCAT.PROCEDURES  group by PROCSCHEMA order by PROCSCHEMA'''),
+        (DbObj.Triggers,        r'''select rtrim(TRIGSCHEMA) from SYSCAT.TRIGGERS  group by TRIGSCHEMA order by TRIGSCHEMA'''),
+
+        (DbObj.Aliases,         r''''''),
+        (DbObj.Database_Partition_Groups,   r''''''),
+        (DbObj.Distinct_Types,  r''''''),
+        (DbObj.Indexes,         r''''''),
+        (DbObj.Packages,        r''''''),
+        (DbObj.Object_Lists,    r''''''),
+        (DbObj.Reports,         r''''''),
+        (DbObj.Schemas,         r'''select TABSCHEMA from SYSCAT.NICKNAMES group by TABSCHEMA order by TABSCHEMA'''),
+        (DbObj.Sequences,       r''''''),
+
+        (DbObj.Users,           r'''select TABSCHEMA from SYSCAT.NICKNAMES group by TABSCHEMA order by TABSCHEMA'''),
+        (DbObj.User_Groups,     r''''''),
+        ]
+        
+        return
+
     def query_schemas(self, cs, typestr):
         ''' user cursor query schema
         @param cs: cursor
@@ -3884,12 +4052,14 @@ class dbm(wx.Frame):
     def OnChoiceDb1Choice(self, event):
         event.Skip()
         self.Obj1['dbX'] = self.get_db2db_from_connect_string(self.choiceDb1.GetStringSelection())
-        self.query_schemas_and_show(1)
+        self.show_db_objects_tree(self.Obj1['dbX'], self.lstT1)
+        #self.query_schemas_and_show(1)
 
     def OnChoiceDb2Choice(self, event):
         event.Skip()
         self.Obj2['dbX'] = self.get_db2db_from_connect_string(self.choiceDb2.GetStringSelection())
-        self.query_schemas_and_show(2)
+        self.show_db_objects_tree(self.Obj2['dbX'], self.lstT2)
+        #self.query_schemas_and_show(2)
 
     # -------- schema objects --------
     def query_schema_objects(self, cs, typestr, schema):
@@ -5077,5 +5247,17 @@ class dbm(wx.Frame):
         pass
     def x12(self, event):
         self.x11(event, True)
+        pass
+    
+    def OnTreelstT1TreeItemRightClick(self, event):
+        pass
+    
+    def OnTreelstT1TreeSelChanged(self, event):
+        pass
+    
+    def OnTreelstT2TreeItemRightClick(self, event):
+        pass
+    
+    def OnTreelstT2TreeSelChanged(self, event):
         pass
     

@@ -1023,7 +1023,7 @@ class dbm(wx.Frame):
         self.choiceType.AppendItems([i for i in dir(DbObj) if not i.startswith('__')])
         self.splitterWindowObject.SplitVertically(self.splitterWindowObject1, self.splitterWindowObject2)
         self.splitterWindowObject.SetMinimumPaneSize(1)
-        self.splitterWindowObject.SetSashPosition(210)
+        self.splitterWindowObject.SetSashPosition(440)
         self.splitterWindowObject1.SplitVertically(self.panelM1, self.panelM2)
         self.splitterWindowObject1.SetMinimumPaneSize(1)
         self.splitterWindowObject1.SetSashGravity(0.5)
@@ -2017,6 +2017,7 @@ class dbm(wx.Frame):
             self.dbs_connected = []
         finally:
             dlg.Destroy()
+        self.db_objects = {}
 
     def OnBtnFontButton(self, event):
         event.Skip()
@@ -3828,12 +3829,21 @@ class dbm(wx.Frame):
 #            self.choiceSchema2.Clear()
 #            self.choiceSchema2.AppendItems([f2[i][0] for i in range(len(f2))])
 
-    def show_db_objects_tree(self, dbX, tree):
+    def show_db_objects_tree(self, choiceC, textC, treeC, ForceRefresh=False):
+        btime = time.time()
+        sqltime = []
+        dbX = self.get_db2db_from_connect_string(choiceC.GetStringSelection())
         dbX.cs.set_timeout(5)
-        dbinfo = {}
-        tree.DeleteAllItems()
-        rootitem = tree.AddRoot(dbX.dbname.decode(self.str_encode))
-        tree.Expand(rootitem)
+        if not hasattr(self, 'db_objects') or type(self.db_objects) != type({}):
+            self.db_objects = {}
+        if ForceRefresh or id(dbX.db) not in self.db_objects:
+            DbInfo = {}
+            self.db_objects[id(dbX.db)] = DbInfo
+        else:
+            DbInfo = self.db_objects[id(dbX.db)]
+        treeC.DeleteAllItems()
+        rootitem = treeC.AddRoot(dbX.dbname.decode(self.str_encode))
+        treeC.Expand(rootitem)
         
         vts = [
         (DbObj.Bufferpools,     r'''select * from SYSCAT.BUFFERPOOLS''',    'BPNAME'),
@@ -3844,34 +3854,48 @@ class dbm(wx.Frame):
         
         ]
         for types, sql, name in vts:
-            item = tree.AppendItem(rootitem, types)
+            item = treeC.AppendItem(rootitem, types.decode(self.str_encode))
             try:
-                dbX.cs.execute(sql)
-                data = dbX.cs.fetchall()
-                desc = dbX.cs._description2()
-                dbinfo[types+'_db'] = (data, desc)
+                treeC.Freeze()
+                if types+'_db' not in DbInfo:
+                    t1 = time.time()
+                    dbX.cs.execute(sql)
+                    data = dbX.cs.fetchall()
+                    desc = dbX.cs._description2()
+                    sqltime.append(time.time()-t1)
+                    DbInfo[types+'_db'] = (data, desc)
+                else:
+                    data, desc = DbInfo[types+'_db']
                 iX = [x[0].upper().strip() for x in desc].index(name.upper())
                 data = [x[iX] for x in data]
                 data.sort()
-                dbinfo[types] = data
+                DbInfo[types] = data
                 for i in data:
-                    tree.AppendItem(item, i)
+                    treeC.AppendItem(item, i.decode(self.str_encode))
                 S.send('appenditem %3d %s' % (len(data), types))
             except Exception as ee:
                 S.send('show_db_objects_tree %s %s' % (types, str(ee)) )
+            finally:
+                treeC.Thaw()
 
         try:
-            sql = r'''select * from SYSCAT.TABLES order by TYPE'''
-            dbX.cs.execute(sql)
-            data = dbX.cs.fetchall()
-            desc = dbX.cs._description2()
-            dbinfo['ANSTV_db'] = (data, desc)
+            treeC.Freeze()
+            if 'ANSTV_db' not in DbInfo:
+                t1 = time.time()
+                sql = r'''select * from SYSCAT.TABLES order by TYPE'''
+                dbX.cs.execute(sql)
+                data = dbX.cs.fetchall()
+                desc = dbX.cs._description2()
+                sqltime.append(time.time()-t1)
+                DbInfo['ANSTV_db'] = (data, desc)
+            else:
+                data, desc = DbInfo['ANSTV_db']
             iX = [i[0].upper().strip() for i in desc].index('TABSCHEMA')
             iY = [i[0].upper().strip() for i in desc].index('TABNAME')
             iZ = [i[0].upper().strip() for i in desc].index('TYPE')
             
             for types in [DbObj.Aliases, DbObj.Nicknames, DbObj.Summary_Tables, DbObj.Tables, DbObj.Views]:
-                item1 = tree.AppendItem(rootitem, types)
+                item1 = treeC.AppendItem(rootitem, types.decode(self.str_encode))
                 objects = [(x[iX],x[iY]) for x in data if x[iZ] == types[0]]
                 schemas = list(set([x[0] for x in objects]))
                 schemas.sort()
@@ -3882,28 +3906,42 @@ class dbm(wx.Frame):
                     schema = schema.rstrip()
                     if schema.upper() != schema or schema.lstrip() != schema:
                         schema = '"%s"' % schema
-                    item2 = tree.AppendItem(item1, schema)
+                    item2 = treeC.AppendItem(item1, schema.decode(self.str_encode))
                     info[schema] = tb
-                    for t in tb:
+                    txt = textC.GetValue().encode(self.str_encode)
+                    if txt:
+                        tb2 = self.get_match_list(tb, txt, False)
+                    else:tb2 = tb
+                    for t in tb2:
                         if t.upper() != t or t.lstrip() != t:
                             t = '"%s"' % t
-                        tree.AppendItem(item2, t)
-                dbinfo[types] = info
-                S.send('appenditem %3d %s' % (len(objects), types))
+                        treeC.AppendItem(item2, t.decode(self.str_encode))
+                    S.send('appenditem %3d -> %s.%s' % (len(tb), types, schema))
+                DbInfo[types] = info
+                S.send('appenditem %3d %s SUM' % (len(objects), types))
         except Exception as ee:
             S.send('show_db_objects_tree %s %s' % ('tab view nickn alias summary', str(ee)) )
+        finally:
+            treeC.Thaw()
 
         for types in [DbObj.Functions, DbObj.Procedures, DbObj.Triggers]:
             try:
-                sql = r'''select * from SYSCAT.%s''' % types
-                dbX.cs.execute(sql)
-                data = dbX.cs.fetchall()
-                desc = dbX.cs._description2()
-                dbinfo['FPT_db'] = (data, desc)
-                iX = [i[0].upper().strip() for i in desc].index('%sSCHEMA' % types[:4].upper())
-                iY = [i[0].upper().strip() for i in desc].index('%sNAME' % types[:4].upper())
+                treeC.Freeze()
+                ty1 = types[:4].upper()
+                if ty1+'_db' not in DbInfo:
+                    t1 = time.time()
+                    sql = r'''select * from SYSCAT.%s''' % types
+                    dbX.cs.execute(sql)
+                    data = dbX.cs.fetchall()
+                    desc = dbX.cs._description2()
+                    sqltime.append(time.time()-t1)
+                    DbInfo[ty1+'_db'] = (data, desc)
+                else:
+                    data, desc = DbInfo[ty1+'_db']
+                iX = [i[0].upper().strip() for i in desc].index('%sSCHEMA' % ty1)
+                iY = [i[0].upper().strip() for i in desc].index('%sNAME' % ty1)
                 
-                item1 = tree.AppendItem(rootitem, types)
+                item1 = treeC.AppendItem(rootitem, types.decode(self.str_encode))
                 objects = [(x[iX],x[iY]) for x in data]
                 schemas = list(set([x[0] for x in objects]))
                 schemas.sort()
@@ -3914,19 +3952,26 @@ class dbm(wx.Frame):
                     schema = schema.rstrip()
                     if schema.upper() != schema or schema.lstrip() != schema:
                         schema = '"%s"' % schema
-                    item2 = tree.AppendItem(item1, schema)
+                    item2 = treeC.AppendItem(item1, schema.decode(self.str_encode))
                     info[schema] = tb
-                    for t in tb:
+                    txt = textC.GetValue().encode(self.str_encode)
+                    if txt:
+                        tb2 = self.get_match_list(tb, txt, False)
+                    else:tb2 = tb
+                    for t in tb2:
                         if t.upper() != t or t.lstrip() != t:
                             t = '"%s"' % t
-                        tree.AppendItem(item2, t)
-                dbinfo[types] = info
-                S.send('appenditem %3d %s' % (len(objects), types))
+                        treeC.AppendItem(item2, t.decode(self.str_encode))
+                    S.send('appenditem %3d -> %s.%s' % (len(tb), types, schema))
+                DbInfo[types] = info
+                S.send('appenditem %3d %s SUM' % (len(objects), types))
             except Exception as ee:
                 S.send('show_db_objects_tree %s %s' % ('func proc trig', str(ee)) )    
+            finally:
+                treeC.Thaw()
 
-            
-        tree.Expand(rootitem)    
+        S.send('All time:%s;  sqt:(%d)%s;  lst:%s' % (time.time()-btime, len(sqltime), sum(sqltime), str(sqltime)))
+        treeC.Expand(rootitem)    
         return
     
         vts = [
@@ -4052,13 +4097,13 @@ class dbm(wx.Frame):
     def OnChoiceDb1Choice(self, event):
         event.Skip()
         self.Obj1['dbX'] = self.get_db2db_from_connect_string(self.choiceDb1.GetStringSelection())
-        self.show_db_objects_tree(self.Obj1['dbX'], self.lstT1)
+        self.show_db_objects_tree(self.choiceDb1, self.txtI1, self.lstT1)
         #self.query_schemas_and_show(1)
 
     def OnChoiceDb2Choice(self, event):
         event.Skip()
         self.Obj2['dbX'] = self.get_db2db_from_connect_string(self.choiceDb2.GetStringSelection())
-        self.show_db_objects_tree(self.Obj2['dbX'], self.lstT2)
+        self.show_db_objects_tree(self.choiceDb2, self.txtI2, self.lstT2)
         #self.query_schemas_and_show(2)
 
     # -------- schema objects --------
@@ -4137,27 +4182,52 @@ class dbm(wx.Frame):
         self.query_schema_objects_and_show(2)
 
     # -------- filter --------
-    def get_match_list(self, ori, matchstr):
+    def get_match_list(self, ori, matchstr, uni=True):
+        if uni: stat = re.IGNORECASE | re.UNICODE
+        else:   stat = re.IGNORECASE
         match = []
         matchstr = '.*%s.*' % matchstr.replace('*', '.*').replace('?', '.')
         for i in ori:
-            if re.match(matchstr, i, re.IGNORECASE | re.UNICODE):
+            if re.match(matchstr, i, stat):
                 match.append(i)
         return match
+        
+    def filter(self, choiceC, textC, treeC):
+        dbX = self.get_db2db_from_connect_string(choiceC.GetStringSelection())
+        DbInfo = self.db_objects[id(dbX.db)]
+        matchstr = textC.GetValue().encode(self.str_encode)
+        rootitem = treeC.GetRootItem()
+        for types in [DbObj.Functions, DbObj.Procedures, DbObj.Triggers,
+            DbObj.Aliases, DbObj.Nicknames, DbObj.Summary_Tables, DbObj.Tables, DbObj.Views]:
+            item,cookie = treeC.GetFirstChild(rootitem)
+            while item:
+                if treeC.GetItemText(item) == types.encode(self.str_encode):
+                    break
+                item,cookie = treeC.GetNextChild(item, cookie)
+            else:continue
+            item1,cookie1 = treeC.GetFirstChild(item)
+            while item1:
+                schema = treeC.GetItemText(item1).encode(self.str_encode)
+                data1 = DbInfo[types][schema]
+                data2 = self.get_match_list(data1, matchstr, False)
+                S.send(' filter %s.%s.%s-- %d,%d' % (types, treeC.GetItemText(item).encode(self.str_encode),
+                   treeC.GetItemText(item1).encode(self.str_encode), len(data1),len(data2)))
+                treeC.DeleteChildren(item1)
+                treeC.Freeze()
+                for i in data2:
+                    treeC.AppendItem(item1,i.decode(self.str_encode))
+                treeC.Thaw()
+                item1,cookie1 = treeC.GetNextChild(item1,cookie1)
+        treeC.Refresh()
+        pass
 
     def OnTxtI1Text(self, event=None):
         if event: event.Skip()
-        matchstr = self.txtI1.GetValue()
-        new = self.get_match_list(self.Obj1['value'], matchstr)
-        self.lstT1.Clear()
-        self.lstT1.SetItems(new)
+        self.filter(self.choiceDb1, self.txtI1, self.lstT1)
 
     def OnTxtI2Text(self, event=None):
         if event: event.Skip()
-        matchstr = self.txtI2.GetValue()
-        new = self.get_match_list(self.Obj2['value'], matchstr)
-        self.lstT2.Clear()
-        self.lstT2.SetItems(new)
+        self.filter(self.choiceDb2, self.txtI2, self.lstT2)
 
     # -------- schema object detail --------
     def query_schema_object_detail(self, cs, typestr, schema, objname, textMsg):
@@ -5248,16 +5318,56 @@ class dbm(wx.Frame):
     def x12(self, event):
         self.x11(event, True)
         pass
-    
-    def OnTreelstT1TreeItemRightClick(self, event):
-        pass
+
+    def GetTreePath(self, treeC, root, item):
+        path = []
+        path.insert(0, treeC.GetItemText(item))
+        while item != root:
+            item = treeC.GetItemParent(item)
+            path.insert(0, treeC.GetItemText(item))
+        return path
     
     def OnTreelstT1TreeSelChanged(self, event):
-        pass
-    
-    def OnTreelstT2TreeItemRightClick(self, event):
-        pass
+        treeCtrl = self.lstT1
+        try:
+            root = treeCtrl.GetRootItem()
+            item = event.GetItem()
+            path = self.GetTreePath(treeCtrl, root, item)
+            S.send('path: %s' % str(path))
+            itemp = treeCtrl.GetItemParent(item)
+            if len(path) == 1:
+                S.send(' lstT1 select root')
+            elif len(path) == 2:
+                S.send(' lstT1 select root/1')
+            else:
+                typestr = treeCtrl.GetItemText(itemp)
+                name = treeCtrl.GetItemText(item)
+                S.send('%s %s ' % (typestr.encode(self.str_encode), name.encode(self.str_encode)))
+        except Exception as ee:
+            S.send('lstT1 select Except : %s' % str(ee))
+        return
+
+    def OnTreelstT1TreeItemRightClick(self, event):
+        treeCtrl = self.lstT1
+        try:
+            root = treeCtrl.GetRootItem()
+            item = event.GetItem()
+            itemp = treeCtrl.GetItemParent(item)
+            if item == root:
+                S.send(' lstT1 right click root')
+            elif itemp == root:
+                S.send(' lstT1 right click root/1')
+            else:
+                typestr = treeCtrl.GetItemText(itemp)
+                name = treeCtrl.GetItemText(item)
+                S.send('%s %s ' % (typestr.encode(self.str_encode), name.encode(self.str_encode)))
+        except Exception as ee:
+            S.send('lstT1 right click Except : %s' % str(ee))
+        return
     
     def OnTreelstT2TreeSelChanged(self, event):
         pass
+
     
+    def OnTreelstT2TreeItemRightClick(self, event):
+        pass

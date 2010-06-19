@@ -2,6 +2,8 @@
 #-*- coding:utf-8 -*-
 #Boa:App:BoaApp
 
+import os, sys
+sys.path.append( sys.path[0] + os.path.sep + 'configd.sqlite3' )
 import wx
 print 'wx.version():', wx.version()
 

@@ -32,8 +32,6 @@ from mods import db2util2
 
 try:
     import wx
-    if not hasattr(wx,'Color') and hasattr(wx,'Colour'):
-        wx.Color = wx.Colour
     import wx.grid
     import wx.stc
     import wx.lib.pubsub
@@ -85,10 +83,9 @@ def create(parent):
  wxID_DBMBTNSQLSAVE, wxID_DBMBUTTON4, wxID_DBMCHKLINK, wxID_DBMCHKLOGSQLS, 
  wxID_DBMCHKSHOWONTEXT, wxID_DBMCHKSHOWSQLSRES, 
  wxID_DBMCHOICECONNECTEDDBNAMES, wxID_DBMCHOICEDB1, wxID_DBMCHOICEDB2, 
- wxID_DBMCHOICESCHEMA1, wxID_DBMCHOICESCHEMA2, wxID_DBMCHOICETYPE, 
- wxID_DBMGRIDDBS, wxID_DBMGRIDM11, wxID_DBMGRIDM12, wxID_DBMGRIDM13, 
- wxID_DBMGRIDM21, wxID_DBMGRIDM22, wxID_DBMGRIDM23, wxID_DBMLSTPROCEDURES, 
- wxID_DBMLSTT1, wxID_DBMLSTT2, wxID_DBMNBDBS, wxID_DBMNBM1, wxID_DBMNBM2, 
+ wxID_DBMCHOICETYPE, wxID_DBMGRIDDBS, wxID_DBMGRIDM11, wxID_DBMGRIDM12, 
+ wxID_DBMGRIDM13, wxID_DBMGRIDM21, wxID_DBMGRIDM22, wxID_DBMGRIDM23, 
+ wxID_DBMLSTPROCEDURES, wxID_DBMNBDBS, wxID_DBMNBM1, wxID_DBMNBM2, 
  wxID_DBMNBMAINFRAME, wxID_DBMNBRESULT, wxID_DBMPANELM1, wxID_DBMPANELM2, 
  wxID_DBMPCODESNIPPET, wxID_DBMPCONNECT, wxID_DBMPEXECUTE, wxID_DBMPOBJECTS, 
  wxID_DBMPPROCEDURES, wxID_DBMPPYTHON, wxID_DBMPWELCOME, 
@@ -101,9 +98,9 @@ def create(parent):
  wxID_DBMSTATICTEXT_MSG, wxID_DBMSTATUSBAR_EXEC, wxID_DBMSTATUSBAR_OBJECT, 
  wxID_DBMTEXTACTSQL, wxID_DBMTEXTCODESNIPPET, wxID_DBMTEXTCONNMSG, 
  wxID_DBMTEXTPROCEDURES, wxID_DBMTREECODESNIPPET, wxID_DBMTREEPYTHON, 
- wxID_DBMTREESQLS, wxID_DBMTXTACTTIME, wxID_DBMTXTI1, wxID_DBMTXTI2, 
- wxID_DBMTXTSPLITCHAR, wxID_DBMTXTTIMEOUT, 
-] = [wx.NewId() for _init_ctrls in range(87)]
+ wxID_DBMTREESQLS, wxID_DBMTREET1, wxID_DBMTREET2, wxID_DBMTXTACTTIME, 
+ wxID_DBMTXTI1, wxID_DBMTXTI2, wxID_DBMTXTSPLITCHAR, wxID_DBMTXTTIMEOUT, 
+] = [wx.NewId() for _init_ctrls in range(85)]
 
 [wxID_DBMTIME_CHANGECTRLPOS, wxID_DBMTIME_KEEPACTIVE, 
  wxID_DBMTIME_SETEDITFOCUS, 
@@ -180,7 +177,7 @@ class dbGridTable(wx.grid.PyGridTableBase):
         if type(self.data[row]) != type([]):
             self.data[row] = [i for i in self.data[row]]
         self.data[row][col] = value
-        self.GetView().SetCellBackgroundColour(row, col, wx.Color(188, 0, 0))
+        self.GetView().SetCellBackgroundColour(row, col, wx.Colour(188, 0, 0))
     def GetColLabelValue(self, col):
         try:
             return unicode(self.desc[col], self.str_encode) #[0]
@@ -206,7 +203,7 @@ class Db2db():
         self.cs = None
         self.info = ''
         self.ischange = False
-        self.color = wx.Color(255, 255, 255)
+        self.color = wx.Colour(255, 255, 255)
 
 class Db2_connected():
     def __init__(self, *args):
@@ -684,24 +681,18 @@ class dbm(wx.Frame):
         self.choiceDb1.Bind(wx.EVT_CHOICE, self.OnChoiceDb1Choice,
               id=wxID_DBMCHOICEDB1)
 
-        self.choiceSchema1 = wx.Choice(choices=[], id=wxID_DBMCHOICESCHEMA1,
-              name=u'choiceSchema1', parent=self.panelM1, pos=wx.Point(0, 22),
-              size=wx.Size(200, 22), style=0)
-        self.choiceSchema1.Bind(wx.EVT_CHOICE, self.OnChoiceSchema1Choice,
-              id=wxID_DBMCHOICESCHEMA1)
-
         self.txtI1 = wx.TextCtrl(id=wxID_DBMTXTI1, name=u'txtI1',
-              parent=self.panelM1, pos=wx.Point(0, 44), size=wx.Size(200, 22),
+              parent=self.panelM1, pos=wx.Point(0, 22), size=wx.Size(200, 22),
               style=0, value=u'')
         self.txtI1.Bind(wx.EVT_TEXT, self.OnTxtI1Text, id=wxID_DBMTXTI1)
 
-        self.lstT1 = wx.TreeCtrl(id=wxID_DBMLSTT1, name=u'lstT1',
-              parent=self.panelM1, pos=wx.Point(0, 66), size=wx.Size(200, 120),
+        self.treeT1 = wx.TreeCtrl(id=wxID_DBMTREET1, name=u'treeT1',
+              parent=self.panelM1, pos=wx.Point(0, 44), size=wx.Size(200, 120),
               style=wx.TR_HAS_BUTTONS | wx.TR_DEFAULT_STYLE)
-        self.lstT1.Bind(wx.EVT_TREE_ITEM_RIGHT_CLICK,
-              self.OnTreelstT1TreeItemRightClick, id=wxID_DBMLSTT1)
-        self.lstT1.Bind(wx.EVT_TREE_SEL_CHANGED,
-              self.OnTreelstT1TreeSelChanged, id=wxID_DBMLSTT1)
+        self.treeT1.Bind(wx.EVT_TREE_ITEM_RIGHT_CLICK,
+              self.OnTreeT1TreeItemRightClick, id=wxID_DBMTREET1)
+        self.treeT1.Bind(wx.EVT_TREE_SEL_CHANGED,
+              self.OnTreeT1TreeSelChanged, id=wxID_DBMTREET1)
 
         self.choiceDb2 = wx.Choice(choices=[], id=wxID_DBMCHOICEDB2,
               name=u'choiceDb2', parent=self.panelM2, pos=wx.Point(0, 0),
@@ -709,24 +700,18 @@ class dbm(wx.Frame):
         self.choiceDb2.Bind(wx.EVT_CHOICE, self.OnChoiceDb2Choice,
               id=wxID_DBMCHOICEDB2)
 
-        self.choiceSchema2 = wx.Choice(choices=[], id=wxID_DBMCHOICESCHEMA2,
-              name=u'choiceSchema2', parent=self.panelM2, pos=wx.Point(0, 22),
-              size=wx.Size(200, 22), style=0)
-        self.choiceSchema2.Bind(wx.EVT_CHOICE, self.OnChoiceSchema2Choice,
-              id=wxID_DBMCHOICESCHEMA2)
-
         self.txtI2 = wx.TextCtrl(id=wxID_DBMTXTI2, name=u'txtI2',
-              parent=self.panelM2, pos=wx.Point(0, 44), size=wx.Size(200, 22),
+              parent=self.panelM2, pos=wx.Point(0, 22), size=wx.Size(200, 22),
               style=0, value=u'')
         self.txtI2.Bind(wx.EVT_TEXT, self.OnTxtI2Text, id=wxID_DBMTXTI2)
 
-        self.lstT2 = wx.TreeCtrl(id=wxID_DBMLSTT2, name=u'lstT2',
-              parent=self.panelM2, pos=wx.Point(0, 66), size=wx.Size(200, 120),
+        self.treeT2 = wx.TreeCtrl(id=wxID_DBMTREET2, name=u'treeT2',
+              parent=self.panelM2, pos=wx.Point(0, 44), size=wx.Size(200, 120),
               style=wx.TR_HAS_BUTTONS | wx.TR_DEFAULT_STYLE)
-        self.lstT2.Bind(wx.EVT_TREE_ITEM_RIGHT_CLICK,
-              self.OnTreelstT2TreeItemRightClick, id=wxID_DBMLSTT2)
-        self.lstT2.Bind(wx.EVT_TREE_SEL_CHANGED,
-              self.OnTreelstT2TreeSelChanged, id=wxID_DBMLSTT2)
+        self.treeT2.Bind(wx.EVT_TREE_ITEM_RIGHT_CLICK,
+              self.OnTreeT2TreeItemRightClick, id=wxID_DBMTREET2)
+        self.treeT2.Bind(wx.EVT_TREE_SEL_CHANGED,
+              self.OnTreeT2TreeSelChanged, id=wxID_DBMTREET2)
 
         self.btnExportDDL = wx.Button(id=wxID_DBMBTNEXPORTDDL,
               label=_(u'Export DDL'), name=u'btnExportDDL',
@@ -1038,8 +1023,8 @@ class dbm(wx.Frame):
         self.statusBar_object.SetStatusWidths([-6, -3, -7, -4])
         self.nbM1.publisher = wx.lib.pubsub.Publisher()
         self.nbM2.publisher = wx.lib.pubsub.Publisher()
-        self.nbM1.publisher.subscribe(self.OnNbM1NotebookPageChanged, self.lstT1)
-        self.nbM2.publisher.subscribe(self.OnNbM2NotebookPageChanged, self.lstT2)
+        self.nbM1.publisher.subscribe(self.OnNbM1NotebookPageChanged, self.treeT1)
+        self.nbM2.publisher.subscribe(self.OnNbM2NotebookPageChanged, self.treeT2)
 
         # execute
         wxID_STCEXECLOGS = wx.NewId()
@@ -1086,7 +1071,7 @@ class dbm(wx.Frame):
             gridX.SetRowLabelSize(50)
             gridX.SetColLabelAlignment(wx.ALIGN_LEFT, wx.ALIGN_CENTRE)
             gridX.SetDefaultCellFont(ff)
-        self.choiceConnectedDbnames.SetBackgroundColour(wx.Color(255, 192, 235))
+        self.choiceConnectedDbnames.SetBackgroundColour(wx.Colour(255, 192, 235))
 
         # python
         self.splitterWindowPython.SplitVertically(self.treePython, self.splitterWindowPython1)
@@ -1417,19 +1402,17 @@ class dbm(wx.Frame):
             else:
                 self.splitterWindowObject2.SetSashPosition(psz.x/2)
 
-        psz = self.lstT1.GetParent().GetSize()
+        psz = self.treeT1.GetParent().GetSize()
         self.choiceDb1.SetSize(wx.Size(psz.x, 22))
-        self.choiceSchema1.SetSize(wx.Size(psz.x, 22))
         self.txtI1.SetSize(wx.Size(psz.x, 22))
-        pt = self.lstT1.GetPosition()
-        self.lstT1.SetSize(wx.Size(psz.x, psz.y - pt.y))
+        pt = self.treeT1.GetPosition()
+        self.treeT1.SetSize(wx.Size(psz.x, psz.y - pt.y))
 
-        psz = self.lstT2.GetParent().GetSize()
+        psz = self.treeT2.GetParent().GetSize()
         self.choiceDb2.SetSize(wx.Size(psz.x, 22))
-        self.choiceSchema2.SetSize(wx.Size(psz.x, 22))
         self.txtI2.SetSize(wx.Size(psz.x, 22))
-        pt = self.lstT2.GetPosition()
-        self.lstT2.SetSize(wx.Size(psz.x, psz.y - pt.y))
+        pt = self.treeT2.GetPosition()
+        self.treeT2.SetSize(wx.Size(psz.x, psz.y - pt.y))
 
     def resize_p_exec(self):
         sts = self.statusBar_exec.GetSize()
@@ -1478,12 +1461,10 @@ class dbm(wx.Frame):
         self.choiceType.SetFont(ff)
         self.choiceDb1.SetFont(ff)
         self.choiceDb2.SetFont(ff)
-        self.choiceSchema1.SetFont(ff)
-        self.choiceSchema2.SetFont(ff)
         self.txtI1.SetFont(ff)
         self.txtI2.SetFont(ff)
-        self.lstT1.SetFont(ff)
-        self.lstT2.SetFont(ff)
+        self.treeT1.SetFont(ff)
+        self.treeT2.SetFont(ff)
         self.nbM1.SetFont(ff)
         self.nbM2.SetFont(ff)
         self.gridM11.SetDefaultCellFont(ff)
@@ -1540,12 +1521,10 @@ class dbm(wx.Frame):
             self.choiceType.Enable()
             self.choiceDb1.Enable()
             self.choiceDb2.Enable()
-            self.choiceSchema1.Enable()
-            self.choiceSchema2.Enable()
             self.txtI1.Enable()
             self.txtI2.Enable()
-            self.lstT1.Enable()
-            self.lstT2.Enable()
+            self.treeT1.Enable()
+            self.treeT2.Enable()
             self.btnExportDDL.Enable() #
             self.btnCompare.Enable()
         else:
@@ -1567,12 +1546,10 @@ class dbm(wx.Frame):
             self.choiceType.Disable()
             self.choiceDb1.Disable()
             self.choiceDb2.Disable()
-            self.choiceSchema1.Disable()
-            self.choiceSchema2.Disable()
             self.txtI1.Disable()
             self.txtI2.Disable()
-            self.lstT1.Disable()
-            self.lstT2.Disable()
+            self.treeT1.Disable()
+            self.treeT2.Disable()
             self.btnExportDDL.Disable()
             self.btnFormatSpace.Disable()
             self.btnCompare.Disable()
@@ -1850,7 +1827,7 @@ class dbm(wx.Frame):
 
             '''227,227,227, 207,235,248, 244,252,203, 253,202,241, 219,234,236, 243,211,220, 253,202,239'''
             id_db = id(db)
-            color = wx.Color(random.randint(200,255), random.randint(200,255), random.randint(200,255))
+            color = wx.Colour(random.randint(200,255), random.randint(200,255), random.randint(200,255))
             self.dbs_connected.append([db, cs, node.encode(self.str_encode), dbname.encode(self.str_encode),
                    dbuser.encode(self.str_encode), password.encode(self.str_encode), comment.encode(self.str_encode), color])
             # column order
@@ -1865,7 +1842,7 @@ class dbm(wx.Frame):
             f = cs.fetchall()
             self.log_pg('    %s\n  success at %s  [%s]\n' % (db.__str__(), f[0][0], id_db))
 
-            conn_color = wx.Color(0, 255, 0)
+            conn_color = wx.Colour(0, 255, 0)
             for col in range(self.gridDbs.GetNumberCols()):
                 self.gridDbs.SetCellBackgroundColour(iRow, col, conn_color)
             self.gridDbs.Refresh()
@@ -2147,8 +2124,8 @@ class dbm(wx.Frame):
 #            self.btnExecSqlSingle.Disable()
 #            self.btnCommit.Enable()
 #            self.btnRollback.Enable()
-            self.btnCommit.SetBackgroundColour(wx.Color(0, 255, 0))
-            self.btnRollback.SetBackgroundColour(wx.Color(255, 0, 0))
+            self.btnCommit.SetBackgroundColour(wx.Colour(0, 255, 0))
+            self.btnRollback.SetBackgroundColour(wx.Colour(255, 0, 0))
             self.choiceConnectedDbnames.Enable(False)
         else:
 #            self.btnExec2.Enable()
@@ -3796,27 +3773,19 @@ class dbm(wx.Frame):
     # -------- schemas --------
     def set_obj_ctrl_s(self, isSingleLine):
         if isSingleLine:
-            self.choiceSchema1.Disable()
-            self.choiceSchema2.Disable()
             self.txtI1.Disable()
             self.txtI2.Disable()
-            self.lstT1.Disable()
-            self.lstT2.Disable()
+            self.treeT1.Disable()
+            self.treeT2.Disable()
 #            self.stcM1.ClearAll()
 #            self.stcM1.AppendText('\n'.join([str(f1[i]) for i in range(len(f1))]))
 #            self.stcM2.ClearAll()
 #            self.stcM2.AppendText('\n'.join([str(f2[i]) for i in range(len(f2))]))
         else:
-            self.choiceSchema1.Enable()
-            self.choiceSchema2.Enable()
             self.txtI1.Enable()
             self.txtI2.Enable()
-            self.lstT1.Enable()
-            self.lstT2.Enable()
-#            self.choiceSchema1.Clear()
-#            self.choiceSchema1.AppendItems([f1[i][0] for i in range(len(f1))])
-#            self.choiceSchema2.Clear()
-#            self.choiceSchema2.AppendItems([f2[i][0] for i in range(len(f2))])
+            self.treeT1.Enable()
+            self.treeT2.Enable()
 
     def show_db_objects_tree(self, choiceC, textC, treeC, ForceRefresh=False):
         btime = time.time()
@@ -4010,55 +3979,11 @@ class dbm(wx.Frame):
 
     def OnChoiceDb1Choice(self, event):
         event.Skip()
-        self.show_db_objects_tree(self.choiceDb1, self.txtI1, self.lstT1)
+        self.show_db_objects_tree(self.choiceDb1, self.txtI1, self.treeT1)
 
     def OnChoiceDb2Choice(self, event):
         event.Skip()
-        self.show_db_objects_tree(self.choiceDb2, self.txtI2, self.lstT2)
-
-    # -------- schema objects --------
-    def query_schema_objects(self, cs, typestr, schema):
-        '''using cursor query owner = %schema% objects
-        @param cs:
-        @param typestr:
-        @param schema:
-        @return:  None or objects list
-        '''
-        schema2 = schema.replace("'","''")
-        if typestr == 'TABLE':
-            vt = """select TABNAME from SYSCAT.TABLES where TYPE='T' and TABSCHEMA='%s' order by TABNAME""" % schema2
-        elif typestr == 'VIEW':
-            vt = """select TABNAME from SYSCAT.TABLES where TYPE='V' and TABSCHEMA='%s' order by TABNAME""" % schema2
-        elif typestr == 'SUMMARY TABLE':
-            vt = """select TABNAME from SYSCAT.TABLES where TYPE='S' and TABSCHEMA='%s' order by TABNAME""" % schema2
-        elif typestr == 'NICKNAME':
-            vt = """select TABNAME from SYSCAT.NICKNAMES where TABSCHEMA='%s' order by TABNAME""" % schema2
-        elif typestr == 'FUNCTION':
-            vt = """select FUNCNAME from SYSCAT.FUNCTIONS where FUNCSCHEMA='%s' order by FUNCNAME""" % schema2
-        elif typestr == 'TRIGGER':
-            vt = """select TRIGNAME from SYSCAT.TRIGGERS where TRIGSCHEMA='%s' order by TRIGNAME""" % schema2
-        elif typestr == 'PROCEDURE':
-            vt = """select PROCNAME from SYSCAT.PROCEDURES where PROCSCHEMA='%s' order by PROCNAME""" % schema2
-        else:
-            vt = ''
-            print '   unknown  ??? '
-            return None
-
-        try:
-            cs.execute(vt)
-            f = cs.fetchall()
-            objs = [f[i][0] for i in range(len(f))]
-            return objs
-        except DB2.Error as ee:
-            m = ' DB2: %s, %s, %s' % (ee.args[0], ee.args[1], ee.args[2])
-            wx.MessageBox(m.decode(self.str_encode), u'query_schema_objects error', wx.OK, self.last_dlg)
-            return None
-
-    def OnChoiceSchema1Choice(self, event):
-        event.Skip()
-
-    def OnChoiceSchema2Choice(self, event):
-        event.Skip()
+        self.show_db_objects_tree(self.choiceDb2, self.txtI2, self.treeT2)
 
     # -------- filter --------
     def get_match_list(self, ori, matchstr, uni=True):
@@ -4106,11 +4031,11 @@ class dbm(wx.Frame):
 
     def OnTxtI1Text(self, event=None):
         if event: event.Skip()
-        self.filter(self.choiceDb1, self.txtI1, self.lstT1)
+        self.filter(self.choiceDb1, self.txtI1, self.treeT1)
 
     def OnTxtI2Text(self, event=None):
         if event: event.Skip()
-        self.filter(self.choiceDb2, self.txtI2, self.lstT2)
+        self.filter(self.choiceDb2, self.txtI2, self.treeT2)
 
     # -------- schema object detail --------
     def query_schema_object_detail(self, cs, typestr, schema, objname, textMsg):
@@ -4194,17 +4119,17 @@ class dbm(wx.Frame):
 
             if self.chkLink.GetValue():
                 try:
-                    i = self.lstT2.GetItems().index(objname1)
-                    self.lstT2.SetSelection(i)
+                    i = self.treeT2.GetItems().index(objname1)
+                    self.treeT2.SetSelection(i)
                     cs = dbX.cs
-                    schema2 = self.choiceSchema2.GetStringSelection()
+                    schema2 = ''
                     if not cs or len(schema2) == 0 or len(objname1) == 0:
                         return
                     self.query_schema_object_detail(cs, typestr, schema2.encode(self.str_encode), objname1.encode(self.str_encode), self.stcM2)
                 except ValueError:
                     self.stcM2.SetValue(u'%s no exists.' % objname1)
                     self.staticText_Msg.SetLabel(u'%s.%s                   == ?' % (schema1, objname1))
-                    self.staticText_Msg.SetForegroundColour(wx.Color(255, 0, 0))
+                    self.staticText_Msg.SetForegroundColour(wx.Colour(255, 0, 0))
                     return
                 self.compare_text(schema1,objname1,schema2)
         elif L == 2:
@@ -4217,17 +4142,17 @@ class dbm(wx.Frame):
 
             if self.chkLink.GetValue():
                 try:
-                    i = self.lstT1.GetItems().index(objname2)
-                    self.lstT1.SetSelection(i)
+                    i = self.treeT1.GetItems().index(objname2)
+                    self.treeT1.SetSelection(i)
                     cs = dbX.cs
-                    schema1 = self.choiceSchema1.GetStringSelection()
+                    schema1 = ''
                     if not cs or len(schema1) == 0 or len(objname2) == 0:
                         return
                     self.query_schema_object_detail(cs, typestr, schema1.encode(self.str_encode), objname2.encode(self.str_encode), self.stcM1)
                 except ValueError:
                     self.stcM1.SetValue(u'%s no exists.' % objname2)
                     self.staticText_Msg.SetLabel(u' ?                      == %s.%s' % (schema2, objname2))
-                    self.staticText_Msg.SetForegroundColour(wx.Color(255, 0, 0))
+                    self.staticText_Msg.SetForegroundColour(wx.Colour(255, 0, 0))
                     return
                 self.compare_text(schema1,objname2,schema2)
         else:
@@ -4277,7 +4202,7 @@ class dbm(wx.Frame):
         try:
             pos = event.GetSelection()
             event.Skip()
-        except Exception as _ee: #' pubsub lstT1'
+        except Exception as _ee: #' pubsub treeT1'
             pos =self.nbM1.GetSelection()
         if not hasattr(self, 'db_objects'):
             return
@@ -4286,7 +4211,7 @@ class dbm(wx.Frame):
         if dbX.cs is None:
             S.send('OnNbM1NotebookPageChanged  not dbX ')
             return
-        treePath = self.func_GetTreePath(self.lstT1, self.lstT1.GetRootItem(), self.lstT1.GetSelection())
+        treePath = self.func_GetTreePath(self.treeT1, self.treeT1.GetRootItem(), self.treeT1.GetSelection())
         S.send('OnNbM1NotebookPageChanged %s pos:%d' % (str(treePath), pos))
         if not dbX or len(treePath) < 4:
             return
@@ -4304,7 +4229,7 @@ class dbm(wx.Frame):
         try:
             pos = event.GetSelection()
             event.Skip()
-        except Exception as _ee: #' pubsub lstT2'
+        except Exception as _ee: #' pubsub treeT2'
             pos =self.nbM2.GetSelection()
         if not hasattr(self, 'db_objects'):
             return
@@ -4313,7 +4238,7 @@ class dbm(wx.Frame):
         if dbX.cs is None:
             S.send('OnNbM2NotebookPageChanged  not dbX ')
             return
-        treePath = self.func_GetTreePath(self.lstT2, self.lstT2.GetRootItem(), self.lstT2.GetSelection())
+        treePath = self.func_GetTreePath(self.treeT2, self.treeT2.GetRootItem(), self.treeT2.GetSelection())
         S.send('OnNbM2NotebookPageChanged  %s pos:%d' % (str(treePath), pos))
         if not dbX or len(treePath) < 4:
             return
@@ -4376,19 +4301,19 @@ class dbm(wx.Frame):
             S.send('lstTx right click Except : %s' % str(ee))
         return
     
-    def OnTreelstT1TreeSelChanged(self, event):
-        self.treeitemselchanged(self.lstT1, 1, event)
+    def OnTreeT1TreeSelChanged(self, event):
+        self.treeitemselchanged(self.treeT1, 1, event)
     
-    def OnTreelstT1TreeItemRightClick(self, event):
-        self.treeitemrightclick(self.lstT1, 1, event)
+    def OnTreeT1TreeItemRightClick(self, event):
+        self.treeitemrightclick(self.treeT1, 1, event)
     
-    def OnTreelstT2TreeSelChanged(self, event):
-        self.treeitemselchanged(self.lstT2, 2, event)
+    def OnTreeT2TreeSelChanged(self, event):
+        self.treeitemselchanged(self.treeT2, 2, event)
     
-    def OnTreelstT2TreeItemRightClick(self, event):
-        self.treeitemrightclick(self.lstT2, 2, event)
+    def OnTreeT2TreeItemRightClick(self, event):
+        self.treeitemrightclick(self.treeT2, 2, event)
     
-
+    # -------- splitter event --------
     def OnSplitterWindowObject1LeftDclick(self, event):
         event.Skip()
         psz = self.splitterWindowObject1.GetSize()
@@ -4423,11 +4348,11 @@ class dbm(wx.Frame):
         if self.stcM1.GetValue().strip() == self.stcM2.GetValue().strip():
             msgs = 'info: %s.%s == %s.%s' % (schema1, objname, schema2, objname)
             self.staticText_Msg.SetLabel(msgs.decode(self.str_encode))
-            self.staticText_Msg.SetForegroundColour(wx.Color(0, 0, 0))
+            self.staticText_Msg.SetForegroundColour(wx.Colour(0, 0, 0))
         else:
             msgs = 'INFO: %s.%s <> %s.%s' % (schema1, objname, schema2, objname)
             self.staticText_Msg.SetLabel(msgs.decode(self.str_encode))
-            self.staticText_Msg.SetForegroundColour(wx.Color(255, 0, 0))
+            self.staticText_Msg.SetForegroundColour(wx.Colour(255, 0, 0))
 
 
     def OnBtnCompareButton(self, event):
@@ -4454,7 +4379,7 @@ class dbm(wx.Frame):
         event.Skip()
 
     def OnCbxLinkCheckbox(self, event):
-        self.staticText_Msg.SetForegroundColour(wx.Color(0, 0, 0))
+        self.staticText_Msg.SetForegroundColour(wx.Colour(0, 0, 0))
         if self.chkLink.GetValue():
             self.staticText_Msg.SetLabel(_('compare'))
             self.btnFormatSpace.Enable()
@@ -5175,7 +5100,8 @@ class dbm(wx.Frame):
         info.Version = u"0.0.9"
         info.Copyright = _("(C) 2010 Programmers and Coders Everywhere")
         info.Description = wx.lib.wordwrap.wordwrap(
-            _('''A "db2 tool" program is a software program that IBM/DB2 utility tool'''),
+            _('''A "db2 tool" program is a software program that IBM/DB2 utility tool''') +
+            '\n\npython: %s\nwxPython: %s' % (sys.version, wx.version()),
             500, wx.ClientDC(self))
         #info.WebSite = ("emailto:windwiny.ubt@gmail.com", "emailto:")
         info.Developers = [u"windwiny.ubt@gmail.com", ]

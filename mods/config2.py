@@ -17,13 +17,17 @@ class dbConfig():
     '''configure file use sqlite3 database
     '''
 
-    def __init__(self, str_encode):
+    def __init__(self, str_encode, fi=''):
         '''
         Constructor
         '''
         self.str_encode = str_encode
         self.conf_password = None
-        fi = sys.path[0] + os.path.sep + 'configd.sqlite3' 
+        if fi == '':
+            if sys.path[-1].endswith('configd.sqlite3'):
+                fi = sys.path[-1]
+            else:
+                fi = sys.path[0] + os.path.sep + 'configd.sqlite3' 
         fs = os.path.isfile(fi)
         self.__db1 = sqlite3.connect(fi)
         #self.__db1.row_factory = sqlite3.Row

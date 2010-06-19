@@ -175,10 +175,10 @@ class EditWindow(stc.StyledTextCtrl):
             self.SetEndAtLastLine(False)
         except AttributeError:
             pass
-        self.SetCaretForeground(wx.Color(255,0,0))
+        self.SetCaretForeground(wx.Colour(255,0,0))
         self.SetCaretWidth(10)
         self.SetCaretPeriod(200)
-        self.SetCaretLineBackground(wx.Color(0,255,255))
+        self.SetCaretLineBackground(wx.Colour(0,255,255))
         self.SetCaretLineBackAlpha(20)
         self.SetCaretLineVisible(True)
 

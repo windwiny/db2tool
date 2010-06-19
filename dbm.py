@@ -4877,10 +4877,21 @@ class dbm(wx.Frame):
     def OnMenuFileItem_exitMenu(self, event):
         if wx.YES == wx.MessageBox(_('Exit program ?'), _('Ask'), wx.YES_NO|wx.ICON_QUESTION, self):
             self.Close()
-            
+
+    def func_getwinn(self, ctl):
+        n = []
+        while True:
+            if not ctl:
+                break
+            n.append('%s(%s)' % (ctl.GetName(), ctl.GetClassName()))
+            ctl = ctl.GetParent()
+        n.reverse()
+        return '->'.join(n)
+
     def OnFind(self, event):
         ctl = self.ctl
         if not ctl: return
+        S.send(' %s' % self.func_getwinn(ctl))
 
         et = event.GetEventType()
         flags = event.GetFlags()
@@ -4925,8 +4936,8 @@ class dbm(wx.Frame):
                 pass
             elif issubclass(ctl.__class__, wx.grid.Grid):
                 pass
-            elif ctl.GetName() =='grid window':
-                gridX = self.FindWindowById(ctl.GetId()).GetParent()
+            elif issubclass(ctl.GetParent().__class__, wx.grid.Grid):
+                gridX = ctl.GetParent()
                 row, col = gridX.GetGridCursorRow(), gridX.GetGridCursorCol()
                 if hasattr(gridX.GetTable(),'data'):
                     desc = gridX.description2[col]
@@ -4996,8 +5007,8 @@ class dbm(wx.Frame):
         ctl = self.ctl
         if not ctl:
             return
-        if ctl.GetName() == 'grid window':
-            gridX = self.FindWindowById(ctl.GetId()).GetParent()
+        if issubclass(ctl.GetParent().__class__, wx.grid.Grid):
+            gridX = ctl.GetParent()
             self.current_active_gridX = gridX
             print gridX.GetName()
             self.popup2_CopyString()

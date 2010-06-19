@@ -4127,7 +4127,9 @@ class dbm(wx.Frame):
                     elif len(treePathX) == 4:
                         c2 = self.treeT2.GetItemParent(self.treeT2.GetSelection())
                     else:
-                        return
+                        c2 = self.func_TreeCtrl_SelectionItemsPath(self.treeT2, typestr, schema1)
+                        if c2 is None:
+                            return
                     schema2 = self.treeT1.GetItemText(c2).encode(self.str_encode)
                     item, cookie = self.treeT2.GetFirstChild(c2)
                     while item:
@@ -4135,14 +4137,7 @@ class dbm(wx.Frame):
                             self.treeT2.SelectItem(item)
                             break
                         item, cookie = self.treeT2.GetNextChild(item, cookie)
-#                    i = self.treeT2.GetItems().index(objname1)
-#                    self.treeT2.SetSelection(i)
-#                    cs = dbX.cs
-#                    schema2 = ''
-#                    if not cs or len(schema2) == 0 or len(objname1) == 0:
-#                        return
-#                    self.query_schema_object_detail(cs, typestr, schema2.encode(self.str_encode), objname1.encode(self.str_encode), self.stcM2)
-                except ValueError:
+                except Exception as ee:
                     self.stcM2.SetValue(u'%s no exists.' % objname1)
                     self.staticText_Msg.SetLabel(u'%s.%s                   == ?' % (schema1, objname1))
                     self.staticText_Msg.SetForegroundColour(wx.Colour(255, 0, 0))
@@ -4168,7 +4163,9 @@ class dbm(wx.Frame):
                     elif len(treePathX) == 4:
                         c2 = self.treeT1.GetItemParent(self.treeT1.GetSelection())
                     else:
-                        return
+                        c2 = self.func_TreeCtrl_SelectionItemsPath(self.treeT1, typestr, schema2)
+                        if c2 is None:
+                            return
                     schema1 = self.treeT1.GetItemText(c2).encode(self.str_encode)
                     item, cookie = self.treeT1.GetFirstChild(c2)
                     while item:
@@ -4176,14 +4173,7 @@ class dbm(wx.Frame):
                             self.treeT1.SelectItem(item)
                             break
                         item, cookie = self.treeT1.GetNextChild(item, cookie)
-                        
-#                    self.treeT1.SetSelection(i)
-#                    cs = dbX.cs
-#                    schema1 = ''
-#                    if not cs or len(schema1) == 0 or len(objname2) == 0:
-#                        return
-#                    self.query_schema_object_detail(cs, typestr, schema1.encode(self.str_encode), objname2.encode(self.str_encode), self.stcM1)
-                except ValueError:
+                except Exception as ee:
                     self.stcM1.SetValue(u'%s no exists.' % objname2)
                     self.staticText_Msg.SetLabel(u' ?                      == %s.%s' % (schema2, objname2))
                     self.staticText_Msg.SetForegroundColour(wx.Colour(255, 0, 0))
@@ -4287,6 +4277,19 @@ class dbm(wx.Frame):
             self.query_schema_object_table(dbX, typestr, schema1, objname1, self.gridM22, pos)
         elif pos == 3:
             self.query_schema_object_table(dbX, typestr, schema1, objname1, self.gridM23, pos)
+
+    def func_TreeCtrl_SelectionItemsPath(self, treeC, typestr, schema):
+        root = treeC.GetRootItem()
+        item, cookie = treeC.GetFirstChild(root)
+        while item:
+            if treeC.GetItemText(item).encode(self.str_encode) == typestr:
+                item2, cookie2 = treeC.GetFirstChild(item)
+                while item2:
+                    if treeC.GetItemText(item2).encode(self.str_encode) == schema:
+                        return item2
+                    item2, cookie2 = treeC.GetNextChild(item2, cookie2)
+            item, cookie = treeC.GetNextChild(item, cookie)
+        return None
     
     def func_GetTreeCtrl_CurrentSelectionItemsPath(self, treeC, root=None, item=None):
         path = []

@@ -4002,7 +4002,7 @@ class dbm(wx.Frame):
         matchstr = textC.GetValue().encode(self.str_encode)
         rootitem = treeC.GetRootItem()
         citem = treeC.GetSelection()
-        treePath = self.func_GetTreePath(treeC, rootitem, citem)
+        treePath = self.func_GetTreeCtrl_CurrentSelectionItemsPath(treeC, rootitem, citem)
         if len(treePath) >= 4:
             treeC.SelectItem(treeC.GetItemParent(citem))
         for types in [DbObj.Functions, DbObj.Procedures, DbObj.Triggers,
@@ -4113,47 +4113,83 @@ class dbm(wx.Frame):
             dbX = self.get_db2db_from_connect_string(self.choiceDb1.GetStringSelection())
             cs = dbX.cs
             typestr,schema1,objname1 = treePath[1:4]
-            if not cs or len(typestr) == 0  or len(schema1) == 0 or len(objname1) == 0:
+            if not cs or len(typestr) == 0 or len(schema1) == 0 or len(objname1) == 0:
                 return
             self.query_schema_object_detail(cs, typestr, schema1.encode(self.str_encode), objname1.encode(self.str_encode), self.stcM1)
 
             if self.chkLink.GetValue():
+                if hasattr(self, 'incompare'): return
                 try:
-                    i = self.treeT2.GetItems().index(objname1)
-                    self.treeT2.SetSelection(i)
-                    cs = dbX.cs
-                    schema2 = ''
-                    if not cs or len(schema2) == 0 or len(objname1) == 0:
+                    self.incompare = True
+                    treePathX = self.func_GetTreeCtrl_CurrentSelectionItemsPath(self.treeT2)
+                    if len(treePathX) == 3:
+                        c2 = self.treeT2.GetSelection()
+                    elif len(treePathX) == 4:
+                        c2 = self.treeT2.GetItemParent(self.treeT2.GetSelection())
+                    else:
                         return
-                    self.query_schema_object_detail(cs, typestr, schema2.encode(self.str_encode), objname1.encode(self.str_encode), self.stcM2)
+                    schema2 = self.treeT1.GetItemText(c2).encode(self.str_encode)
+                    item, cookie = self.treeT2.GetFirstChild(c2)
+                    while item:
+                        if self.treeT2.GetItemText(item).encode(self.str_encode) == objname1:
+                            self.treeT2.SelectItem(item)
+                            break
+                        item, cookie = self.treeT2.GetNextChild(item, cookie)
+#                    i = self.treeT2.GetItems().index(objname1)
+#                    self.treeT2.SetSelection(i)
+#                    cs = dbX.cs
+#                    schema2 = ''
+#                    if not cs or len(schema2) == 0 or len(objname1) == 0:
+#                        return
+#                    self.query_schema_object_detail(cs, typestr, schema2.encode(self.str_encode), objname1.encode(self.str_encode), self.stcM2)
                 except ValueError:
                     self.stcM2.SetValue(u'%s no exists.' % objname1)
                     self.staticText_Msg.SetLabel(u'%s.%s                   == ?' % (schema1, objname1))
                     self.staticText_Msg.SetForegroundColour(wx.Colour(255, 0, 0))
                     return
+                finally:
+                    del self.incompare
                 self.compare_text(schema1,objname1,schema2)
         elif L == 2:
             dbX = self.get_db2db_from_connect_string(self.choiceDb2.GetStringSelection())
             cs = dbX.cs
             typestr,schema2,objname2 = treePath[1:4]
-            if not cs or len(typestr) == 0   or len(schema2) == 0 or len(objname2) == 0:
+            if not cs or len(typestr) == 0 or len(schema2) == 0 or len(objname2) == 0:
                 return
             self.query_schema_object_detail(cs, typestr, schema2.encode(self.str_encode), objname2.encode(self.str_encode), self.stcM2)
 
             if self.chkLink.GetValue():
+                if hasattr(self, 'incompare'): return
                 try:
-                    i = self.treeT1.GetItems().index(objname2)
-                    self.treeT1.SetSelection(i)
-                    cs = dbX.cs
-                    schema1 = ''
-                    if not cs or len(schema1) == 0 or len(objname2) == 0:
+                    self.incompare = True
+                    treePathX = self.func_GetTreeCtrl_CurrentSelectionItemsPath(self.treeT1)
+                    if len(treePathX) == 3:
+                        c2 = self.treeT1.GetSelection()
+                    elif len(treePathX) == 4:
+                        c2 = self.treeT1.GetItemParent(self.treeT1.GetSelection())
+                    else:
                         return
-                    self.query_schema_object_detail(cs, typestr, schema1.encode(self.str_encode), objname2.encode(self.str_encode), self.stcM1)
+                    schema1 = self.treeT1.GetItemText(c2).encode(self.str_encode)
+                    item, cookie = self.treeT1.GetFirstChild(c2)
+                    while item:
+                        if self.treeT1.GetItemText(item).encode(self.str_encode) == objname2:
+                            self.treeT1.SelectItem(item)
+                            break
+                        item, cookie = self.treeT1.GetNextChild(item, cookie)
+                        
+#                    self.treeT1.SetSelection(i)
+#                    cs = dbX.cs
+#                    schema1 = ''
+#                    if not cs or len(schema1) == 0 or len(objname2) == 0:
+#                        return
+#                    self.query_schema_object_detail(cs, typestr, schema1.encode(self.str_encode), objname2.encode(self.str_encode), self.stcM1)
                 except ValueError:
                     self.stcM1.SetValue(u'%s no exists.' % objname2)
                     self.staticText_Msg.SetLabel(u' ?                      == %s.%s' % (schema2, objname2))
                     self.staticText_Msg.SetForegroundColour(wx.Colour(255, 0, 0))
                     return
+                finally:
+                    del self.incompare
                 self.compare_text(schema1,objname2,schema2)
         else:
             print 'unknow '
@@ -4211,7 +4247,7 @@ class dbm(wx.Frame):
         if dbX.cs is None:
             S.send('OnNbM1NotebookPageChanged  not dbX ')
             return
-        treePath = self.func_GetTreePath(self.treeT1, self.treeT1.GetRootItem(), self.treeT1.GetSelection())
+        treePath = self.func_GetTreeCtrl_CurrentSelectionItemsPath(self.treeT1)
         S.send('OnNbM1NotebookPageChanged %s pos:%d' % (str(treePath), pos))
         if not dbX or len(treePath) < 4:
             return
@@ -4238,7 +4274,7 @@ class dbm(wx.Frame):
         if dbX.cs is None:
             S.send('OnNbM2NotebookPageChanged  not dbX ')
             return
-        treePath = self.func_GetTreePath(self.treeT2, self.treeT2.GetRootItem(), self.treeT2.GetSelection())
+        treePath = self.func_GetTreeCtrl_CurrentSelectionItemsPath(self.treeT2)
         S.send('OnNbM2NotebookPageChanged  %s pos:%d' % (str(treePath), pos))
         if not dbX or len(treePath) < 4:
             return
@@ -4252,22 +4288,26 @@ class dbm(wx.Frame):
         elif pos == 3:
             self.query_schema_object_table(dbX, typestr, schema1, objname1, self.gridM23, pos)
     
-    def func_GetTreePath(self, treeC, root, item):
+    def func_GetTreeCtrl_CurrentSelectionItemsPath(self, treeC, root=None, item=None):
         path = []
         try:
+            if root is None:
+                root = treeC.GetRootItem()
+            if item is None:
+                item = treeC.GetSelection()
             path.insert(0, treeC.GetItemText(item).encode(self.str_encode))
             while item != root:
                 item = treeC.GetItemParent(item)
                 path.insert(0, treeC.GetItemText(item).encode(self.str_encode))
         except Exception as ee:
-            S.send('func_GetTreePath  Except:%s' % str(ee))
+            S.send('func_GetTreeCtrl_CurrentSelectionItemsPath  Except:%s' % str(ee))
         return path
         
     def treeitemselchanged(self, treeCtrl, L, event):
         try:
             root = treeCtrl.GetRootItem()
             item = event.GetItem()
-            path = self.func_GetTreePath(treeCtrl, root, item)
+            path = self.func_GetTreeCtrl_CurrentSelectionItemsPath(treeCtrl, root, item)
             S.send('path: %s' % str(path))
             itemp = treeCtrl.GetItemParent(item)
             if len(path) == 1:

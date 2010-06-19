@@ -3787,7 +3787,7 @@ class dbm(wx.Frame):
             self.treeT1.Enable()
             self.treeT2.Enable()
 
-    def show_db_objects_tree(self, choiceC, textC, treeC, ForceRefresh=False):
+    def show_db_objects_tree(self, choiceC, textC, treeC, ForceRefresh=True):
         btime = time.time()
         sqltime = []
         dbX = self.get_db2db_from_connect_string(choiceC.GetStringSelection())
@@ -3811,7 +3811,7 @@ class dbm(wx.Frame):
             treeC.Freeze()
             if 'ANSTV_db' not in DbInfo:
                 t1 = time.time()
-                sql = r'''select * from SYSCAT.TABLES order by TYPE'''
+                sql = r'''select TABSCHEMA,TABNAME,TYPE from SYSCAT.TABLES order by TYPE'''
                 dlg.Update(10, sql.decode(self.str_encode))
                 dbX.cs.execute(sql)
                 data = dbX.cs.fetchall()
@@ -3855,11 +3855,11 @@ class dbm(wx.Frame):
             treeC.Thaw()
 
         vts = [
-        (DbObj.Servers,         r'''select * from SYSCAT.SERVERS''',        'SERVERNAME'),
-        (DbObj.Wrappers,        r'''select * from SYSCAT.WRAPPERS''',       'WRAPNAME'),
-        (DbObj.User_Mappings,   r'''select * from SYSCAT.USEROPTIONS''',    'AUTHID'),
-        (DbObj.Bufferpools,     r'''select * from SYSCAT.BUFFERPOOLS''',    'BPNAME'),
-        (DbObj.Tablespaces,     r'''select * from SYSCAT.TABLESPACES''',    'TBSPACE'),
+        (DbObj.Servers,         r'''select %s from SYSCAT.SERVERS''',        'SERVERNAME'),
+        (DbObj.Wrappers,        r'''select %s from SYSCAT.WRAPPERS''',       'WRAPNAME'),
+        (DbObj.User_Mappings,   r'''select %s from SYSCAT.USEROPTIONS''',    'AUTHID'),
+        (DbObj.Bufferpools,     r'''select %s from SYSCAT.BUFFERPOOLS''',    'BPNAME'),
+        (DbObj.Tablespaces,     r'''select %s from SYSCAT.TABLESPACES''',    'TBSPACE'),
 
         ]
         for types, sql, name in vts:
@@ -3868,7 +3868,7 @@ class dbm(wx.Frame):
                 treeC.Freeze()
                 if types+'_db' not in DbInfo:
                     t1 = time.time()
-                    dbX.cs.execute(sql)
+                    dbX.cs.execute(sql % name)
                     dlg.Update(50, sql.decode(self.str_encode))
                     data = dbX.cs.fetchall()
                     desc = dbX.cs._description2()
@@ -3894,7 +3894,7 @@ class dbm(wx.Frame):
                 ty1 = types[:4].upper()
                 if ty1+'_db' not in DbInfo:
                     t1 = time.time()
-                    sql = r'''select * from SYSCAT.%s''' % types
+                    sql = r'''select %sSCHEMA,%sNAME from SYSCAT.%s''' % (ty1, ty1, types)
                     dlg.Update(80, sql.decode(self.str_encode))
                     dbX.cs.execute(sql)
                     data = dbX.cs.fetchall()
@@ -4100,7 +4100,7 @@ class dbm(wx.Frame):
             try:
                 cs.execute(vt)
                 f = cs.fetchall()
-                textMsg.AppendText(str(f[0][0]))
+                textMsg.AppendText(f[0][0].decode(self.str_encode))
             except DB2.Error as ee:
                 m = ' DB2: %s, %s, %s' % (ee.args[0], ee.args[1], ee.args[2])
                 wx.MessageBox(m.decode(self.str_encode), u'query_schema_object_detail error', wx.OK, self.last_dlg)

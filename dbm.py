@@ -22,7 +22,7 @@ from mods import sqlformatter
 import S
 
 try:
-    import DB2
+    from mods.db2 import DB2
 except Exception as ee:
     print '''  Not import PyDB2, python setup.py install -c mingw32'''
     print ee.args[0]

@@ -12,12 +12,17 @@
 
 """
 import os
+import sys
 ##eval('from %s import _db2' % os.name)    ##
 if os.name == 'nt':
-    from nt import _db2
+    if sys.version.split(' ',1)[0].startswith('2.7'):
+        from nt.v27 import _db2
+    elif sys.version.split(' ',1)[0].startswith('2.6'):
+        from nt.v26 import _db2
+    else:
+        from nt import _db2
 elif os.name == 'posix':
     from posix import _db2
-import sys
 import time
 import types
 import binascii

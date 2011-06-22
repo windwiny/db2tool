@@ -23,6 +23,13 @@ from mods import sqld
 from mods import sqlformatter
 import S
 import db2ext
+try:
+    import winsound
+except ImportError:
+    class winsound():
+        @classmethod
+        def Beep(self, *args):
+            pass
 
 try:
     from mods.db2 import DB2
@@ -977,6 +984,9 @@ class dbm(wx.Frame):
     def __init__(self, parent):
         self.init_dir()
         gettext.install(pgname, './locale', True)
+        if _('Log') == 'Log':
+            winsound.Beep(1000, 200)
+            wx.MessageBox('''_('Log') == 'Log', dir is %s''' % os.getcwdu())
         self.str_encode = locale.getdefaultlocale()[1]
         self.cfgread()
         self._init_ctrls(parent)

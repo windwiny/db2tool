@@ -69,7 +69,18 @@ class DbObj():
     User_Mappings             = 'User Mappings'
     Views                     = 'Views'
     Wrappers                  = 'Wrappers'
+    
+class ShowObjType():
+    Ddl   = 0
+    Cols  = 1
+    Datas = 2
+    Count = 3
 
+class ExportFileType():
+    SQL = 1
+    DEL = 2
+    CSV = 4
+    IXF = 3
 
 def create(parent):
     return dbm(parent)
@@ -971,11 +982,11 @@ class dbm(wx.Frame):
         self.SetMenuBar(self.menuMainMenuBar)
         self.nbMainFrame.SetSelection(0)
         
-        self.Bind(wx.EVT_FIND, self.OnFind)
-        self.Bind(wx.EVT_FIND_NEXT, self.OnFind)
-        self.Bind(wx.EVT_FIND_REPLACE, self.OnFind)
-        self.Bind(wx.EVT_FIND_REPLACE_ALL, self.OnFind)
-        self.Bind(wx.EVT_FIND_CLOSE, self.OnFindClose)
+        self.Bind(wx.EVT_COMMAND_FIND, self.OnFind)
+        self.Bind(wx.EVT_COMMAND_FIND_NEXT, self.OnFind)
+        self.Bind(wx.EVT_COMMAND_FIND_REPLACE, self.OnFind)
+        self.Bind(wx.EVT_COMMAND_FIND_REPLACE_ALL, self.OnFind)
+        self.Bind(wx.EVT_COMMAND_FIND_CLOSE, self.OnFindClose)
 
         self.init_ctrl(parent)
         self.init_keys()
@@ -2238,15 +2249,19 @@ class dbm(wx.Frame):
     # -------- grid context menu --------
     def popup2_ExportSQL(self, event):
         self.stcSQLs.SetFocus()
-        self.export_data(1, self.current_active_gridX, wx.GetKeyState(wx.WXK_SHIFT))
+        self.export_data(ExportFileType.SQL, self.current_active_gridX, wx.GetKeyState(wx.WXK_SHIFT))
 
     def popup2_ExportDEL(self, event):
         self.stcSQLs.SetFocus()
-        self.export_data(2, self.current_active_gridX, wx.GetKeyState(wx.WXK_SHIFT))
+        self.export_data(ExportFileType.DEL, self.current_active_gridX, wx.GetKeyState(wx.WXK_SHIFT))
+
+    def popup2_ExportCSV(self, event):
+        self.stcSQLs.SetFocus()
+        self.export_data(ExportFileType.CSV, self.current_active_gridX, wx.GetKeyState(wx.WXK_SHIFT))
 
     def popup2_ExportIXF(self, event):
         self.stcSQLs.SetFocus()
-        self.export_data(3, self.current_active_gridX, wx.GetKeyState(wx.WXK_SHIFT))
+        self.export_data(ExportFileType.IXF, self.current_active_gridX, wx.GetKeyState(wx.WXK_SHIFT))
 
     def popup2_SelectAll(self, event):
         gridX = self.current_active_gridX
@@ -2376,35 +2391,26 @@ class dbm(wx.Frame):
         
     def copy_cond_sql(self, progress):
         gridX = self.current_active_gridX
-        print gridX.dbname, gridX.dbuser, gridX.tabname, gridX.sql, gridX.resmsg
-        print gridX.GetSelectedCells()
-        print gridX.GetSelectedRows()
-        print gridX.GetSelectedCols()
         TL = gridX.GetSelectionBlockTopLeft()
         RB = gridX.GetSelectionBlockBottomRight()
-        if len(TL) <= 0 or len(RB) <=0:
-            x = gridX.GetGridCursorRow()
-            y = gridX.GetGridCursorCol()
-            TL.append([x, y])
-            RB.append([x, y])
+        col = gridX.GetGridCursorCol()
+        rowss = [gridX.GetGridCursorRow()]
+        for i in range(len(TL)):
+            rowss += [TL[i][0], RB[i][0]]
+        ces = gridX.GetSelectedCells()
+        for i in ces:
+            rowss.append(i[0])
+        rowss = list(set(rowss))
+        rowss.sort()
+        print col, rowss
         
         ds = StringIO.StringIO()
-        if RB[0][1] - TL[0][1] > 1:
-            pass    #TODO
-#            for i in range(TL[0][0], RB[0][0]+1):
-#                ls = ''
-#                for j in range(TL[0][1], RB[0][1]+1):
-#                    ls += ',%s' % gridX.GetCellValue(i, j)
-#                ds.write('%s%s' % (ls[1:], self.NL))
-        else:
-            col = TL[0][1]
-            row = TL[0][0]
+        if True:
             data = gridX.GetTable().data
-            row2 = row + RB[0][0] - TL[0][0] + 1
             colname = gridX.description2[col][0]
             colisnum = gridX.description2[col][1] in ['INTEGER', 'SMALLINT', 'BIGINT', 'INT', 'DECIMAL', 'REAL', 'DOUBLE']
-            progress[1] = row2 - row
-            for i in range(row, row2):
+            progress[1] = len(rowss)
+            for i in rowss:
                 if progress[2]: break
                 progress[0] += 1
                 s = data[i][col]
@@ -2507,6 +2513,7 @@ class dbm(wx.Frame):
                     [_("Create Selec&t SQL condition "),        self.popup2_CopyCondSelectSQL,  None, None],
                     [_('&Export to SQL\tor (SHIFT)'),           self.popup2_ExportSQL,          None, None],
                     [_('&Export to DEL\tor (SHIFT)'),           self.popup2_ExportDEL,          None, None],
+                    [_('&Export to CSV\tor (SHIFT)'),           self.popup2_ExportCSV,          None, None],
                     [_('&Export to IXF'),                       self.popup2_ExportIXF,          None, None],
                    ]
             for m in self.menttextGrid:
@@ -3635,7 +3642,7 @@ class dbm(wx.Frame):
         if not colss:
             colss = [i for i in range(len(desc))]
 
-        if data_type == 1:
+        if data_type == ExportFileType.SQL:
             ftype = 'SQL'
 #            inss = ''
 #            for col in range(len(desc)):
@@ -3662,8 +3669,21 @@ class dbm(wx.Frame):
                 ff.write(inssql1)
                 iC[0] += 1
                 if isBrk[0]: break
-        elif data_type == 2:
-            ftype = 'DEL'
+        elif data_type == ExportFileType.DEL or data_type == ExportFileType.CSV:
+            if data_type == ExportFileType.DEL:
+                ftype = 'DEL'
+            else:
+                ftype = 'CSV'
+                cnX = []
+                coX = []
+                for i in desc:
+                    cnX.append('"%s"' % i[0])
+                    tyx = ['%s' % j for j in i[1:]]
+                    coX.append('"%s"' % '/'.join(tyx))
+                ff.write('%s' % ','.join(cnX))
+                ff.write(self.NL)
+                ff.write('%s' % ','.join(coX))
+                ff.write(self.NL)
             for row in rowss:
                 v = []
                 for col in colss:
@@ -3680,7 +3700,7 @@ class dbm(wx.Frame):
                 ff.write(self.NL)
                 iC[0] += 1
                 if isBrk[0]: break
-        elif data_type == 3:
+        elif data_type == ExportFileType.IXF:
             ftype = 'IXF'
             print
 
@@ -3699,7 +3719,7 @@ class dbm(wx.Frame):
         #print ' get data table ID: %s' % id(data) #check []
 
         colss = None
-        if isSelectColumns and data_type in [1, 2]:
+        if isSelectColumns and data_type in [ExportFileType.SQL, ExportFileType.DEL, ExportFileType.CSV]:
             desc = gridX.description2
             colss = []
             for i in range(len(desc)):
@@ -3721,13 +3741,16 @@ class dbm(wx.Frame):
                 return False
 
         fext = u'Any files (*.*)|*.*'
-        if data_type == 1:
+        if data_type == ExportFileType.SQL:
             fext = u'%s|%s' % (u'Insert SQL file (*.sql)|*.sql', fext)
             ftype = 'SQL'
-        elif data_type == 2:
+        elif data_type == ExportFileType.DEL:
             fext = u'%s|%s' % (u'DB2 DEL file (*.del)|*.del', fext)
             ftype = 'DEL'
-        elif data_type == 3:
+        elif data_type == ExportFileType.CSV:
+            fext = u'%s|%s' % (u'DB2 DEL file (*.csv)|*.csv', fext)
+            ftype = 'CSV'
+        elif data_type == ExportFileType.IXF:
             fext = u'%s|%s' % (u'DB2 IXF file (*.ixf)|*.ixf', fext)
             ftype = 'IXF'
         else:
@@ -3751,7 +3774,7 @@ class dbm(wx.Frame):
         iC = [0]
         isBrk = [False]
         msg = 'export  "%s"."%s"   of  "%s" ' % (gridX.tabschema, gridX.tabname, ftype)  + '  Write %4d' + ' of %d records.' % len(data)
-        if ftype == 'IXF':
+        if data_type == ExportFileType.IXF:
             ff.close()
             try:
                 i = gridX.db2db.db.export(ftype, gridX.sql, ff.name.encode(self.str_encode), ff.name.encode(self.str_encode)+'.msg')
@@ -4228,13 +4251,13 @@ class dbm(wx.Frame):
         '''
         cs = db2db.cs
         if typestr in [DbObj.Tables, DbObj.Views, DbObj.Summary_Tables, DbObj.Nicknames, DbObj.Aliases]:
-            if typeid == 1:
+            if typeid == ShowObjType.Cols:
                 vt = """select COLNAME, TYPENAME, LENGTH, SCALE, DEFAULT, NULLS from SYSCAT.COLUMNS 
                     where TABSCHEMA='%s' and TABNAME='%s' order by COLNAME""" % (schema.replace("'","''"), tabname.replace("'","''"))
                 tabname = 'columns'
-            elif typeid == 2:
+            elif typeid == ShowObjType.Datas:
                 vt = """select * from "%s"."%s" where 1=1""" % (schema, tabname)
-            elif typeid == 3:
+            elif typeid == ShowObjType.Count:
                 vt = """select count(*) from "%s"."%s" where 1=1""" % (schema, tabname)
                 tabname = 'count'
             else:
@@ -4278,11 +4301,11 @@ class dbm(wx.Frame):
         if pos == 0:
             self.query_schema_object_detail_and_show(1, treePath)
         elif pos == 1:
-            self.query_schema_object_table(dbX, typestr, schema1, objname1, self.gridM11, pos)
+            self.query_schema_object_table(dbX, typestr, schema1, objname1, self.gridM11, ShowObjType.Cols)
         elif pos == 2:
-            self.query_schema_object_table(dbX, typestr, schema1, objname1, self.gridM12, pos)
+            self.query_schema_object_table(dbX, typestr, schema1, objname1, self.gridM12, ShowObjType.Datas)
         elif pos == 3:
-            self.query_schema_object_table(dbX, typestr, schema1, objname1, self.gridM13, pos)
+            self.query_schema_object_table(dbX, typestr, schema1, objname1, self.gridM13, ShowObjType.Count)
 
     def OnNbM2NotebookPageChanged(self, event=None):
         try:

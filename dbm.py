@@ -2293,7 +2293,7 @@ class dbm(wx.Frame):
         '''
         t1 = time.time()
         progress = [-1, 100, False]  # pos, count, Break
-        th = threading.Thread(target=function, args=((progress,)))
+        th = threading.Thread(target=function, args=(progress,))
         th.start()
         dlg = wx.ProgressDialog(_('Please waiting ...'), _('On copy value ( %d / %d ) ...') % (progress[0],progress[1]),
                     100, self.last_dlg, style=wx.PD_ELAPSED_TIME|wx.PD_CAN_ABORT)
@@ -2311,6 +2311,9 @@ class dbm(wx.Frame):
                             progress[2] = True
                 else:
                     break
+            if self.cptxt:
+                self.copy_text_to_clipboard(self.cptxt)
+                self.cptxt = None
         finally:
             if dlg: dlg.Destroy()
         print ' copy', progress[1], 'lines used time:', time.time() - t1
@@ -2360,7 +2363,8 @@ class dbm(wx.Frame):
                 else:
                     v.append('NULL')
             inssqls.write(inss % ', '.join(v))
-        self.copy_text_to_clipboard(inssqls)
+#        self.copy_text_to_clipboard(inssqls)
+        self.cptxt = inssqls
 
     def popup2_CopyCondSelectSQL(self, event):
         self.copy_value_thread(self.copy_cond_sql)
@@ -2402,8 +2406,10 @@ class dbm(wx.Frame):
                     ds.write("  %s,%s" % (s, self.NL))
                 else:
                     ds.write("  '%s',%s" % (s, self.NL))
-            self.copy_text_to_clipboard('select * from %s.%s where %s in (%s%s%s);%s' % \
-                    (gridX.tabschema, gridX.tabname, colname, self.NL, ds.getvalue()[:-(len(self.NL)+1)], self.NL, self.NL))
+#            self.copy_text_to_clipboard('select * from %s.%s where %s in (%s%s%s);%s' % \
+#                    (gridX.tabschema, gridX.tabname, colname, self.NL, ds.getvalue()[:-(len(self.NL)+1)], self.NL, self.NL))
+            self.cptxt = 'select * from %s.%s where %s in (%s%s%s);%s' % \
+                    (gridX.tabschema, gridX.tabname, colname, self.NL, ds.getvalue()[:-(len(self.NL)+1)], self.NL, self.NL)
         pass
 
     def popup2_CopyString(self, event=None):
@@ -2433,8 +2439,8 @@ class dbm(wx.Frame):
                 ls.append('%s' % gridX.GetCellValue(i, j))
             ds.write('%s' % ','.join(ls))
             ds.write(self.NL)
-        self.copy_text_to_clipboard(ds)
-        pass
+#        self.copy_text_to_clipboard(ds)
+        self.cptxt = ds
 
     def copy_text_to_clipboard(self, text):
         xx = wx.Clipboard()
@@ -2974,6 +2980,7 @@ class dbm(wx.Frame):
             iprog = 10
             isBrk = False
             while True:
+                S.send2('execSQL while')
                 th.join(0.3)
                 if th.isAlive():
                     ti += 0.3
@@ -3054,6 +3061,7 @@ class dbm(wx.Frame):
         th.start()
         try:
             while True:
+                S.send2('fetchData %d' % iprog)
                 th.join(0.4)
                 ti += 0.4
                 if th.isAlive():
@@ -3367,6 +3375,7 @@ class dbm(wx.Frame):
         try:
             last1 = False
             while True:
+                S.send2('execSQLs while')
                 th.join(splittime)
                 ti += splittime
                 if not th.isAlive():

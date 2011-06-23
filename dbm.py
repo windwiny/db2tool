@@ -1706,7 +1706,7 @@ class dbm(wx.Frame):
     # ---------- connect page ----------
     def OnBtnSaveDbsButton(self, event=None):
         self.cfgwrite()
-        event.Skip()
+        if event: event.Skip()
 
     def get_db2_catalog(self, typestr):
         ''' db2 list  node / db  directory

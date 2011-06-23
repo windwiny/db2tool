@@ -62,6 +62,7 @@ class DbObj():
     Summary_Tables            = 'Summary Tables'
     Tables                    = 'Tables'
     Tablespaces               = 'Tablespaces'
+    Tablespaces2              = 'Tablespaces2'
     Triggers                  = 'Triggers'
     Users                     = 'Users'
     User_Groups               = 'User Groups'
@@ -2145,8 +2146,8 @@ class dbm(wx.Frame):
         if event.ShiftDown():
             gridX.SetColSize(col, 100)
             gridX.ForceRefresh()
-        elif event.ControlDown():
-            gridX.SetColSize(col, 0)
+        elif event.ControlDown() and event.ShiftDown():
+            gridX.SetColSize(col, 1)
             gridX.ForceRefresh()
         else:
             if len(gridX.GetTable().data) < 100000:
@@ -2191,7 +2192,10 @@ class dbm(wx.Frame):
         gridX = self.FindWindowById(event.GetId())
         if gridX.tabname.find('?') == -1:
             try:
-                colname = gridX.GetTable().desc[col]
+                ttt = gridX.GetTable()
+                if col > len(ttt.desc):
+                    return
+                colname = ttt.desc[col]
                 if gridX.issort and gridX.sortcol == col:
                     colname = colname[:-5]
                 self.cfg.colsize_insert(gridX.tabname, colname, gridX.GetColSize(col), True)
@@ -3409,7 +3413,7 @@ class dbm(wx.Frame):
                     sqlu = sqls[Rst.iCurrent][0].lstrip()[:78].decode(self.str_encode)
                 except Exception as ee:
                     sqlu = _(' ?? unknow split sql ')
-                if Rst.isCancel: # 2@#$&@)#&@)
+                if Rst.isCancel and not last1: # skip if the last 1 , progress ds es ..
                     splittime = 0.3
                     if dlg: dlg.Update(Rst.iSucc + Rst.iFail + 1, _('execute %3d ( %3d ) statement. Success %2d, Failed %2d\n\n Cancel, waiting ...') \
                         % (Rst.iSucc + Rst.iFail, Rst.iSqls, Rst.iSucc, Rst.iFail))
@@ -3829,6 +3833,8 @@ class dbm(wx.Frame):
         dlg = wx.ProgressDialog(_('Please wait...'), _('query database objects...           '), 
                 100, self.last_dlg, style=wx.PD_ELAPSED_TIME|wx.PD_CAN_ABORT)
         dlg.Update(1)
+        
+        # alias nickname summary table view 
         try:
             treeC.Freeze()
             if 'ANSTV_db' not in DbInfo:
@@ -3876,6 +3882,7 @@ class dbm(wx.Frame):
         finally:
             treeC.Thaw()
 
+        # some
         vts = [
         (DbObj.Servers,         r'''select %s from SYSCAT.SERVERS''',        'SERVERNAME'),
         (DbObj.Wrappers,        r'''select %s from SYSCAT.WRAPPERS''',       'WRAPNAME'),
@@ -3909,7 +3916,11 @@ class dbm(wx.Frame):
                 S.send('show_db_objects_tree %s %s' % (types, str(ee)) )
             finally:
                 treeC.Thaw()
+        
+        # tbs2
+        treeC.AppendItem(rootitem, DbObj.Tablespaces2)
 
+        # some
         for types in [DbObj.Functions, DbObj.Procedures, DbObj.Triggers]:
             try:
                 treeC.Freeze()
@@ -4332,15 +4343,37 @@ class dbm(wx.Frame):
         try:
             root = treeCtrl.GetRootItem()
             item = event.GetItem()
-            path = self.func_GetTreeCtrl_CurrentSelectionItemsPath(treeCtrl, root, item)
-            S.send('path: %s' % str(path))
+            treePath = self.func_GetTreeCtrl_CurrentSelectionItemsPath(treeCtrl, root, item)
+            S.send('treePath: %s' % str(treePath))
             itemp = treeCtrl.GetItemParent(item)
-            if len(path) == 1:
+            if len(treePath) == 1:
                 S.send(' lstTx select root')
-            elif len(path) == 2:
+            elif len(treePath) == 2:
                 S.send(' lstTx select root/1')
+                if treePath[-1] == DbObj.Tablespaces2:
+                    if L==1:
+                        dbX = self.get_db2db_from_connect_string(self.choiceDb1.GetStringSelection())
+                    else:
+                        dbX = self.get_db2db_from_connect_string(self.choiceDb2.GetStringSelection())
+                    if dbX.cs is None:
+                        return
+                    vt = r'''SELECT tbsp_id, tbsp_name, tbsp_type, tbsp_content_type, tbsp_state, 
+                            tbsp_total_pages, tbsp_usable_pages, tbsp_used_pages, 
+                            tbsp_free_pages, tbsp_page_top 
+                            FROM TABLE(SYSPROC.MON_GET_TABLESPACE('', -1)) '''
+                    self.execSQL(dbX.cs, vt, 1, 3)
+                    data, rese = self.fetchData(dbX.cs, '')
+                    desc = dbX.cs._description2()
+                    if not rese:
+                        if L==1:
+                            self.nbM1.SetSelection(1)
+                            self.new_page__show_data(data, desc, gridx=self.gridM11)
+                        else:
+                            self.nbM2.SetSelection(1)
+                            self.new_page__show_data(data, desc, gridx=self.gridM21)
+                    return
             else:
-                if len(path) == 4:
+                if len(treePath) == 4:
                     if L==1:
                         self.OnNbM1NotebookPageChanged()
                     else:

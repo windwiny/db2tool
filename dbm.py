@@ -185,7 +185,7 @@ class dbGridTable(wx.grid.PyGridTableBase):
             pass
         self.data = data
         self.data_change_pos = []
-        if len(description2) >0 and type(description2[0]) == type(()):
+        if len(description2) > 0 and type(description2[0]) in [type(()), type([])]:
             self.desc = [i[0] for i in description2]
             self.desc2 = description2
         else:
@@ -1899,11 +1899,7 @@ class dbm(wx.Frame):
                 else:
                     db = DB2.connect(dsn=dbname, uid=dbuser, pwd=password)
                 cs = db.cursor()
-                if not hasattr(cs, 'set_timeout'):
-                    def sett(*args):
-                        pass
-                    cs.set_timeout = sett
-                cs.set_timeout(1)
+                self.settimeout(cs, 1)
             except DB2.Error as dee:
                 if G.usePyDB2:
                     msg = '%s' % dee.args[2]
@@ -2057,13 +2053,13 @@ class dbm(wx.Frame):
             x = cs.description
             desc = []
             for i in x:
-                i[1] = i[1][0]
+                i[1] = list(i[1])[0]
                 desc.append(i)
             return desc
         elif G.usePyDB2:
             return cs._description2()
         else:
-            return []
+            return ['error', '', 0, 0, 0, 0, 0, 0] * 10
 
     def geterrocde(self, ee):
         if G.useIBMDB:
@@ -2076,6 +2072,12 @@ class dbm(wx.Frame):
             return ee.args[1]
         else:
             return -99999
+
+    def settimeout(self, cs, timeo):
+        if G.usePyDB2:
+            cs.set_timeout(timeo)
+        elif G.useIBMDB:
+            pass
 
     def dis_all_connect(self):
         ''' disconnect all
@@ -2745,7 +2747,7 @@ class dbm(wx.Frame):
             if rese and len(data) == 0:
                 cont = False
                 raise rese
-            description2 = cs.description
+            description2 = self.getdesc(cs)
             fetchdata_time = str(time.time() - t1)
             fetchdata_time = fetchdata_time[:fetchdata_time.find('.')+3]
             rows, cols = len(data), len(gridX.description2)
@@ -2944,22 +2946,25 @@ class dbm(wx.Frame):
         gridX.issort = False
         gridX.sortcol = 0
         
-        for i in range(len(description2)):
-            gridX.SetColMinimalWidth(i, 1)
-
-        try:    #set column size
-            cl, sz = self.cfg.colsize_select(gridX.tabname)
-            if cl:
-                for ii in range(len(description2)):
-                    try:
-                        ix = cl.index(description2[ii][0].decode(self.str_encode))
-                        gridX.SetColSize(ii, sz[ix])
-                    except Exception as _ee:
-                        pass
-            elif len(data) < 100:   # grid.AutoSizeColumns may use long time.
-                gridX.AutoSizeColumns(False)
-        except Exception as _ee:
-            pass
+        if len(description2) < 3 and len(data) < 100:
+            gridX.AutoSizeColumns(True)
+        else:
+            for i in range(len(description2)):
+                gridX.SetColMinimalWidth(i, 1)
+    
+            try:    #set column size
+                cl, sz = self.cfg.colsize_select(gridX.tabname)
+                if cl:
+                    for ii in range(len(description2)):
+                        try:
+                            ix = cl.index(description2[ii][0].decode(self.str_encode))
+                            gridX.SetColSize(ii, sz[ix])
+                        except Exception as _ee:
+                            pass
+                elif len(data) < 100:   # grid.AutoSizeColumns may use long time.
+                    gridX.AutoSizeColumns(False)
+            except Exception as _ee:
+                pass
 
         if gridx is None:
             # don't in AppPage method set select=True.
@@ -3107,7 +3112,7 @@ class dbm(wx.Frame):
 
         dlg = None
         try:
-            cs.set_timeout(time_out)  # python cannot break a thread
+            self.settimeout(cs, time_out)  # python cannot break a thread
             res = []
             th = threading.Thread(target=self.execute_sql_thread, args=(cs,sql,res))
             th.start()
@@ -3160,6 +3165,8 @@ class dbm(wx.Frame):
                 da = cs.fetchmany(iCount[1])
                 iCount[0] += iCount[1]
                 data += da
+                if len(da) == 0:
+                    return
                 while isBrkOrPause[1]:
                     time.sleep(0.01)
         except TypeError as ee:
@@ -3342,8 +3349,8 @@ class dbm(wx.Frame):
             print 'Param Error'
             return
         Rst.iSqls = len(Rst.sqls)
-        if Rst.iSqls <= 1:  Rst.cs.set_timeout(Rst.timeout_1)
-        else:               Rst.cs.set_timeout(Rst.timeout_more)
+        if Rst.iSqls <= 1:  self.settimeout(Rst.cs, Rst.timeout_1)
+        else:               self.settimeout(Rst.cs, Rst.timeout_more)
         az = sqld.QueryTokenizer()
         for ss in Rst.sqls:
             if Rst.isCancel:
@@ -3976,7 +3983,7 @@ class dbm(wx.Frame):
         btime = time.time()
         sqltime = []
         dbX = self.get_db2db_from_connect_string(choiceC.GetStringSelection())
-        dbX.cs.set_timeout(5)
+        self.settimeout(dbX.cs, 5)
         if not hasattr(self, 'db_objects') or type(self.db_objects) != type({}):
             self.db_objects = {}
         if ForceRefresh or id(dbX.db) not in self.db_objects:
@@ -4400,7 +4407,7 @@ class dbm(wx.Frame):
             elif typeid == ShowObjType.Datas:
                 vt = """select * from "%s"."%s" where 1=1""" % (schema, tabname)
             elif typeid == ShowObjType.Count:
-                vt = """select count(*) from "%s"."%s" where 1=1""" % (schema, tabname)
+                vt = """select count(*) "%s.%s.count" from "%s"."%s" where 1=1""" % (schema, tabname, schema, tabname)
                 tabname = 'count'
             else:
                 print ' unknow ?? '

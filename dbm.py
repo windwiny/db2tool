@@ -22,6 +22,7 @@ from mods import config2
 from mods import sqld
 from mods import sqlformatter
 import S
+import db2ext
 
 try:
     from mods.db2 import DB2
@@ -1763,46 +1764,36 @@ class dbm(wx.Frame):
         @param typestr: 'node' or 'db'
         '''
         if str(typestr).lower() == 'node':
-            cmd = 'db2 list node directory'
+            nodes = db2ext.ListNodeDir()
+            items = []
+            for node in nodes[:-1]:
+                ip, port, proto, node, comment = node
+                ip = ip.decode(self.str_encode).strip()
+                port = port.decode(self.str_encode).strip()
+                proto = proto.decode(self.str_encode).strip()
+                node = node.decode(self.str_encode).strip()
+                comment = comment.decode(self.str_encode).strip()
+                items.append([node, comment, 'LOCAL', proto, ip, port])
+            return items
         elif str(typestr).lower() == 'db':
-            cmd = 'db2 list db directory'
+            dbs = db2ext.ListDbDir()
+            items = []
+            for db in dbs[:-1]:
+                node, dbn, alias, drive, intname, dbtype, type, auth, comment = db
+                node = node.decode(self.str_encode).strip()
+                dbn = dbn.decode(self.str_encode).strip()
+                alias = alias.decode(self.str_encode).strip()
+                drive = drive.decode(self.str_encode).strip()
+                intname = intname.decode(self.str_encode).strip()
+                dbtype = dbtype.decode(self.str_encode).strip()
+                type = type.decode(self.str_encode).strip()
+                auth = auth.decode(self.str_encode).strip()
+                comment = comment.decode(self.str_encode).strip()
+                items.append([alias, dbn, drive+node, dbtype, comment, type, intname, '', ''])
+            return items
         else:
             print 'unknow typestr'
             return []
-
-        lls = ''
-        ss = subprocess.Popen('%s ' % (cmd), shell=True, stdout=subprocess.PIPE, universal_newlines=True)
-        lls = ss.stdout.read()
-        if len(lls) == 0:
-            print ' read error'
-            return []
-        lls = lls.split('\n')
-        ii, iLines = 0, len(lls)
-        for i in range(ii, iLines):
-            part = lls[i].split('=')
-            if len(part) == 2:
-                try:    iItems=int(part[1])
-                except: return []
-                ii = i + 1
-                break
-        if iItems == 0: return []
-
-        items = []
-        iit = int((iLines - ii) / iItems)
-        iit2 = (iLines - ii) % iItems
-        for i in range(iItems):
-            item = []
-            for j in range(iit):
-                part = lls[ii+iit2 + i*iit +j].split('=')
-                if len(part) == 2:
-                    msg = part[1].strip()
-                    msg = msg.decode(self.str_encode)
-                    item.append(msg)
-            items.append(item)
-        print '"%s"' % cmd
-        print iItems, len(items)
-        return items
-
 
     def func_dbs_connected_sort(self, L, R):
         try:
@@ -3830,7 +3821,7 @@ class dbm(wx.Frame):
                 i = gridX.db2db.db.export(ftype, gridX.sql, ff.name.encode(self.str_encode), ff.name.encode(self.str_encode)+'.msg')
                 print i
             except Exception as _ee:
-                pass
+                print traceback.format_exc()
         else:
             dlg = wx.ProgressDialog(_('Please waiting ...'), msg.decode(self.str_encode) % 0, len(data), self, style=wx.PD_CAN_ABORT | wx.PD_ELAPSED_TIME)
             th = threading.Thread(target=self.export_data_thread, args=(data_type, data, gridX, ff, isBrk, iC, colss))
@@ -5348,3 +5339,6 @@ class dbm(wx.Frame):
         self.x11(event, True)
         pass
 
+if __name__ == '__main__':
+    ap = wx.App(0)
+    wx.MessageBox('No App', 'db2 tool', wx.OK)

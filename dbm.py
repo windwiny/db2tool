@@ -2084,7 +2084,8 @@ class dbm(wx.Frame):
         ii = self.lstProcedures.GetCount()
         self.lstProcedures.Clear()
         msgs = [u'%s.%s' % (f[0].decode(self.str_encode).rstrip(), f[1].decode(self.str_encode).rstrip()) for f in fd]
-        self.lstProcedures.InsertItems(msgs, 0)
+        if msgs:
+            self.lstProcedures.InsertItems(msgs, 0)
 
 
     def OnBtnCallProcButton(self, event):
@@ -2394,6 +2395,7 @@ class dbm(wx.Frame):
         else:
             col = TL[0][1]
             row = TL[0][0]
+            data = gridX.GetTable().data
             row2 = row + RB[0][0] - TL[0][0] + 1
             colname = gridX.description2[col][0]
             colisnum = gridX.description2[col][1] in ['INTEGER', 'SMALLINT', 'BIGINT', 'INT', 'DECIMAL', 'REAL', 'DOUBLE']
@@ -2401,7 +2403,7 @@ class dbm(wx.Frame):
             for i in range(row, row2):
                 if progress[2]: break
                 progress[0] += 1
-                s = gridX.GetCellValue(i, col)
+                s = data[i][col]
                 if colisnum:
                     ds.write("  %s,%s" % (s, self.NL))
                 else:
@@ -2428,17 +2430,28 @@ class dbm(wx.Frame):
                 RB.append([x, y])
             else:
                 TL.append([Rows[0], 0])
-                RB.append([Rows[0], len(gridX.description2)-1])
+                RB.append([Rows[0], gridX.GetNumberCols()-1])
         ds = StringIO.StringIO()
         progress[1] = RB[0][0]+1 - TL[0][0]
-        for i in range(TL[0][0], RB[0][0]+1):
-            if progress[2]: break
-            progress[0] += 1
-            ls = []
-            for j in range(TL[0][1], RB[0][1]+1):
-                ls.append('%s' % gridX.GetCellValue(i, j))
-            ds.write('%s' % ','.join(ls))
-            ds.write(self.NL)
+        if hasattr(gridX.GetTable(), 'data'):
+            data = gridX.GetTable().data
+            for i in range(TL[0][0], RB[0][0]+1):
+                if progress[2]: break
+                progress[0] += 1
+                ls = []
+                for j in range(TL[0][1], RB[0][1]+1):
+                    ls.append('%s' % data[i][j])
+                ds.write('%s' % ','.join(ls))
+                ds.write(self.NL)
+        else:
+            for i in range(TL[0][0], RB[0][0]+1):
+                if progress[2]: break
+                progress[0] += 1
+                ls = []
+                for j in range(TL[0][1], RB[0][1]+1):
+                    ls.append('%s' % gridX.GetCellValue(i, j))
+                ds.write('%s' % ','.join(ls))
+                ds.write(self.NL)
 #        self.copy_text_to_clipboard(ds)
         self.cptxt = ds
 

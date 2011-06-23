@@ -18,11 +18,19 @@ import base64
 import zlib
 import gettext
 import traceback
+import logging
+import logging.config
+logging.getLogger().setLevel(logging.DEBUG)
+
 from mods import config2
 from mods import sqld
 from mods import sqlformatter
 import S
-import db2ext
+
+class G:
+    usePyDB2 = False
+    useIBMDB = False
+
 try:
     import winsound
 except ImportError:
@@ -32,10 +40,22 @@ except ImportError:
             pass
 
 try:
-    from mods.db2 import DB2
-except Exception as ee:
-    print '''  Not import PyDB2, python setup.py install -c mingw32'''
-    print ee.args[0]
+    pth1, fn = os.path.split(__file__)
+    pth = '%s/mods/db2/%s/%s' % (pth1, os.name, sys.version.split(' ', 1)[0])
+    if not os.path.isdir(pth):
+        logging.error('not db2 mod dir %s' % pth)
+    
+    #import DB2
+    #G.usePyDB2 = True
+    #G.useIBMDB = False
+    import ibm_db_dbi as DB2
+    G.usePyDB2 = False
+    G.useIBMDB = True
+    
+    import db2ext
+except ImportError as ee:
+    logging.error('''  Not import DB2 mod %s''')
+    logging.error(traceback.format_exc())
     sys.exit(3)
 
 from mods import db2util2
@@ -47,7 +67,8 @@ try:
     import wx.lib.pubsub
     import wx.lib.wordwrap
 except Exception as ee:
-    print ''' *IMPORT WX EXCEPT* ''', ee.args[0]
+    logging.error(''' *IMPORT WX EXCEPT* ''')
+    logging.error(traceback.format_exc())
     sys.exit(2)
 
 from mods import stc2
@@ -1873,8 +1894,15 @@ class dbm(wx.Frame):
             try:
                 dlg = wx.ProgressDialog(_('connect ...'), u' db2 connect to %s user %s using ****' % (dbname, dbuser), 100, self, style=wx.PD_ELAPSED_TIME)
                 dlg.Update(50)
-                db = DB2.connect(dsn=dbname, uid=dbuser, pwd=password)
+                if G.useIBMDB:
+                    db = DB2.connect(dsn=dbname, user=dbuser, password=password)
+                else:
+                    db = DB2.connect(dsn=dbname, uid=dbuser, pwd=password)
                 cs = db.cursor()
+                if not hasattr(cs, 'set_timeout'):
+                    def sett(*args):
+                        pass
+                    cs.set_timeout = sett
                 cs.set_timeout(1)
             except DB2.Error as ee:
                 msg = '%s' % ee.args[2]
@@ -2019,6 +2047,31 @@ class dbm(wx.Frame):
                 db2db.color = item[self.iCOLOR]
                 break
         return db2db
+
+    def getdesc(self, cs):
+        if G.useIBMDB:
+            x = cs.description
+            desc = []
+            for i in x:
+                i[1] = i[1][0]
+                desc.append(i)
+            return desc
+        elif G.usePyDB2:
+            return cs._description2()
+        else:
+            return []
+
+    def geterrocde(self, ee):
+        if G.useIBMDB:
+            sl = str(ee).split()
+            for i in sl:
+                if i.startswith('SQL') and i.endswith('N'):
+                    return - int(i[3:-1])
+            return -99998
+        elif G.usePyDB2:
+            return ee[1]
+        else:
+            return -99999
 
     def dis_all_connect(self):
         ''' disconnect all
@@ -2688,7 +2741,7 @@ class dbm(wx.Frame):
             if rese and len(data) == 0:
                 cont = False
                 raise rese
-            description2 = cs._description2()
+            description2 = cs.description
             fetchdata_time = str(time.time() - t1)
             fetchdata_time = fetchdata_time[:fetchdata_time.find('.')+3]
             rows, cols = len(data), len(gridX.description2)
@@ -3177,7 +3230,7 @@ class dbm(wx.Frame):
         t1 = time.time()
         data, rese = self.fetchData(db2db.cs, sql)
         if rese and len(data) == 0: raise rese
-        desc = db2db.cs._description2()
+        desc = self.getdesc(db2db.cs)
 
         #in DB2 v8.2 a connect change date but uncommit,other connect selected date look like is commited.
         #in DB2 v9.5 , except SQL0952N
@@ -3917,7 +3970,7 @@ class dbm(wx.Frame):
                 dlg.Update(10, sql.decode(self.str_encode))
                 dbX.cs.execute(sql)
                 data = dbX.cs.fetchall()
-                desc = dbX.cs._description2()
+                desc = dbX.cs.description
                 sqltime.append(time.time()-t1)
                 DbInfo['ANSTV_db'] = (data, desc)
             else:
@@ -3974,7 +4027,7 @@ class dbm(wx.Frame):
                     dbX.cs.execute(sql % name)
                     dlg.Update(50, sql.decode(self.str_encode))
                     data = dbX.cs.fetchall()
-                    desc = dbX.cs._description2()
+                    desc = dbX.cs.description
                     sqltime.append(time.time()-t1)
                     DbInfo[types+'_db'] = (data, desc)
                 else:
@@ -4005,7 +4058,7 @@ class dbm(wx.Frame):
                     dlg.Update(80, sql.decode(self.str_encode))
                     dbX.cs.execute(sql)
                     data = dbX.cs.fetchall()
-                    desc = dbX.cs._description2()
+                    desc = dbX.cs.description
                     sqltime.append(time.time()-t1)
                     DbInfo[ty1+'_db'] = (data, desc)
                 else:
@@ -4320,7 +4373,7 @@ class dbm(wx.Frame):
             self.execSQL(cs, vt, self.getts()[0])
             data, rese = self.fetchData(cs, vt)
             if rese and len(data) == 0: raise rese
-            description2 = cs._description2()
+            description2 = self.getdesc(cs)
             self.new_page__show_data(data, description2, db2db, schema, tabname, vt, '', gridX)
             gridX.MakeCellVisible(len(data)-1, 0)
             if rese: raise rese
@@ -4437,7 +4490,7 @@ class dbm(wx.Frame):
                             FROM TABLE(SYSPROC.MON_GET_TABLESPACE('', -1)) '''
                     self.execSQL(dbX.cs, vt, 1, 3)
                     data, rese = self.fetchData(dbX.cs, '')
-                    desc = dbX.cs._description2()
+                    desc = self.getdesc(dbX.cs)
                     if not rese:
                         if L==1:
                             self.nbM1.SetSelection(1)

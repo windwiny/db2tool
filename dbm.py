@@ -1904,9 +1904,13 @@ class dbm(wx.Frame):
                         pass
                     cs.set_timeout = sett
                 cs.set_timeout(1)
-            except DB2.Error as ee:
-                msg = '%s' % ee.args[2]
-                tap = '%s, %s' % (ee.args[0], ee.args[1])
+            except DB2.Error as dee:
+                if G.usePyDB2:
+                    msg = '%s' % dee.args[2]
+                    tap = '%s, %s' % (dee.args[0], dee.args[1])
+                else:
+                    tap = ''
+                    msg = str(dee)
                 self.log_pg('%s, %s%s\n' % (tap, msg, '--' *50))
                 wx.MessageBox(msg.decode(self.str_encode), tap.decode(self.str_encode), wx.OK | wx.ICON_ERROR, dlg)
                 return
@@ -2069,7 +2073,7 @@ class dbm(wx.Frame):
                     return - int(i[3:-1])
             return -99998
         elif G.usePyDB2:
-            return ee[1]
+            return ee.args[1]
         else:
             return -99999
 
@@ -2751,8 +2755,11 @@ class dbm(wx.Frame):
             if rese and len(data)>0:
                 cont = True
                 raise rese
-        except DB2.Error as ee:
-            m = '  # DB2: %s %s %s\n' % (ee.args[0], ee.args[1], ee.args[2])
+        except DB2.Error as dee:
+            if G.usePyDB2:
+                m = '  # DB2: %s %s %s\n' % (dee.args[0], dee.args[1], dee.args[2])
+            else:
+                m = '  # DB2: %s\n' % str(dee)
             self.statusBar_exec.SetStatusText(m.encode(self.str_encode))
             self.log_usersql2('--%s' % m)
             self.log_usersql(m, True)
@@ -3351,9 +3358,13 @@ class dbm(wx.Frame):
                 Rst.ds.write(' COMMIT ; --autocommit at %d .\n\n' % Rst.iCurrent)
                 Rst.lock.release()
                 try: Rst.db.commit()
-                except DB2.Error as ee:
+                except DB2.Error as dee:
+                    if G.usePyDB2:
+                        msg = '--- %s, %s, %s\n' % (dee.args[0], dee.args[1], dee.args[2])
+                    else:
+                        msg = '--- %s\n' % str(dee)
                     Rst.lock.acquire()
-                    Rst.ds.write('--- %s, %s, %s\n' % (ee.args[0], ee.args[1], ee.args[2]))
+                    Rst.ds.write(msg)
                     Rst.lock.release()
             else:
                 Rst.lock.release()
@@ -3398,16 +3409,17 @@ class dbm(wx.Frame):
                 # all
                 if m != '':
                     Rst.lock.acquire();Rst.ds.write('-- %s\n\n' % m);Rst.lock.release()
-            except DB2.Error as ee:
+            except DB2.Error as dee:
                 Rst.lock.acquire()
+                errcode = self.geterrocde(dee)
                 try:
                     Rst.iFail += 1
-                    if ee.args[1] in Rst.BreakDb2Errors:
+                    if errcode in Rst.BreakDb2Errors:
                         return
-                    elif ee.args[1] in Rst.IgnoreDb2Errors:
+                    elif errcode in Rst.IgnoreDb2Errors:
                         continue
                 finally:
-                    Rst.Res_or_Except.append((False, sql, ee))
+                    Rst.Res_or_Except.append((False, sql, dee))
                     Rst.lock.release()
                 
                 while True:
@@ -3431,9 +3443,13 @@ class dbm(wx.Frame):
             Rst.ds.write(' COMMIT ; --autocommit at %d .\n\n' % (Rst.iCurrent+1))
             Rst.lock.release()
             try: Rst.db.commit()
-            except DB2.Error as ee:
+            except DB2.Error as dee:
+                if G.usePyDB2:
+                    msg = '--- %s, %s, %s\n' % (dee.args[0], dee.args[1], dee.args[2])
+                else:
+                    msg = '--- %s\n' % (dee)
                 Rst.lock.acquire()
-                Rst.ds.write('--- %s, %s, %s\n' % (ee.args[0], ee.args[1], ee.args[2]))
+                Rst.ds.write(msg)
                 Rst.lock.release()
         else:
             Rst.lock.release()
@@ -3547,11 +3563,17 @@ class dbm(wx.Frame):
                                     m = ' %s\n\n' % remsg
                                     Rst.ds.write('--%s' % m)
                                     if rese: raise rese
-                                except DB2.Error as ee:
+                                except DB2.Error as dee:
                                     Rst.iSucc -= 1; Rst.iFail += 1
-                                    m = '  # DB2: %s, %s, %s\n' % (ee.args[0], ee.args[1], ee.args[2])
-                                    if ee.args[1] == -952:
-                                        m = '  # DB2: Timeout or Break.  SQL0952N %s %s\n' % (ee.args[0], ee.args[1])
+                                    errcode = self.geterrocde(dee)
+                                    if G.usePyDB2:
+                                        m = '  # DB2: %s, %s, %s\n' % (dee.args[0], dee.args[1], dee.args[2])
+                                        if errcode == -952:
+                                            m = '  # DB2: Timeout or Break.  SQL0952N %s %s\n' % (dee.args[0], dee.args[1])
+                                    else:
+                                        m = '  # DB2: %s\n' % str(dee)
+                                        if errcode == -952:
+                                            m = '  # DB2: Timeout or Break.  SQL0952N %s\n' % str(dee)
                                     Rst.ds.write('--%s' % m)
                                     Rst.es.write(m)
                                 except Exception as ee:
@@ -3562,22 +3584,26 @@ class dbm(wx.Frame):
                             else:   # Exception
                                 try:
                                     raise re1[2]
-                                except DB2.Error as ee:
-                                    m = '  # DB2: %s, %s, %s\n' % (ee.args[0], ee.args[1], ee.args[2])
+                                except DB2.Error as dee:
+                                    errcode = self.geterrocde(dee)
+                                    if G.usePyDB2:
+                                        m = '  # DB2: %s, %s, %s\n' % (dee.args[0], dee.args[1], dee.args[2])
+                                    else:
+                                        m = '  # DB2: %s\n' % str(dee)
                                     Rst.ds.write('--%s' % m)
                                     Rst.es.write('%s ;\n%s' % (re1[1], m))
                                     if confirm: continue
-                                    if ee.args[1] in Rst.BreakDb2Errors:
+                                    if errcode in Rst.BreakDb2Errors:
                                         wx.MessageBox(m.decode(self.str_encode), _('Error'), wx.ICON_ERROR | wx.OK, self.last_dlg)
                                         Rst.isCancel = True
                                         confirm = True
-                                    elif ee.args[1] not in Rst.IgnoreDb2Errors:
+                                    elif errcode not in Rst.IgnoreDb2Errors:
                                         ans = wx.MessageBox(m.decode(self.str_encode), _('Error, Continue ? '), wx.ICON_ERROR | wx.YES_NO | wx.NO_DEFAULT, self.last_dlg)
                                         if ans == wx.NO:
                                             Rst.isCancel = True
                                             confirm = True
                                         elif ans == wx.YES:
-                                            Rst.IgnoreDb2Errors.append(ee.args[1])
+                                            Rst.IgnoreDb2Errors.append(errcode)
                                 except Exception as ee:
                                     m = '  # EXCEPT: %s\n' % str(ee)
                                     Rst.ds.write('--%s' % m)
@@ -3711,8 +3737,11 @@ class dbm(wx.Frame):
             self.log_usersql('COMMIT ;\n-- on %s at %s\n\n' % (dbX.dbname, time.strftime(self.str_time_strf)), False, True)
             try:
                 dbX.db.commit()
-            except DB2.Error as ee:
-                self.log_usersql('  # %s, %s, %s\n' % (ee.args[0], ee.args[1], ee.args[2]), False, True)
+            except DB2.Error as dee:
+                if G.usePyDB2:
+                    self.log_usersql('  # %s, %s, %s\n' % (dee.args[0], dee.args[1], dee.args[2]), False, True)
+                else:
+                    self.log_usersql('  # %s\n' % str(dee), False, True)
         else:
             if wx.YES != wx.MessageBox(_(' Rollback ?            few change may be lost '), _('Ask'), wx.YES_NO | wx.NO_DEFAULT | wx.ICON_ERROR, self.last_dlg):
                 return
@@ -3720,8 +3749,11 @@ class dbm(wx.Frame):
             self.log_usersql('ROLLBACK ;\n-- on %s at %s\n\n' % (dbX.dbname, time.strftime(self.str_time_strf)), False, True)
             try:
                 dbX.db.rollback()
-            except DB2.Error as ee:
-                self.log_usersql('  # %s, %s, %s\n' % (ee.args[0], ee.args[1], ee.args[2]), False, True)
+            except DB2.Error as dee:
+                if G.usePyDB2:
+                    self.log_usersql('  # %s, %s, %s\n' % (dee.args[0], dee.args[1], dee.args[2]), False, True)
+                else:
+                    self.log_usersql('  # %s\n' % (str(dee)), False, True)
 
     def OnBtnCommitButton(self, event):
         event.Skip()
@@ -4232,8 +4264,11 @@ class dbm(wx.Frame):
                     cs.execute(vts[i])
                     f = cs.fetchall()
                     textMsg.AppendText('\n'.join([str(f[i]).decode(self.str_encode) for i in range(len(f))]))
-                except DB2.Error as ee:
-                    m = ' DB2: %s, %s, %s%s\n' % (ee.args[0], ee.args[1], ee.args[2], u'--' *50)
+                except DB2.Error as dee:
+                    if G.usePyDB2:
+                        m = ' DB2: %s, %s, %s%s\n' % (dee.args[0], dee.args[1], dee.args[2], u'--' *50)
+                    else:
+                        m = ' DB2: %s%s\n' % (str(dee), u'--' *50)
                     wx.MessageBox(m.decode(self.str_encode), u'query_schema_object_detail error', wx.OK, self.last_dlg)
                     textMsg.AppendText(m.decode(self.str_encode))
             isR = True
@@ -4261,8 +4296,11 @@ class dbm(wx.Frame):
                 cs.execute(vt)
                 f = cs.fetchall()
                 textMsg.AppendText(f[0][0].decode(self.str_encode))
-            except DB2.Error as ee:
-                m = ' DB2: %s, %s, %s' % (ee.args[0], ee.args[1], ee.args[2])
+            except DB2.Error as dee:
+                if G.usePyDB2:
+                    m = ' DB2: %s, %s, %s' % (dee.args[0], dee.args[1], dee.args[2])
+                else:
+                    m = ' DB2: %s' % str(dee)
                 wx.MessageBox(m.decode(self.str_encode), u'query_schema_object_detail error', wx.OK, self.last_dlg)
         textMsg.ShowPosition(0)
 
@@ -4377,8 +4415,11 @@ class dbm(wx.Frame):
             self.new_page__show_data(data, description2, db2db, schema, tabname, vt, '', gridX)
             gridX.MakeCellVisible(len(data)-1, 0)
             if rese: raise rese
-        except DB2.Error as ee:
-            m = ' DB2: %s, %s, %s' % (ee.args[0], ee.args[1], ee.args[2])
+        except DB2.Error as dee:
+            if G.usePyDB2:
+                m = ' DB2: %s, %s, %s' % (dee.args[0], dee.args[1], dee.args[2])
+            else:
+                m = ' DB2: %s' % str(dee)
             wx.MessageBox(m.decode(self.str_encode), u'query_schema_object_table error', wx.OK, self.last_dlg)
         except Exception as ee:
             m = '%s' % str(ee)

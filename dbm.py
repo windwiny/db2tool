@@ -4,6 +4,7 @@
 pgname = 'db2tool'
 
 import os, sys
+import platform
 import locale
 import sqlite3
 import tempfile
@@ -16,6 +17,7 @@ import StringIO
 import base64
 import zlib
 import gettext
+import traceback
 from mods import config2
 from mods import sqld
 from mods import sqlformatter
@@ -156,6 +158,7 @@ class dbGridTable(wx.grid.PyGridTableBase):
         self.data_change_pos = []
         if len(description2) >0 and type(description2[0]) == type(()):
             self.desc = [i[0] for i in description2]
+            self.desc2 = description2
         else:
             self.desc = description2
     def GetNumberRows(self):
@@ -188,8 +191,36 @@ class dbGridTable(wx.grid.PyGridTableBase):
         self.data_change_pos.append((row, col))
         if type(self.data[row]) != type([]):
             self.data[row] = [i for i in self.data[row]]
-        self.data[row][col] = value
-        self.GetView().SetCellBackgroundColour(row, col, wx.Colour(188, 0, 0))
+        self.data[row][col] = value.encode(self.str_encode)
+        #self.GetView().SetCellBackgroundColour(row, col, wx.Colour(188, 0, 0))
+        if hasattr(self, 'desc2'):
+            try:
+                for i in range(len(self.desc2)):
+                    if self.desc2[i][5] == 'N':
+                        break
+                else:
+                    i = 0
+                if len(self.desc2[i][0].split()) == 1:
+                    ks = self.desc2[i][0]
+                else:
+                    ks = '"%s"' % self.desc2[i][0]
+                if self.desc2[i][1] in ['INTEGER', 'SMALLINT', 'BIGINT', 'INT', 'DECIMAL', 'REAL', 'DOUBLE']:
+                    kv = self.data[row][i]
+                else:
+                    kv = "'%s'" % self.data[row][i]
+                    
+                if len(self.desc2[col][0].split()) == 1:
+                    vs = self.desc2[col][0]
+                else:
+                    vs = '"%s"' % self.desc2[col][0]
+                if self.desc2[col][1] in ['INTEGER', 'SMALLINT', 'BIGINT', 'INT', 'DECIMAL', 'REAL', 'DOUBLE']:
+                    vv = self.data[row][col]
+                else:
+                    vv = "'%s'" % self.data[row][col]
+                sql = 'update %%s set %s=%s \twhere %s=%s ; \n' % (vs, vv, ks, kv)
+                wx.lib.pubsub.Publisher.sendMessage('update grid data', [sql.expandtabs(), self.GetView(), row, col])
+            except Exception as _ee:
+                print traceback.format_exc()
     def GetColLabelValue(self, col):
         try:
             return unicode(self.desc[col], self.str_encode) #[0]
@@ -943,6 +974,7 @@ class dbm(wx.Frame):
         self._init_coll_nbM2_Pages(self.nbM2)
 
     def __init__(self, parent):
+        self.init_dir()
         gettext.install(pgname, './locale', True)
         self.str_encode = locale.getdefaultlocale()[1]
         self.cfgread()
@@ -1037,6 +1069,8 @@ class dbm(wx.Frame):
         self.nbM2.publisher = wx.lib.pubsub.Publisher()
         self.nbM1.publisher.subscribe(self.OnNbM1NotebookPageChanged, self.treeT1)
         self.nbM2.publisher.subscribe(self.OnNbM2NotebookPageChanged, self.treeT2)
+        self.publisher1 = wx.lib.pubsub.Publisher()
+        self.publisher1.subscribe(self.OnUpdateDataGridValueAndCreateSql, 'update grid data')
 
         # execute
         wxID_STCEXECLOGS = wx.NewId()
@@ -1188,13 +1222,29 @@ class dbm(wx.Frame):
             self.nbMainFrame.SetSelection(pos + 1)
         pass
 
+    def init_dir(self):
+        self.oridir = sys.path[0]
+        print 'sys.path[0]:', sys.path[0]
+        if os.path.isfile(self.oridir) and self.oridir[-11:].lower() == 'library.zip':
+            if self.oridir[-12] == os.sep:
+                self.oridir = self.oridir[:-12]
+            else:
+                self.oridir = self.oridir[:-11]
+        elif os.path.isdir(self.oridir):
+            pass
+        else:
+            print 'Error, Unknow sys.path[0]: %s' % self.oridir
+            sys.exit(1)
+        os.chdir(self.oridir)
+
     def init_data(self, parent):
         # data
         print 'init data\n'
         self.str_time_strf = '%Y%m%d%H%M%S'
         fnnt = time.strftime(self.str_time_strf)
-        self.logsqlf = open('%s_sql.log' % fnnt, 'ab')
-        self.logpgf = open('%s_pg.log' % fnnt[:8], 'ab')
+        if not os.path.isdir('log'): os.mkdir('log')
+        self.logsqlf = open('log/%s_sql.log' % fnnt, 'ab')
+        self.logpgf = open('log/%s_pg.log' % fnnt[:8], 'ab')
         startstr = '\n---- PROGRAM START AT %s ----\n' % time.strftime(self.str_time_strf)
         self.logpgf.write(startstr)
 
@@ -4731,6 +4781,15 @@ class dbm(wx.Frame):
     def OnTextConnMsgTextMaxlen(self, event):
         self.textConnMsg.Clear()
         event.Skip()
+        
+    def OnUpdateDataGridValueAndCreateSql(self, Message):
+        try:
+            sql, view, row, col = Message.data
+            sql = sql % ('%s.%s' % (view.tabschema, view.tabname))
+            self.stcSQLs.AppendText(sql.decode(self.str_encode))
+            view.SetCellBackgroundColour(row, col, wx.Colour(188, 0, 0))
+        except Exception as _ee:
+            print traceback.format_exc()
 
     # --------
     # -------- all treeCtrl and Load Save btn event --------
@@ -5233,7 +5292,8 @@ class dbm(wx.Frame):
         info.Copyright = _("(C) 2010 Programmers and Coders Everywhere")
         info.Description = wx.lib.wordwrap.wordwrap(
             _('''A "db2 tool" program is a software program that IBM/DB2 utility tool''') +
-            '\n\npython: %s\nwxPython: %s' % (sys.version, wx.version()),
+            '\n\nos: %s \tver: %s\npython: %s\nwxPython: %s' % 
+            (os.name, platform.version(), sys.version, wx.version()),
             500, wx.ClientDC(self))
         #info.WebSite = ("emailto:windwiny.ubt@gmail.com", "emailto:")
         info.Developers = [u"windwiny.ubt@gmail.com", ]

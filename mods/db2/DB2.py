@@ -13,16 +13,19 @@
 """
 import os
 import sys
-##eval('from %s import _db2' % os.name)    ##
-if os.name == 'nt':
-    if sys.version.split(' ',1)[0].startswith('2.7'):
-        from nt.v27 import _db2
-    elif sys.version.split(' ',1)[0].startswith('2.6'):
-        from nt.v26 import _db2
-    else:
-        from nt import _db2
-elif os.name == 'posix':
-    from posix import _db2
+try:
+    import _db2
+except:
+    ##eval('from %s import _db2' % os.name)    ##
+    if os.name == 'nt':
+        if sys.version.split(' ',1)[0].startswith('2.7'):
+            from nt.v27 import _db2
+        elif sys.version.split(' ',1)[0].startswith('2.6'):
+            from nt.v26 import _db2
+        else:
+            from nt import _db2
+    elif os.name == 'posix':
+        from posix import _db2
 import time
 import types
 import binascii

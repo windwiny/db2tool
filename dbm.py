@@ -61,6 +61,11 @@ except ImportError as ee:
 from mods import db2util2
 
 try:
+    import cx_Oracle as mOra
+except ImportError:
+    mOra = None
+
+try:
     import wx
     import wx.grid
     import wx.stc
@@ -117,14 +122,14 @@ def create(parent):
     return dbm(parent)
 
 [wxID_DBM, wxID_DBMBTNCALLPROC, wxID_DBMBTNCODERELOAD, wxID_DBMBTNCODESAVE, 
- wxID_DBMBTNCOMMIT, wxID_DBMBTNCOMPARE, wxID_DBMBTNDB2HELP, 
- wxID_DBMBTNDISCONNECTALL, wxID_DBMBTNEXECPYTHON, wxID_DBMBTNEXECSQLS, 
- wxID_DBMBTNEXECSQLSINGLE, wxID_DBMBTNEXPORTDDL, wxID_DBMBTNFONT, 
- wxID_DBMBTNFORMATSPACE, wxID_DBMBTNLISTPROCS, wxID_DBMBTNPYTHONRELOAD, 
- wxID_DBMBTNPYTHONSAVE, wxID_DBMBTNREFRESHDB, wxID_DBMBTNREFRESHDBS, 
- wxID_DBMBTNROLLBACK, wxID_DBMBTNSAVEDBS, wxID_DBMBTNSQLRELOAD, 
- wxID_DBMBTNSQLSAVE, wxID_DBMBUTTON4, wxID_DBMCHKLINK, wxID_DBMCHKLOGSQLS, 
- wxID_DBMCHKSHOWONTEXT, wxID_DBMCHKSHOWSQLSRES, 
+ wxID_DBMBTNCOMMIT, wxID_DBMBTNCOMPARE, wxID_DBMBTNCONNECTORA, 
+ wxID_DBMBTNDB2HELP, wxID_DBMBTNDISCONNECTALL, wxID_DBMBTNEXECPYTHON, 
+ wxID_DBMBTNEXECSQLS, wxID_DBMBTNEXECSQLSINGLE, wxID_DBMBTNEXPORTDDL, 
+ wxID_DBMBTNFONT, wxID_DBMBTNFORMATSPACE, wxID_DBMBTNLISTPROCS, 
+ wxID_DBMBTNPYTHONRELOAD, wxID_DBMBTNPYTHONSAVE, wxID_DBMBTNREFRESHDB, 
+ wxID_DBMBTNREFRESHDBS, wxID_DBMBTNROLLBACK, wxID_DBMBTNSAVEDBS, 
+ wxID_DBMBTNSQLRELOAD, wxID_DBMBTNSQLSAVE, wxID_DBMBUTTON4, wxID_DBMCHKLINK, 
+ wxID_DBMCHKLOGSQLS, wxID_DBMCHKSHOWONTEXT, wxID_DBMCHKSHOWSQLSRES, 
  wxID_DBMCHOICECONNECTEDDBNAMES, wxID_DBMCHOICEDB1, wxID_DBMCHOICEDB2, 
  wxID_DBMCHOICETYPE, wxID_DBMGRIDDBS, wxID_DBMGRIDM11, wxID_DBMGRIDM12, 
  wxID_DBMGRIDM13, wxID_DBMGRIDM21, wxID_DBMGRIDM22, wxID_DBMGRIDM23, 
@@ -143,7 +148,7 @@ def create(parent):
  wxID_DBMTEXTPROCEDURES, wxID_DBMTREECODESNIPPET, wxID_DBMTREEPYTHON, 
  wxID_DBMTREESQLS, wxID_DBMTREET1, wxID_DBMTREET2, wxID_DBMTXTACTTIME, 
  wxID_DBMTXTI1, wxID_DBMTXTI2, wxID_DBMTXTSPLITCHAR, wxID_DBMTXTTIMEOUT, 
-] = [wx.NewId() for _init_ctrls in range(85)]
+] = [wx.NewId() for _init_ctrls in range(86)]
 
 [wxID_DBMTIME_CHANGECTRLPOS, wxID_DBMTIME_KEEPACTIVE, 
  wxID_DBMTIME_SETEDITFOCUS, 
@@ -763,8 +768,8 @@ class dbm(wx.Frame):
               style=wx.TR_HAS_BUTTONS | wx.TR_DEFAULT_STYLE)
         self.treeT1.Bind(wx.EVT_TREE_ITEM_RIGHT_CLICK,
               self.OnTreeT1TreeItemRightClick, id=wxID_DBMTREET1)
-        self.treeT1.Bind(wx.EVT_TREE_SEL_CHANGED,
-              self.OnTreeT1TreeSelChanged, id=wxID_DBMTREET1)
+        self.treeT1.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnTreeT1TreeSelChanged,
+              id=wxID_DBMTREET1)
 
         self.choiceDb2 = wx.Choice(choices=[], id=wxID_DBMCHOICEDB2,
               name=u'choiceDb2', parent=self.panelM2, pos=wx.Point(0, 0),
@@ -782,8 +787,8 @@ class dbm(wx.Frame):
               style=wx.TR_HAS_BUTTONS | wx.TR_DEFAULT_STYLE)
         self.treeT2.Bind(wx.EVT_TREE_ITEM_RIGHT_CLICK,
               self.OnTreeT2TreeItemRightClick, id=wxID_DBMTREET2)
-        self.treeT2.Bind(wx.EVT_TREE_SEL_CHANGED,
-              self.OnTreeT2TreeSelChanged, id=wxID_DBMTREET2)
+        self.treeT2.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnTreeT2TreeSelChanged,
+              id=wxID_DBMTREET2)
 
         self.btnExportDDL = wx.Button(id=wxID_DBMBTNEXPORTDDL,
               label=_(u'Export DDL'), name=u'btnExportDDL',
@@ -996,6 +1001,12 @@ class dbm(wx.Frame):
         self.splitterWindowPython1 = wx.SplitterWindow(id=wxID_DBMSPLITTERWINDOWPYTHON1,
               name=u'splitterWindowPython1', parent=self.splitterWindowPython,
               pos=wx.Point(120, 8), size=wx.Size(8, 100), style=wx.SP_NOBORDER)
+
+        self.btnConnectOra = wx.Button(id=wxID_DBMBTNCONNECTORA,
+              label=u'connOracle', name=u'btnConnectOra', parent=self.Pconnect,
+              pos=wx.Point(840, 120), size=wx.Size(75, 24), style=0)
+        self.btnConnectOra.Bind(wx.EVT_BUTTON, self.OnBtnConnectOraButton,
+              id=wxID_DBMBTNCONNECTORA)
 
         self._init_coll_nbMainFrame_Pages(self.nbMainFrame)
         self._init_coll_nbDbs_Pages(self.nbDbs)
@@ -1859,6 +1870,24 @@ class dbm(wx.Frame):
                 else:       self.gridDbs.SetCellValue(i, col, new_value)
                 chd.append(i)
         self.cfgwrite_dbs(chd)
+
+    def OnBtnConnectOraButton(self, event):
+        event.Skip()
+        if mOra is None:
+            return
+        dlg = wx.TextEntryDialog(self,"", "oracle dsn user password")
+        if wx.ID_OK == dlg.ShowModal():
+            txt = dlg.GetValue()
+            txt = txt.split()
+            if len(txt) != 3:
+                return
+        db = mOra.connect(dsn=txt[0], user=txt[1], password=txt[2])
+        cs = db.cursor()
+        
+        color = wx.Colour(random.randint(200,255), random.randint(200,255), random.randint(200,255))
+        self.dbs_connected.append([db, cs, '?node', txt[0],
+               txt[1], txt[2], 'manual input oracle', color])
+        print 'oracle connected'
 
     def OnGridDbsGridCellRightClick(self, event):
         ''' self.gridDbs    wx.grid.EVT_GRID_CELL_RIGHT_CLICK '''

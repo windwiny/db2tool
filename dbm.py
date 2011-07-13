@@ -207,7 +207,7 @@ class dbGridTable(wx.grid.PyGridTableBase):
             pass
         self.data = data
         self.data_change_pos = []
-        if len(description2) > 0 and type(description2[0]) in [type(()), type([])]:
+        if len(description2) > 0 and type(description2[0]) in [types.TupleType, types.ListType]:
             self.desc = [i[0] for i in description2]
             self.desc2 = description2
         else:
@@ -243,7 +243,7 @@ class dbGridTable(wx.grid.PyGridTableBase):
         if row > self.row or col > self.col:
             return
         self.data_change_pos.append((row, col))
-        if type(self.data[row]) != type([]):
+        if type(self.data[row]) != types.ListType:
             self.data[row] = [i for i in self.data[row]]
         self.data[row][col] = value.encode(self.str_encode)
         #self.GetView().SetCellBackgroundColour(row, col, wx.Colour(188, 0, 0))
@@ -2473,7 +2473,7 @@ class dbm(wx.Frame):
             ss = data[row][col]
             if ss is None:
                 ss = u''
-            elif type(ss) == type(''):
+            elif type(ss) == types.StringType:
                 ss = ss.decode(self.str_encode)
         dlg = wx.TextEntryDialog(self.last_dlg, _('Search Text In Column %s :') % descstr, _('Input:'), ss, style=wx.OK | wx.CANCEL)
         try:
@@ -2662,12 +2662,12 @@ class dbm(wx.Frame):
         xx = wx.Clipboard()
         if not xx.Open(): return
         try:
-            if type(text) == type(''):
+            if type(text) == types.StringType:
                 try: text = text.decode(self.str_encode)
                 except Exception as _ee:
                     logging.error(traceback.format_exc())
                 xx.SetData(wx.TextDataObject(text))
-            elif type(text) == type(u''):
+            elif type(text) == types.UnicodeType:
                 xx.SetData(wx.TextDataObject(text))
             else:
                 try:
@@ -3082,7 +3082,7 @@ class dbm(wx.Frame):
         @param sql:
         @param dbuser:
         '''
-        assert type(sql) == type('')
+        assert type(sql) == types.StringType
         az = sqld.QueryTokenizer()
         sql = az.removeAllCommentsFromQuery(sql)
         sql = az.removeAllQuoteString(sql, True)
@@ -3189,7 +3189,7 @@ class dbm(wx.Frame):
         @param show_dlg_time:
         '''
         try:
-            if type(sql) == type(u''):
+            if type(sql) == types.StringType:
                 sql = sql.encode(self.str_encode)
         except UnicodeError as ee:
             logging.error(traceback.format_exc())
@@ -3567,7 +3567,7 @@ class dbm(wx.Frame):
         @param isSingle: run selected as a single sql statments
         @param sqlstr: a list, element is sql statements
         '''
-        assert type(sqlstr) in [type(''), type(u'')]
+        assert type(sqlstr) in [types.StringType, types.UnicodeType]
 
         dbX = self.get_db2db_from_connect_string(newcs=True)
         if not dbX.cs:
@@ -3797,7 +3797,7 @@ class dbm(wx.Frame):
         if exsql.strip() == '':
             self.stcSQLs.SetFocus()
             exsql = self.stcSQLs.GetSelectedText()
-        elif type(exsql) != type(u''):
+        elif type(exsql) != types.UnicodeType:
             try:
                 exsql = exsql.decode(self.str_encode)   # pg local --> unicode
             except UnicodeDecodeError as ee: # may be sql from execPython, string code is unicode,but type is str
@@ -4093,7 +4093,7 @@ class dbm(wx.Frame):
         sqltime = []
         dbX = self.get_db2db_from_connect_string(choiceC.GetStringSelection())
         self.settimeout(dbX.cs, 5)
-        if not hasattr(self, 'db_objects') or type(self.db_objects) != type({}):
+        if not hasattr(self, 'db_objects') or type(self.db_objects) != types.DictType:
             self.db_objects = {}
         if ForceRefresh or id(dbX.db) not in self.db_objects:
             DbInfo = {}
@@ -4868,7 +4868,7 @@ class dbm(wx.Frame):
             errds = StringIO.StringIO()
             errds.write('<<< EXEC EXCEPT: \n')
             for i in range(len(ee.args)):
-                if type(ee.args[i]) ==  type(()) or type(ee.args[i]) == type([]):
+                if type(ee.args[i]) in [types.TupleType, types.ListType]:
                     errds.write(' [')
                     for j in range(len(ee.args[i])):
                         errds.write(str(ee.args[i][j]))

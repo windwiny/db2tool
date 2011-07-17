@@ -27,6 +27,7 @@ from mods import config2
 from mods import sqld
 from mods import sqlformatter
 
+
 class G:
     usePyDB2 = False
     useIBMDB = False
@@ -88,6 +89,7 @@ except ImportError:
 from mods import stc2
 from mods import images   # my images
 
+
 class DbObj():
     ALL                       = 'ALL'
     Aliases                   = 'Aliases'
@@ -114,18 +116,21 @@ class DbObj():
     User_Mappings             = 'User Mappings'
     Views                     = 'Views'
     Wrappers                  = 'Wrappers'
-    
+
+
 class ShowObjType():
     Ddl   = 0
     Cols  = 1
     Datas = 2
     Count = 3
 
+
 class ExportFileType():
     SQL = 1
     DEL = 2
     CSV = 4
     IXF = 3
+
 
 def create(parent):
     return dbm(parent)
@@ -172,6 +177,7 @@ def create(parent):
  wxID_DBMTOOLBAR_QUERYTOOLS4, wxID_DBMTOOLBAR_QUERYTOOLS5,
 ] = [wx.NewId() for _init_coll_toolBar_query_Tools in range(6)]
 
+
 class mylock22():
     def __init__(self):
         self.lock = threading.Lock()
@@ -181,7 +187,8 @@ class mylock22():
     def release(self, m=''):
         print ' >', m
         return self.lock.release()
-        
+
+
 class dbGridTable(wx.grid.PyGridTableBase):
     def __init__(self, data, description2, str_encode, nullstr=''):
         self.str_encode = str_encode
@@ -296,6 +303,7 @@ class Db2db():
         self.ischange = False
         self.color = wx.Colour(255, 255, 255)
 
+
 class Db2_connected():
     def __init__(self, *args):
         pass
@@ -306,6 +314,7 @@ class Db2_connected():
         self.dbuser = args[4]
         self.password = args[5]
         self.comment = args[6]
+
 
 class ExecSqlsStatus():
     '''execute Sqls status'''
@@ -354,6 +363,7 @@ class ExecSqlsStatus():
 
 [wxID_DBMMENUHELPITEMS_HELP_ABOUT, wxID_DBMMENUHELPITEMS_HELP_DEBUG, 
 ] = [wx.NewId() for _init_coll_menuHelp_Items in range(2)]
+
 
 class dbm(wx.Frame):
     def _init_coll_menuWindow_Items(self, parent):
@@ -1065,9 +1075,9 @@ class dbm(wx.Frame):
             self.icon_noconn16.CopyFromBitmap(ic)
             
             self.icon_conn32 = self.icon_conn16
-            self.icon_conn32.SetSize(wx.Size(32,32))
+            self.icon_conn32.SetSize(wx.Size(32, 32))
             self.icon_noconn32 = self.icon_noconn16
-            self.icon_noconn32.SetSize(wx.Size(32,32))
+            self.icon_noconn32.SetSize(wx.Size(32, 32))
         except Exception as _ee:
             logging.error(traceback.format_exc())
             pass
@@ -1103,7 +1113,7 @@ class dbm(wx.Frame):
         self.gridDbs_bgc = self.gridDbs.GetCellBackgroundColour(0, 0)
         self.gridDbs.DisableDragRowSize()
         self.nbDbs.SetSelection(0)
-        self.textConnMsg.SetMaxLength(2**20)
+        self.textConnMsg.SetMaxLength(2 ** 20)
 
         # code snippet
         self.splitterWindowCodeSnippet.SplitVertically(self.treeCodeSnippet, self.textCodeSnippet)
@@ -1129,8 +1139,8 @@ class dbm(wx.Frame):
         wxID_STCM2 = wx.NewId()
         self.stcM2 = stc2.EditWindow(id=wxID_STCM2, name='stcM2', parent=self.nbM2,
               pos=wx.DefaultPosition, size=wx.DefaultSize, style=0, typestr='SQL')
-        self.nbM1.InsertPage(0,self.stcM1,'DDL',True)
-        self.nbM2.InsertPage(0,self.stcM2,'DDL',True)
+        self.nbM1.InsertPage(0, self.stcM1, 'DDL', True)
+        self.nbM2.InsertPage(0, self.stcM2, 'DDL', True)
         self.splitterWindowObject2.SplitHorizontally(self.nbM1, self.nbM2)
         self.splitterWindowObject2.SetMinimumPaneSize(1)
         self.splitterWindowObject2.SetSashGravity(0.5)
@@ -1150,8 +1160,8 @@ class dbm(wx.Frame):
         wxID_STCEXECDATA = wx.NewId()
         self.stcExecData = stc2.EditWindow(id=wxID_STCEXECDATA, name='stcData', parent=self.nbResult,
               pos=wx.DefaultPosition, size=wx.DefaultSize, style=0, typestr='SQL')
-        self.nbResult.AddPage(imageId=-1, page=self.stcExecLog, select=True, text=_tr(u'Log'))
-        self.nbResult.AddPage(imageId=-1, page=self.stcExecData, select=False, text=_tr(u'Result T'))
+        self.nbResult.AddPage(imageId= -1, page=self.stcExecLog, select=True, text=_tr(u'Log'))
+        self.nbResult.AddPage(imageId= -1, page=self.stcExecData, select=False, text=_tr(u'Result T'))
         
         self.splitterWindowExec.SplitHorizontally(self.splitterWindowExec1, self.nbResult)
         self.splitterWindowExec.SetMinimumPaneSize(1)
@@ -1169,14 +1179,14 @@ class dbm(wx.Frame):
         self.nbResult.oldpos = 0
         self.txtTimeout.SetMaxLength(10)
         self.txtSplitChar.SetMaxLength(5)
-        self.stcExecLog.SetMaxLength(2**20)
-        self.stcExecData.SetMaxLength(2**20)
+        self.stcExecLog.SetMaxLength(2 ** 20)
+        self.stcExecData.SetMaxLength(2 ** 20)
         self.statusBar_exec.SetFieldsCount(4)
         self.statusBar_exec.SetStatusWidths([-6, -3, -7, -4])
         fts = self.cfg.get_config(u'defaultfontname', u'Courier New')
         ftss = self.cfg.get_config(u'defaultfontsize', 9)
         ff = wx.Font(ftss, wx.SWISS, wx.NORMAL, wx.NORMAL, False, fts)
-        for gridX in [self.gridM11,self.gridM12,self.gridM13,self.gridM21,self.gridM22,self.gridM23]:
+        for gridX in [self.gridM11, self.gridM12, self.gridM13, self.gridM21, self.gridM22, self.gridM23]:
             gridX.Bind(wx.grid.EVT_GRID_SELECT_CELL, self.on_grid_select_cell__show_pos)
             gridX.Bind(wx.grid.EVT_GRID_RANGE_SELECT, self.on_grid_range_selection__show_range)
             gridX.Bind(wx.grid.EVT_GRID_LABEL_LEFT_CLICK, self.on_grid_label_left_click__sort)
@@ -1327,10 +1337,10 @@ class dbm(wx.Frame):
         logging.info('self.str_encode = %s' % self.str_encode)
         self.logpgf.write(' default locale = %s\n' % self.str_encode)
         if os.name == 'nt':
-            self.NL='\r\n'
+            self.NL = '\r\n'
             self.iswin = True
         else:
-            self.NL='\n'
+            self.NL = '\n'
             self.iswin = False
 
         self.cs_time_out = 100
@@ -1535,14 +1545,14 @@ class dbm(wx.Frame):
 
             psz = self.splitterWindowObject1.GetSize()
             if wx.SPLIT_HORIZONTAL == self.splitterWindowObject1.GetSplitMode():
-                self.splitterWindowObject1.SetSashPosition(psz.y/2)
+                self.splitterWindowObject1.SetSashPosition(psz.y / 2)
             else:
-                self.splitterWindowObject1.SetSashPosition(psz.x/2)
+                self.splitterWindowObject1.SetSashPosition(psz.x / 2)
             psz = self.splitterWindowObject2.GetSize()
             if wx.SPLIT_HORIZONTAL == self.splitterWindowObject2.GetSplitMode():
-                self.splitterWindowObject2.SetSashPosition(psz.y/2)
+                self.splitterWindowObject2.SetSashPosition(psz.y / 2)
             else:
-                self.splitterWindowObject2.SetSashPosition(psz.x/2)
+                self.splitterWindowObject2.SetSashPosition(psz.x / 2)
 
         psz = self.treeT1.GetParent().GetSize()
         self.choiceDb1.SetSize(wx.Size(psz.x, 22))
@@ -1875,7 +1885,7 @@ class dbm(wx.Frame):
                 type = type.decode(self.str_encode).strip()
                 auth = auth.decode(self.str_encode).strip()
                 comment = comment.decode(self.str_encode).strip()
-                items.append([alias, dbn, drive+node, dbtype, comment, type, intname, '', ''])
+                items.append([alias, dbn, drive + node, dbtype, comment, type, intname, '', ''])
             return items
         else:
             logging.info('unknow typestr')
@@ -1930,7 +1940,7 @@ class dbm(wx.Frame):
         db = mOra.connect(dsn=txt[0], user=txt[1], password=txt[2])
         cs = db.cursor()
         
-        color = wx.Colour(random.randint(200,255), random.randint(200,255), random.randint(200,255))
+        color = wx.Colour(random.randint(200, 255), random.randint(200, 255), random.randint(200, 255))
         self.dbs_connected.append([db, cs, '?node', txt[0],
                txt[1], txt[2], 'manual input oracle', color])
         if len(self.dbs_connected) != lconn:
@@ -1998,7 +2008,7 @@ class dbm(wx.Frame):
 
             '''227,227,227, 207,235,248, 244,252,203, 253,202,241, 219,234,236, 243,211,220, 253,202,239'''
             id_db = id(db)
-            color = wx.Colour(random.randint(200,255), random.randint(200,255), random.randint(200,255))
+            color = wx.Colour(random.randint(200, 255), random.randint(200, 255), random.randint(200, 255))
             self.dbs_connected.append([db, cs, node.encode(self.str_encode), dbname.encode(self.str_encode),
                    dbuser.encode(self.str_encode), password.encode(self.str_encode), comment.encode(self.str_encode), color])
             # column order G
@@ -2082,7 +2092,7 @@ class dbm(wx.Frame):
 
         # refresh choice
         self.dbs_connected.sort(self.func_dbs_connected_sort)
-        its1 = ['%s %s (%s) - %s - \tID:%d' % (i[G.iDBNAME], '- %s -' % i[G.iCOMMENT] if len(i[G.iCOMMENT])>0 else '', \
+        its1 = ['%s %s (%s) - %s - \tID:%d' % (i[G.iDBNAME], '- %s -' % i[G.iCOMMENT] if len(i[G.iCOMMENT]) > 0 else '', \
                                     i[G.iDBUSER], i[G.iNODE], id(i[G.iDB])) for i in self.dbs_connected]
         its = [it.decode(self.str_encode) for it in its1 ]
         self.choiceConnectedDbnames.Clear()
@@ -2157,7 +2167,7 @@ class dbm(wx.Frame):
             sl = str(ee).split()
             for i in sl:
                 if i.startswith('SQL') and i.endswith('N'):
-                    return - int(i[3:-1])
+                    return -int(i[3:-1])
             return -99998
         elif G.usePyDB2:
             return ee.args[1]
@@ -2212,7 +2222,7 @@ class dbm(wx.Frame):
             if dlg.ShowModal() == wx.ID_OK:
                 data = dlg.GetFontData()
                 font = data.GetChosenFont()
-                ff=wx.Font(font.GetPointSize(),wx.SWISS,wx.NORMAL,wx.NORMAL,False,font.GetFaceName())
+                ff = wx.Font(font.GetPointSize(), wx.SWISS, wx.NORMAL, wx.NORMAL, False, font.GetFaceName())
                 self.set_ctrl_font(ff, ff)
                 self.cfg.save_config(u'defaultfontname', font.GetFaceName())
                 self.cfg.save_config(u'defaultfontsize', font.GetPointSize())
@@ -2228,7 +2238,7 @@ class dbm(wx.Frame):
                 font = data.GetChosenFont()
                 colour = data.GetColour()
                 colour.Get()
-                ff=wx.Font(font.GetPointSize(),wx.SWISS,wx.NORMAL,wx.NORMAL,False,font.GetFaceName())
+                ff = wx.Font(font.GetPointSize(), wx.SWISS, wx.NORMAL, wx.NORMAL, False, font.GetFaceName())
                 self.set_ctrl_font2(ff, ff)
                 #self.stcSQLs.SetBackgroundColour(colour.Get())
                 #self.stcSQLs.SetBackgroundColour(colour.Get())
@@ -2264,7 +2274,7 @@ class dbm(wx.Frame):
 
     def OnBtnDisconnectAllButton(self, event):
         event.Skip()
-        if wx.YES != wx.MessageBox(_tr(' Disconnect All  ??'), _tr('Ask'), 
+        if wx.YES != wx.MessageBox(_tr(' Disconnect All  ??'), _tr('Ask'),
                 wx.YES_NO | wx.NO_DEFAULT | wx.ICON_EXCLAMATION, self.last_dlg):
             return
         self.dis_all_connect()
@@ -2423,14 +2433,14 @@ class dbm(wx.Frame):
         event.Skip()
         gridX = self.FindWindowById(event.GetId())
         if gridX in [self.gridM11, self.gridM12, self.gridM13, self.gridM21, self.gridM22, self.gridM23]:
-            startbar =   self.statusBar_object
+            startbar = self.statusBar_object
         else:startbar = self.statusBar_exec
         row, col = event.GetRow(), event.GetCol()
         try:
             startbar.SetStatusText(u'%d , %d' % (row + 1, col + 1), 1)
             tag = '%s:%s.%s: ' % (gridX.dbname, gridX.tabschema, gridX.tabname)
             msg = '/'.join([str(i) for i in gridX.description2[col]])
-            startbar.SetStatusText(tag.decode(self.str_encode)+msg.decode(self.str_encode), 2)
+            startbar.SetStatusText(tag.decode(self.str_encode) + msg.decode(self.str_encode), 2)
         except Exception as ee:
             logging.error(traceback.format_exc())
 
@@ -2438,7 +2448,7 @@ class dbm(wx.Frame):
         event.Skip()
         gridX = self.FindWindowById(event.GetId())
         if gridX in [self.gridM11, self.gridM12, self.gridM13, self.gridM21, self.gridM22, self.gridM23]:
-            startbar =   self.statusBar_object
+            startbar = self.statusBar_object
         else:startbar = self.statusBar_exec
         #print gridX.dbname, gridX.dbuser, gridX.tabname, gridX.sql, gridX.resmsg
         TL = gridX.GetSelectionBlockTopLeft()
@@ -2476,9 +2486,9 @@ class dbm(wx.Frame):
         row, col = self.gridrightclick
         data = gridX.GetTable().data
         desc = gridX.description2[col]
-        descstr = '"%s" (%s/%s)' % (desc[0],desc[1],desc[2])
+        descstr = '"%s" (%s/%s)' % (desc[0], desc[1], desc[2])
         descstr = descstr.decode(self.str_encode)
-        if hasattr(self,'str_search'):
+        if hasattr(self, 'str_search'):
             ss = self.str_search
         else:
             ss = data[row][col]
@@ -2493,7 +2503,7 @@ class dbm(wx.Frame):
                 s = self.str_search.encode(self.str_encode)
                 if s == '':
                     return
-                s = s.replace('*','.*').replace('?','.')
+                s = s.replace('*', '.*').replace('?', '.')
                 for i in range(row + 1, len(data)):
                     if re.match(s, str(data[i][col]), re.IGNORECASE):
                         gridX.SelectBlock(i, col, i, col)
@@ -2519,8 +2529,8 @@ class dbm(wx.Frame):
         progress = [-1, 100, False]  # pos, count, Break
         th = threading.Thread(target=function, args=(progress,))
         th.start()
-        dlg = wx.ProgressDialog(_tr('Please waiting ...'), _tr('On copy value ( %d / %d ) ...') % (progress[0],progress[1]),
-                    100, self.last_dlg, style=wx.PD_ELAPSED_TIME|wx.PD_CAN_ABORT)
+        dlg = wx.ProgressDialog(_tr('Please waiting ...'), _tr('On copy value ( %d / %d ) ...') % (progress[0], progress[1]),
+                    100, self.last_dlg, style=wx.PD_ELAPSED_TIME | wx.PD_CAN_ABORT)
         try:
             while True:
                 th.join(0.4)
@@ -2530,7 +2540,7 @@ class dbm(wx.Frame):
                             msg = _tr('On copy value ( %d / %d ) ...') % (progress[0], progress[1])
                         else:
                             msg = _tr('On copy ( %d / %d ) , CANCELED ...') % (progress[0], progress[1])
-                        cont =  dlg.Update(int(progress[0]*100/progress[1]), msg)[0]
+                        cont = dlg.Update(int(progress[0] * 100 / progress[1]), msg)[0]
                         if not cont and not progress[2]:
                             progress[2] = True
                 else:
@@ -2540,7 +2550,7 @@ class dbm(wx.Frame):
                 self.cptxt = None
         finally:
             dlg.Destroy()
-        logging.info(' copy %d lines used time: %s' %( progress[1], time.time() - t1))
+        logging.info(' copy %d lines used time: %s' % (progress[1], time.time() - t1))
 
     def popup2_CopyLineSQL(self, event):
         self.copy_value_thread(self.copy_line_sql)
@@ -2553,7 +2563,7 @@ class dbm(wx.Frame):
         TLs = gridX.GetSelectionBlockTopLeft()
         BRs = gridX.GetSelectionBlockBottomRight()
         for i in range(len(TLs)):
-            Rows += [ij for ij in range(TLs[i][0], BRs[i][0]+1)]
+            Rows += [ij for ij in range(TLs[i][0], BRs[i][0] + 1)]
         Rows += gridX.GetSelectedRows()
         Rows.append(gridX.GetGridCursorRow())
         Rows = list(set(Rows))
@@ -2567,7 +2577,7 @@ class dbm(wx.Frame):
         tabname = gridX.tabname
         cols = len(desc)
 
-        inss = ', '.join([i[0] if i[0]==i[0].upper().strip() else '"%s"' % i[0] for i in desc])
+        inss = ', '.join([i[0] if i[0] == i[0].upper().strip() else '"%s"' % i[0] for i in desc])
         rl = '%s ' % self.NL if len(inss) > 80 else ''
         inss = 'insert into %s.%s ( %s )%s values ( %%s ) ;%s' % (tabschema, tabname, inss, rl, self.NL)
         inssqls = StringIO.StringIO()
@@ -2625,7 +2635,7 @@ class dbm(wx.Frame):
 #            self.copy_text_to_clipboard('select * from %s.%s where %s in (%s%s%s);%s' % \
 #                    (gridX.tabschema, gridX.tabname, colname, self.NL, ds.getvalue()[:-(len(self.NL)+1)], self.NL, self.NL))
             self.cptxt = 'select * from %s.%s where %s in (%s%s%s);%s' % \
-                    (gridX.tabschema, gridX.tabname, colname, self.NL, ds.getvalue()[:-(len(self.NL)+1)], self.NL, self.NL)
+                    (gridX.tabschema, gridX.tabname, colname, self.NL, ds.getvalue()[:-(len(self.NL) + 1)], self.NL, self.NL)
         pass
 
     def popup2_CopyString(self, event=None):
@@ -2635,7 +2645,7 @@ class dbm(wx.Frame):
         gridX = self.current_active_gridX
         TL = gridX.GetSelectionBlockTopLeft()
         RB = gridX.GetSelectionBlockBottomRight()
-        if len(TL) <= 0 or len(RB) <=0:
+        if len(TL) <= 0 or len(RB) <= 0:
             Rows = gridX.GetSelectedRows()
             if len(Rows) <= 0:
                 x = gridX.GetGridCursorRow()
@@ -2644,25 +2654,25 @@ class dbm(wx.Frame):
                 RB.append([x, y])
             else:
                 TL.append([Rows[0], 0])
-                RB.append([Rows[0], gridX.GetNumberCols()-1])
+                RB.append([Rows[0], gridX.GetNumberCols() - 1])
         ds = StringIO.StringIO()
-        progress[1] = RB[0][0]+1 - TL[0][0]
+        progress[1] = RB[0][0] + 1 - TL[0][0]
         if hasattr(gridX.GetTable(), 'data'):
             data = gridX.GetTable().data
-            for i in range(TL[0][0], RB[0][0]+1):
+            for i in range(TL[0][0], RB[0][0] + 1):
                 if progress[2]: break
                 progress[0] += 1
                 ls = []
-                for j in range(TL[0][1], RB[0][1]+1):
+                for j in range(TL[0][1], RB[0][1] + 1):
                     ls.append('%s' % data[i][j])
                 ds.write('%s' % ','.join(ls))
                 ds.write(self.NL)
         else:
-            for i in range(TL[0][0], RB[0][0]+1):
+            for i in range(TL[0][0], RB[0][0] + 1):
                 if progress[2]: break
                 progress[0] += 1
                 ls = []
-                for j in range(TL[0][1], RB[0][1]+1):
+                for j in range(TL[0][1], RB[0][1] + 1):
                     ls.append('%s' % gridX.GetCellValue(i, j))
                 ds.write('%s' % ','.join(ls))
                 ds.write(self.NL)
@@ -2710,15 +2720,15 @@ class dbm(wx.Frame):
         if not hasattr(self, "popupMenuGrid"):
             self.popupMenuGrid = wx.Menu()
             self.menttextGrid = [
-                    [_tr("&Copy Selected Text"),                  self.popup2_CopyString,         None, None],
-                    [_tr("&Find Value"),                          self.popup2_Find,               None, None],
-                    [_tr("Select &All"),                          self.popup2_SelectAll,          None, None],
-                    [_tr("Copy Selected Line(s) Data to &SQL"),   self.popup2_CopyLineSQL,        None, None],
-                    [_tr("Create Selec&t SQL condition "),        self.popup2_CopyCondSelectSQL,  None, None],
-                    [_tr('&Export to SQL\tor (SHIFT)'),           self.popup2_ExportSQL,          None, None],
-                    [_tr('&Export to DEL\tor (SHIFT)'),           self.popup2_ExportDEL,          None, None],
-                    [_tr('&Export to CSV\tor (SHIFT)'),           self.popup2_ExportCSV,          None, None],
-                    [_tr('&Export to IXF'),                       self.popup2_ExportIXF,          None, None],
+                    [_tr("&Copy Selected Text"),                self.popup2_CopyString,         None, None],
+                    [_tr("&Find Value"),                        self.popup2_Find,               None, None],
+                    [_tr("Select &All"),                        self.popup2_SelectAll,          None, None],
+                    [_tr("Copy Selected Line(s) Data to &SQL"), self.popup2_CopyLineSQL,        None, None],
+                    [_tr("Create Selec&t SQL condition "),      self.popup2_CopyCondSelectSQL,  None, None],
+                    [_tr('&Export to SQL\tor (SHIFT)'),         self.popup2_ExportSQL,          None, None],
+                    [_tr('&Export to DEL\tor (SHIFT)'),         self.popup2_ExportDEL,          None, None],
+                    [_tr('&Export to CSV\tor (SHIFT)'),         self.popup2_ExportCSV,          None, None],
+                    [_tr('&Export to IXF'),                     self.popup2_ExportIXF,          None, None],
                    ]
             for m in self.menttextGrid:
                 m[iMid] = wx.NewId()
@@ -2747,7 +2757,7 @@ class dbm(wx.Frame):
             sqlori = self.nbResult.GetPage(i).sql
             az = sqld.QueryTokenizer()
             sqlnoc = az.removeAllCommentsFromQuery(sqlori)
-            wx.MessageBox(u'%s\n---\n%s'%(sqlori.decode(self.str_encode), 
+            wx.MessageBox(u'%s\n---\n%s' % (sqlori.decode(self.str_encode),
                 sqlnoc.decode(self.str_encode)), u'SQL', wx.OK, self.last_dlg)
         pass
 
@@ -2776,12 +2786,12 @@ class dbm(wx.Frame):
             for __j in range(2, a):
                 self.nbResult.DeletePage(2)
         elif i == 2:
-            for __j in range(i+1,a):
-                self.nbResult.DeletePage(i+1)
+            for __j in range(i + 1, a):
+                self.nbResult.DeletePage(i + 1)
         elif i > 2:
-            for __j in range(i+1,a):
-                self.nbResult.DeletePage(i+1)
-            for __j in range(2,i):
+            for __j in range(i + 1, a):
+                self.nbResult.DeletePage(i + 1)
+            for __j in range(2, i):
                 self.nbResult.DeletePage(2)# 2
 
     def popup_SwitchPage(self, args=None):
@@ -2830,12 +2840,12 @@ class dbm(wx.Frame):
                     wx.MessageBox(_tr(' Database Disconnected ? '), _tr('Error'), wx.OK | wx.ICON_ERROR, self.last_dlg)
                     return
 
-            self.log_usersql('-- * [%s/%s] [%s] *\n%s ;\n' % (gridX.dbname, gridX.dbuser, 
+            self.log_usersql('-- * [%s/%s] [%s] *\n%s ;\n' % (gridX.dbname, gridX.dbuser,
                             time.strftime(self.str_time_strf), gridX.sql), False, True)
             t1 = time.time()
             self.execSQL(cs, gridX.sql, self.getts()[0], 1)
             exec_time = str(time.time() - t1)
-            exec_time = exec_time[:exec_time.find('.')+3]
+            exec_time = exec_time[:exec_time.find('.') + 3]
             t1 = time.time()
             data, rese = self.fetchData(cs, gridX.sql)
             if rese and len(data) == 0:
@@ -2843,12 +2853,12 @@ class dbm(wx.Frame):
                 raise rese
             description2 = self.getdesc(cs)
             fetchdata_time = str(time.time() - t1)
-            fetchdata_time = fetchdata_time[:fetchdata_time.find('.')+3]
+            fetchdata_time = fetchdata_time[:fetchdata_time.find('.') + 3]
             rows, cols = len(data), len(gridX.description2)
             msg = _tr('%d rows (%d cols) selected in %s sec.') % (rows, cols, exec_time)
             gridX.resmsg = msg.encode(self.str_encode) + '  Ftt: %s' % (fetchdata_time)
             gridX.desc = [i[0] for i in description2]
-            if rese and len(data)>0:
+            if rese and len(data) > 0:
                 cont = True
                 raise rese
         except DB2.Error as dee:
@@ -2914,13 +2924,13 @@ class dbm(wx.Frame):
         if not hasattr(self, "popupMenuNb"):
             self.popupMenuNb = wx.Menu()
             self.menttextNb = [
-                    [_tr("&Show SQL"),            self.popup_ShowSQL,         None, None],
-                    [_tr('&Close Current Page'),  self.popup_ClosePage,       None, None],
-                    [_tr('Clos&e Other Pages'),   self.popup_CloseOtherPage,  None, None],
-                    [_tr('Close &All Pages'),     self.popup_CloseAllPage,    None, None],
-                    [_tr('S&witch Log Page'),     self.popup_SwitchPage,      None, None],
-                    [_tr("&Refresh Data"),        self.popup_RefreshData,     None, None],
-                    [_tr("Rename La&bel"),        self.popup_RenameLabel,     None, None],
+                    [_tr("&Show SQL"),              self.popup_ShowSQL,         None, None],
+                    [_tr('&Close Current Page'),    self.popup_ClosePage,       None, None],
+                    [_tr('Clos&e Other Pages'),     self.popup_CloseOtherPage,  None, None],
+                    [_tr('Close &All Pages'),       self.popup_CloseAllPage,    None, None],
+                    [_tr('S&witch Log Page'),       self.popup_SwitchPage,      None, None],
+                    [_tr("&Refresh Data"),          self.popup_RefreshData,     None, None],
+                    [_tr("Rename La&bel"),          self.popup_RenameLabel,     None, None],
                    ]
             for m in self.menttextNb:
                 m[iMid] = wx.NewId()
@@ -3032,12 +3042,12 @@ class dbm(wx.Frame):
             rows, cols = len(data), len(description2)
             msg = _tr('%d rows (%d cols) selected in %s sec.') % (rows, cols, 0.0)
             gridX.resmsg = msg.encode(self.str_encode)
-        if not hasattr(gridX,'dbname'): gridX.dbname = ''
-        if not hasattr(gridX,'dbuser'): gridX.dbuser = ''
-        if not hasattr(gridX,'tabschema'): gridX.tabschema = ''
-        if not hasattr(gridX,'tabname'): gridX.tabname = ''
-        if not hasattr(gridX,'sql'): gridX.sql = ''
-        if not hasattr(gridX,'resmsg'): gridX.resmsg = ''
+        if not hasattr(gridX, 'dbname'):    gridX.dbname = ''
+        if not hasattr(gridX, 'dbuser'):    gridX.dbuser = ''
+        if not hasattr(gridX, 'tabschema'): gridX.tabschema = ''
+        if not hasattr(gridX, 'tabname'):   gridX.tabname = ''
+        if not hasattr(gridX, 'sql'):       gridX.sql = ''
+        if not hasattr(gridX, 'resmsg'):    gridX.resmsg = ''
 
         gridX.issort = False
         gridX.sortcol = 0
@@ -3080,12 +3090,12 @@ class dbm(wx.Frame):
 
 
     def getQuoteInnerValue(self, str, quote_s='"'):
-        lx=len(quote_s)
-        mi=str[lx:]
-        Rq=mi.find(quote_s)
-        L=mi[:Rq].rstrip()
-        R=mi[Rq+lx:].lstrip()
-        return (L,R)
+        lx = len(quote_s)
+        mi = str[lx:]
+        Rq = mi.find(quote_s)
+        L = mi[:Rq].rstrip()
+        R = mi[Rq + lx:].lstrip()
+        return (L, R)
 
     def analyse_select_SQL_TableName(self, sql, dbuser):
         ''' from select * from ??  SQL get  tabschema and tabname
@@ -3102,75 +3112,75 @@ class dbm(wx.Frame):
         # bug bug bug ,unknow how to get tabname,
         # select * from  " user "." TABname "  ; select * from (select ? from xx) ; select ? from a A, b B where ...
         mi = re.sub('\s+[fF][rR][oO][mM]\s+', ' FROM ', sql.lstrip())
-        mi = mi[mi.find(' FROM ')+6:]
-        if mi[0]=='(':  #
-            tabschema='_UN'
-            tabname='KNOW_'
-        elif mi[0]=='"':
-            L,R=self.getQuoteInnerValue(mi,'"')
-            if len(R)>0:
-                if R[0]=='.':
-                    R=R[1:].lstrip()
-                    if R[0]=='"':
-                        L1,R1=self.getQuoteInnerValue(R,'"')
-                        if L1==L1.upper() and L1==L1.lstrip():
-                            tabname=L1  # ok "??" . "UPPER"
+        mi = mi[mi.find(' FROM ') + 6:]
+        if mi[0] == '(':  #
+            tabschema = '_UN'
+            tabname = 'KNOW_'
+        elif mi[0] == '"':
+            L, R = self.getQuoteInnerValue(mi, '"')
+            if len(R) > 0:
+                if R[0] == '.':
+                    R = R[1:].lstrip()
+                    if R[0] == '"':
+                        L1, R1 = self.getQuoteInnerValue(R, '"')
+                        if L1 == L1.upper() and L1 == L1.lstrip():
+                            tabname = L1  # ok "??" . "UPPER"
                         else:
-                            tabname='"%s"' % L1 # ok "??"."lower"
+                            tabname = '"%s"' % L1 # ok "??"."lower"
                     else:
                         for i in range(len(R)):
                             if R[i] not in '_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789':
                                 break   # ok "??".abcd where ..
                         else:
-                            i+=1    # ok "??".abcd$
-                        tabname=R[:i].upper()   # ok "??".UPPERorlower
-                    if L==L.upper() and L==L.lstrip():
-                        tabschema=L # ok "UPPER ".??
+                            i += 1    # ok "??".abcd$
+                        tabname = R[:i].upper()   # ok "??".UPPERorlower
+                    if L == L.upper() and L == L.lstrip():
+                        tabschema = L # ok "UPPER ".??
                     else:
-                        tabschema='"%s"' % L    # ok " lower".??
+                        tabschema = '"%s"' % L    # ok " lower".??
                 else:
-                    if L==L.upper() and L==L.lstrip():
-                        tabname=L   # ok "TABNAME " where ..
+                    if L == L.upper() and L == L.lstrip():
+                        tabname = L   # ok "TABNAME " where ..
                     else:
-                        tabname='"%s"' % L # ok " lower" where ..
-                    tabschema=dbuser.upper()
+                        tabname = '"%s"' % L # ok " lower" where ..
+                    tabschema = dbuser.upper()
             else:
-                if L==L.upper() and L==L.lstrip():
-                    tabname=L   # ok "TABNAME " $
+                if L == L.upper() and L == L.lstrip():
+                    tabname = L   # ok "TABNAME " $
                 else:
-                    tabname='"%s"' % L  # ok " lower" $
-                tabschema=dbuser.upper()
+                    tabname = '"%s"' % L  # ok " lower" $
+                tabschema = dbuser.upper()
         else:   # from NAME ..., not begin by quote
             for i in range(len(mi)):
                 if mi[i] not in '_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789':
                     break   # ok abc.??
             else:
-                i+=1
-            L=mi[:i]
-            if i!=len(mi):
-                R=mi[i:].lstrip()
-                if R[0]=='.':
-                    R=R[1:].lstrip()
-                    if R[0]=='"':
-                        L1,R1=self.getQuoteInnerValue(R, '"')
-                        if L1==L1.upper() and L1==L1.lstrip():
-                            tabname=L1  #ok abc."DEF"
+                i += 1
+            L = mi[:i]
+            if i != len(mi):
+                R = mi[i:].lstrip()
+                if R[0] == '.':
+                    R = R[1:].lstrip()
+                    if R[0] == '"':
+                        L1, R1 = self.getQuoteInnerValue(R, '"')
+                        if L1 == L1.upper() and L1 == L1.lstrip():
+                            tabname = L1  #ok abc."DEF"
                         else:
-                            tabname='"%s"' % L1 #ok abc." lower"
+                            tabname = '"%s"' % L1 #ok abc." lower"
                     else:
                         for i in range(len(R)):
                             if R[i] not in '_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789':
                                 break # ok ??.?? where ...
                         else:
-                            i+=1    # ok ??.?? $
-                        tabname=R[:i].upper()
-                    tabschema=L.upper()
+                            i += 1    # ok ??.?? $
+                        tabname = R[:i].upper()
+                    tabschema = L.upper()
                 else:
-                    tabname=L.upper()   # ok abcd where ...
-                    tabschema=dbuser.upper()
+                    tabname = L.upper()   # ok abcd where ...
+                    tabschema = dbuser.upper()
             else:
-                tabname=L.upper()   # ok abcd
-                tabschema=dbuser.upper()
+                tabname = L.upper()   # ok abcd
+                tabschema = dbuser.upper()
 
         if tabschema[0] != '"' and tabschema.find(' ') != -1:
             tabschema = '"%s"' % tabschema
@@ -3214,7 +3224,7 @@ class dbm(wx.Frame):
         try:
             self.settimeout(cs, time_out)  # python cannot break a thread
             res = []
-            th = threading.Thread(target=self.execute_sql_thread, args=(cs,sql,res))
+            th = threading.Thread(target=self.execute_sql_thread, args=(cs, sql, res))
             th.start()
             ti = 0.0
             iprog = 10
@@ -3231,7 +3241,7 @@ class dbm(wx.Frame):
                             sqll = _tr(' ?? unknow split sql ')
                             logging.error(traceback.format_exc())
                         dlg = wx.ProgressDialog(_tr('Please waiting ...'), _tr('EXECUTE: %s\n  %s') % \
-                            (u'  '*30, sqll), 100, self.last_dlg, style=wx.PD_ELAPSED_TIME)
+                            (u'  ' * 30, sqll), 100, self.last_dlg, style=wx.PD_ELAPSED_TIME)
                             # | wx.PD_CAN_ABORT)
                     iprog = (iprog + 10) % 100
                     if dlg and not dlg.Update(iprog)[0]:
@@ -3304,7 +3314,7 @@ class dbm(wx.Frame):
         res = []
         rese = None
         ti = 0
-        th =  threading.Thread(target=self.fetch_data_thread, args=(cs, isBrkOrPasue, iCount, das, res))
+        th = threading.Thread(target=self.fetch_data_thread, args=(cs, isBrkOrPasue, iCount, das, res))
         th.start()
         try:
             while True:
@@ -3344,7 +3354,7 @@ class dbm(wx.Frame):
         '''
         ##sql = sql.decode(self.str_encode)
         exec_time = str(execsql_time)
-        exec_time = exec_time[:exec_time.find('.')+3]
+        exec_time = exec_time[:exec_time.find('.') + 3]
         self.statusBar_exec.SetStatusText(_tr('Selected in %s . Please waiting...') % exec_time)
         t1 = time.time()
         data, rese = self.fetchData(db2db.cs, sql)
@@ -3366,13 +3376,13 @@ class dbm(wx.Frame):
         else:
             pass
         try:
-            tabschema,tabname=self.analyse_select_SQL_TableName(sql, db2db.dbuser)
+            tabschema, tabname = self.analyse_select_SQL_TableName(sql, db2db.dbuser)
         except Exception as ee:
             logging.error(traceback.format_exc())
-            self.log_pg('-- Exception in analyse_select_SQL_TableName ?? %s\n'  % str(ee))
+            self.log_pg('-- Exception in analyse_select_SQL_TableName ?? %s\n' % str(ee))
         t3 = time.time()
         fetchdata_time = str(time.time() - t1)
-        fetchdata_time = fetchdata_time[:fetchdata_time.find('.')+3]
+        fetchdata_time = fetchdata_time[:fetchdata_time.find('.') + 3]
         try:
             resmsg_s = u'%s  Ftt: %s' % (resmsg_0, fetchdata_time)
             self.new_page__show_data(data, desc, db2db, tabschema, tabname, sql, resmsg_s.encode(self.str_encode))
@@ -3380,7 +3390,7 @@ class dbm(wx.Frame):
             logging.error(traceback.format_exc())
             self.log_pg('-- Exception in new_page__show_data: %s\n' % str(ee))
         showdataongrid_time = str(time.time() - t3)
-        showdataongrid_time = showdataongrid_time[:showdataongrid_time.find('.')+3]
+        showdataongrid_time = showdataongrid_time[:showdataongrid_time.find('.') + 3]
         msg = u'%s  Ftt: %s Stt: %s' % (resmsg_0, fetchdata_time, showdataongrid_time)
         self.statusBar_exec.SetStatusText(msg)
         return resmsg_0.encode(self.str_encode), rese
@@ -3401,7 +3411,7 @@ class dbm(wx.Frame):
             self.splitterWindowExec.SetSashPosition(-1)
         else:
             sz = self.splitterWindowExec.GetSize()
-            self.splitterWindowExec.SetSashPosition(sz.y/2)
+            self.splitterWindowExec.SetSashPosition(sz.y / 2)
         self.splitterWindowExec1_up = (self.splitterWindowExec1_up + 1) % 3
 #        if self.splitterWindowExec.GetSashPosition() > 100:
 #            self.splitterWindowExec.SetSashPosition(1)
@@ -3417,13 +3427,13 @@ class dbm(wx.Frame):
         '''
         try:
             time_out = self.txtTimeout.GetValue().split(',')
-            if len(time_out)==1:
-                return int(time_out[0]),1
-            elif len(time_out)>=1:
-                return int(time_out[0]),int(time_out[1])
+            if len(time_out) == 1:
+                return int(time_out[0]), 1
+            elif len(time_out) >= 1:
+                return int(time_out[0]), int(time_out[1])
         except Exception as _ee:
             logging.error(traceback.format_exc())
-            return 10,1
+            return 10, 1
 
     def OnBtnExecSqlsButton(self, event):
         if event: event.Skip()
@@ -3506,7 +3516,7 @@ class dbm(wx.Frame):
                         Rst.ds.write('\n== Error ==\n')
                         Rst.lock.release()
                     m = ''
-                    Rst.lock.acquire();Rst.Res_or_Except.append((True, sql, t2-t1));Rst.lock.release()
+                    Rst.lock.acquire();Rst.Res_or_Except.append((True, sql, t2 - t1));Rst.lock.release()
                     while True:
                         Rst.lock.acquire();il = len(Rst.Res_or_Except);Rst.lock.release()
                         if il == 0 or Rst.isCancel: break
@@ -3555,10 +3565,10 @@ class dbm(wx.Frame):
         pass
     
         Rst.lock.acquire()
-        if Rst.isAutoCommit and (Rst.iCurrent+1) > 0 and (Rst.iCurrent+1) % Rst.isAutoCommit == 0:
+        if Rst.isAutoCommit and (Rst.iCurrent + 1) > 0 and (Rst.iCurrent + 1) % Rst.isAutoCommit == 0:
             Rst.hasCommitStatus = False
-            Rst.iLastCommited = Rst.iCurrent+1
-            Rst.ds.write(' COMMIT ; --autocommit at %d .\n\n' % (Rst.iCurrent+1))
+            Rst.iLastCommited = Rst.iCurrent + 1
+            Rst.ds.write(' COMMIT ; --autocommit at %d .\n\n' % (Rst.iCurrent + 1))
             Rst.lock.release()
             try: Rst.db.commit()
             except DB2.Error as dee:
@@ -3619,19 +3629,19 @@ class dbm(wx.Frame):
         Rst.timeout_1, Rst.timeout_more = self.getts()
         Rst.ds = StringIO.StringIO()
         Rst.es = StringIO.StringIO()
-        Rst.BreakDb2Errors = [-1024,]
+        Rst.BreakDb2Errors = [-1024, ]
         Rst.IgnoreDb2Errors = []
         msg = ''
         msg2 = ''
         iProgmax = len(sqls)
         dlg = None
         dlg = wx.ProgressDialog(_tr('Please waiting ...'), _tr('execute %3d/%3d statement %s\n\n\n') % \
-                (Rst.iSucc + Rst.iFail, Rst.iSqls, u'=='*20), iProgmax+2, self.last_dlg, style=wx.PD_CAN_ABORT | wx.PD_ELAPSED_TIME)
+                (Rst.iSucc + Rst.iFail, Rst.iSqls, u'==' * 20), iProgmax + 2, self.last_dlg, style=wx.PD_CAN_ABORT | wx.PD_ELAPSED_TIME)
         dlg.Update(1)
         llast_dlg = self.last_dlg
         self.last_dlg = dlg
         dlg.Center()
-        th = threading.Thread(target=self.execute_sqls_thread, args= (Rst,))
+        th = threading.Thread(target=self.execute_sqls_thread, args=(Rst,))
         th.start()
         ti = 0.0
         splittime = 0.05
@@ -3793,7 +3803,7 @@ class dbm(wx.Frame):
             if dlg:
                 self.last_dlg = llast_dlg
                 if Rst.iFail == 0: dlg.Destroy()
-                else:dlg.Update(iProgmax+2, _tr('Done. \n\n  executed %3d ( %3d ) statement.\n  Success %2d, Failed %2d  ') \
+                else:dlg.Update(iProgmax + 2, _tr('Done. \n\n  executed %3d ( %3d ) statement.\n  Success %2d, Failed %2d  ') \
                                 % (Rst.iSucc + Rst.iFail, Rst.iSqls, Rst.iSucc, Rst.iFail))
         pass
 
@@ -3829,12 +3839,12 @@ class dbm(wx.Frame):
             try:
                 beee = self.stcSQLs.GetSelectionStart()
                 eeed = self.stcSQLs.GetSelectionEnd()
-                if eeed - beee > 2*2**20:
+                if eeed - beee > 2 * 2 ** 20:
                     dlg = wx.ProgressDialog(_tr('Please waiting ...'), _tr('in split query statement '), 100)
                     dlg.Update(50)
                 b = self.stcSQLs.GetTextRange(0, beee)
-                u8sp=len(b.encode(self.str_encode))-len(b)
-                beforepos = u8sp*2 + len(b)
+                u8sp = len(b.encode(self.str_encode)) - len(b)
+                beforepos = u8sp * 2 + len(b)
                 assert beforepos == beee
                 az = sqld.QueryTokenizer()
                 sqls = az.tokenize(exsql, self.str_encode, self.getsplitchar(), beforepos)
@@ -3910,7 +3920,7 @@ class dbm(wx.Frame):
 #            for col in range(len(desc)):
 #                inss += """, %s""" % desc[col][0]
 #            inss = inss[2:]
-            inss = ', '.join([desc[i][0] if desc[i][0]==desc[i][0].upper().strip() else '"%s"' % desc[i][0] for i in colss])
+            inss = ', '.join([desc[i][0] if desc[i][0] == desc[i][0].upper().strip() else '"%s"' % desc[i][0] for i in colss])
             rl = '%s ' % self.NL if len(inss) > 80 else ''
             inss = 'insert into %s.%s ( %s )%s values ( %%s ) ;%s' % (tabschema, tabname, inss, rl, self.NL)
             for row in rowss:
@@ -3987,14 +3997,14 @@ class dbm(wx.Frame):
             for i in range(len(desc)):
                 if not desc[i][1] in ['TIMESTAMP', ]:
                     colss.append(i)
-            dlg = wx.MultiChoiceDialog(self.last_dlg, _tr('Please choose export columns:'), _tr('Please choose'), 
+            dlg = wx.MultiChoiceDialog(self.last_dlg, _tr('Please choose export columns:'), _tr('Please choose'),
                                        ['\t'.join([str(j) for j in i]).expandtabs(24) for i in desc])
             fts = self.cfg.get_config(u'defaultfontname', u'Courier New')
             ftss = self.cfg.get_config(u'defaultfontsize', 9)
             ffx = wx.Font(ftss, wx.SWISS, wx.NORMAL, wx.NORMAL, False, fts)
             dlg.GetChildren()[1].SetFont(ffx)
             dlg.SetSelections(colss)
-            dlg.SetSize(wx.Size(580,400))
+            dlg.SetSize(wx.Size(580, 400))
             dlg.Center()
             if dlg.ShowModal() != wx.ID_OK:
                 return False
@@ -4022,7 +4032,7 @@ class dbm(wx.Frame):
         savefile = ''
         dfn = '%s.%s.%s_%s' % (gridX.dbname, gridX.tabschema, gridX.tabname, time.strftime(self.str_time_strf))
         dlg = wx.FileDialog(self, message=_tr("Save file as ..."),
-                defaultFile=dfn.decode(self.str_encode).replace('"',''),
+                defaultFile=dfn.decode(self.str_encode).replace('"', ''),
                 wildcard=fext , style=wx.SAVE)
         if dlg.ShowModal() == wx.ID_OK:
             savefile = dlg.GetPath()
@@ -4030,16 +4040,16 @@ class dbm(wx.Frame):
         if savefile == '':
             return False
 
-        ff = open(savefile,'wb')
+        ff = open(savefile, 'wb')
 
         t1 = time.time()
         iC = [0]
         isBrk = [False]
-        msg = 'export  "%s"."%s"   of  "%s" ' % (gridX.tabschema, gridX.tabname, ftype)  + '  Write %4d' + ' of %d records.' % len(data)
+        msg = 'export  "%s"."%s"   of  "%s" ' % (gridX.tabschema, gridX.tabname, ftype) + '  Write %4d' + ' of %d records.' % len(data)
         if data_type == ExportFileType.IXF:
             ff.close()
             try:
-                i = gridX.db2db.db.export(ftype, gridX.sql, ff.name.encode(self.str_encode), ff.name.encode(self.str_encode)+'.msg')
+                i = gridX.db2db.db.export(ftype, gridX.sql, ff.name.encode(self.str_encode), ff.name.encode(self.str_encode) + '.msg')
                 logging.info('%d' % i)
             except Exception as _ee:
                 logging.error(traceback.format_exc())
@@ -4065,9 +4075,9 @@ class dbm(wx.Frame):
         st = os.stat(ff.name)
         s_time = str(time.time() - t1)
         msgs = 'export to "%s" of %s "%s"\n  Write %d bytes, Used %s sec.\n' % \
-                    (ff.name.encode(self.str_encode), ftype, gridX.sql, st.st_size, s_time[:s_time.find('.')+3])
+                    (ff.name.encode(self.str_encode), ftype, gridX.sql, st.st_size, s_time[:s_time.find('.') + 3])
         self.log_pg(msgs)
-        if st.st_size <= 10 * 2**20:
+        if st.st_size <= 10 * 2 ** 20:
             dlg = None
             try:
                 if ftype == 'IXF': fn = ff.name + '.msg'
@@ -4117,8 +4127,8 @@ class dbm(wx.Frame):
         treeC.Expand(rootitem)
         
         dlg = None
-        dlg = wx.ProgressDialog(_tr('Please wait...'), _tr('query database objects...           '), 
-                100, self.last_dlg, style=wx.PD_ELAPSED_TIME|wx.PD_CAN_ABORT)
+        dlg = wx.ProgressDialog(_tr('Please wait...'), _tr('query database objects...           '),
+                100, self.last_dlg, style=wx.PD_ELAPSED_TIME | wx.PD_CAN_ABORT)
         dlg.Update(1)
         
         # alias nickname summary table view 
@@ -4131,7 +4141,7 @@ class dbm(wx.Frame):
                 dbX.cs.execute(sql)
                 data = dbX.cs.fetchall()
                 desc = dbX.cs.description
-                sqltime.append(time.time()-t1)
+                sqltime.append(time.time() - t1)
                 DbInfo['ANSTV_db'] = (data, desc)
             else:
                 data, desc = DbInfo['ANSTV_db']
@@ -4141,12 +4151,12 @@ class dbm(wx.Frame):
             
             for types in [DbObj.Summary_Tables, DbObj.Tables, DbObj.Views, DbObj.Aliases, DbObj.Nicknames]:
                 item1 = treeC.AppendItem(rootitem, types.decode(self.str_encode))
-                objects = [(x[iX],x[iY]) for x in data if x[iZ] == types[0]]
+                objects = [(x[iX], x[iY]) for x in data if x[iZ] == types[0]]
                 schemas = list(set([x[0] for x in objects]))
                 schemas.sort()
                 info = {}
                 for schema in schemas:
-                    tb = [x[1] for x in objects if x[0]==schema]
+                    tb = [x[1] for x in objects if x[0] == schema]
                     tb.sort()
                     schema = schema.rstrip()
                     if schema.upper() != schema or schema.lstrip() != schema:
@@ -4171,27 +4181,27 @@ class dbm(wx.Frame):
 
         # some
         vts = [
-        (DbObj.Servers,         r'''select %s from SYSCAT.SERVERS''',        'SERVERNAME'),
-        (DbObj.Wrappers,        r'''select %s from SYSCAT.WRAPPERS''',       'WRAPNAME'),
-        (DbObj.User_Mappings,   r'''select %s from SYSCAT.USEROPTIONS''',    'AUTHID'),
-        (DbObj.Bufferpools,     r'''select %s from SYSCAT.BUFFERPOOLS''',    'BPNAME'),
-        (DbObj.Tablespaces,     r'''select %s from SYSCAT.TABLESPACES''',    'TBSPACE'),
+        (DbObj.Servers,         r'''select %s from SYSCAT.SERVERS''',       'SERVERNAME'),
+        (DbObj.Wrappers,        r'''select %s from SYSCAT.WRAPPERS''',      'WRAPNAME'),
+        (DbObj.User_Mappings,   r'''select %s from SYSCAT.USEROPTIONS''',   'AUTHID'),
+        (DbObj.Bufferpools,     r'''select %s from SYSCAT.BUFFERPOOLS''',   'BPNAME'),
+        (DbObj.Tablespaces,     r'''select %s from SYSCAT.TABLESPACES''',   'TBSPACE'),
 
         ]
         for types, sql, name in vts:
             item = treeC.AppendItem(rootitem, types.decode(self.str_encode))
             try:
                 treeC.Freeze()
-                if types+'_db' not in DbInfo:
+                if types + '_db' not in DbInfo:
                     t1 = time.time()
                     dbX.cs.execute(sql % name)
                     dlg.Update(50, sql.decode(self.str_encode))
                     data = dbX.cs.fetchall()
                     desc = dbX.cs.description
-                    sqltime.append(time.time()-t1)
-                    DbInfo[types+'_db'] = (data, desc)
+                    sqltime.append(time.time() - t1)
+                    DbInfo[types + '_db'] = (data, desc)
                 else:
-                    data, desc = DbInfo[types+'_db']
+                    data, desc = DbInfo[types + '_db']
                 iX = [x[0].upper().strip() for x in desc].index(name.upper())
                 data = [x[iX] for x in data]
                 data.sort()
@@ -4212,27 +4222,27 @@ class dbm(wx.Frame):
             try:
                 treeC.Freeze()
                 ty1 = types[:4].upper()
-                if ty1+'_db' not in DbInfo:
+                if ty1 + '_db' not in DbInfo:
                     t1 = time.time()
                     sql = r'''select %sSCHEMA,%sNAME from SYSCAT.%s''' % (ty1, ty1, types)
                     dlg.Update(80, sql.decode(self.str_encode))
                     dbX.cs.execute(sql)
                     data = dbX.cs.fetchall()
                     desc = dbX.cs.description
-                    sqltime.append(time.time()-t1)
-                    DbInfo[ty1+'_db'] = (data, desc)
+                    sqltime.append(time.time() - t1)
+                    DbInfo[ty1 + '_db'] = (data, desc)
                 else:
-                    data, desc = DbInfo[ty1+'_db']
+                    data, desc = DbInfo[ty1 + '_db']
                 iX = [i[0].upper().strip() for i in desc].index('%sSCHEMA' % ty1)
                 iY = [i[0].upper().strip() for i in desc].index('%sNAME' % ty1)
                 
                 item1 = treeC.AppendItem(rootitem, types.decode(self.str_encode))
-                objects = [(x[iX],x[iY]) for x in data]
+                objects = [(x[iX], x[iY]) for x in data]
                 schemas = list(set([x[0] for x in objects]))
                 schemas.sort()
                 info = {}
                 for schema in schemas:
-                    tb = [x[1] for x in objects if x[0]==schema]
+                    tb = [x[1] for x in objects if x[0] == schema]
                     tb.sort()
                     schema = schema.rstrip()
                     if schema.upper() != schema or schema.lstrip() != schema:
@@ -4257,7 +4267,7 @@ class dbm(wx.Frame):
 
         if dlg:
             dlg.Destroy()
-        logging.debug('All time:%s;  sqt:(%d)%s;  lst:%s' % (time.time()-btime, len(sqltime), sum(sqltime), str(sqltime)))
+        logging.debug('All time:%s;  sqt:(%d)%s;  lst:%s' % (time.time() - btime, len(sqltime), sum(sqltime), str(sqltime)))
         treeC.Expand(rootitem)    
         return
     
@@ -4327,25 +4337,25 @@ class dbm(wx.Frame):
             treeC.SelectItem(treeC.GetItemParent(citem))
         for types in [DbObj.Functions, DbObj.Procedures, DbObj.Triggers,
             DbObj.Aliases, DbObj.Nicknames, DbObj.Summary_Tables, DbObj.Tables, DbObj.Views]:
-            item,cookie = treeC.GetFirstChild(rootitem)
+            item, cookie = treeC.GetFirstChild(rootitem)
             while item:
                 if treeC.GetItemText(item) == types.encode(self.str_encode):
                     break
-                item,cookie = treeC.GetNextChild(item, cookie)
+                item, cookie = treeC.GetNextChild(item, cookie)
             else:continue
-            item1,cookie1 = treeC.GetFirstChild(item)
+            item1, cookie1 = treeC.GetFirstChild(item)
             while item1:
                 schema = treeC.GetItemText(item1).encode(self.str_encode)
                 data1 = DbInfo[types][schema]
                 data2 = self.get_match_list(data1, matchstr, False)
                 logging.debug(' filter %s.%s.%s-- %d,%d' % (types, treeC.GetItemText(item).encode(self.str_encode),
-                   treeC.GetItemText(item1).encode(self.str_encode), len(data1),len(data2)))
+                   treeC.GetItemText(item1).encode(self.str_encode), len(data1), len(data2)))
                 treeC.DeleteChildren(item1)
                 treeC.Freeze()
                 for i in data2:
-                    treeC.AppendItem(item1,i.decode(self.str_encode))
+                    treeC.AppendItem(item1, i.decode(self.str_encode))
                 treeC.Thaw()
-                item1,cookie1 = treeC.GetNextChild(item1,cookie1)
+                item1, cookie1 = treeC.GetNextChild(item1, cookie1)
         treeC.Refresh()
         pass
 
@@ -4367,8 +4377,8 @@ class dbm(wx.Frame):
         @param textMsg:
         @return:  None , values write to textMesg TextCtrl
         '''
-        owner2 = schema.replace("'","''")
-        objname2 = objname.replace("'","''")
+        owner2 = schema.replace("'", "''")
+        objname2 = objname.replace("'", "''")
         textMsg.ClearAll()
         isR = False
 
@@ -4395,9 +4405,9 @@ class dbm(wx.Frame):
                 except DB2.Error as dee:
                     logging.error(traceback.format_exc())
                     if G.usePyDB2:
-                        m = ' DB2: %s, %s, %s%s\n' % (dee.args[0], dee.args[1], dee.args[2], u'--' *50)
+                        m = ' DB2: %s, %s, %s%s\n' % (dee.args[0], dee.args[1], dee.args[2], u'--' * 50)
                     else:
-                        m = ' DB2: %s%s\n' % (str(dee), u'--' *50)
+                        m = ' DB2: %s%s\n' % (str(dee), u'--' * 50)
                     wx.MessageBox(m.decode(self.str_encode), u'query_schema_object_detail error', wx.OK, self.last_dlg)
                     textMsg.AppendText(m.decode(self.str_encode))
             isR = True
@@ -4440,7 +4450,7 @@ class dbm(wx.Frame):
         if L == 1:
             dbX = self.get_db2db_from_connect_string(self.choiceDb1.GetStringSelection())
             cs = dbX.cs
-            typestr,schema1,objname1 = treePath[1:4]
+            typestr, schema1, objname1 = treePath[1:4]
             if not cs or len(typestr) == 0 or len(schema1) == 0 or len(objname1) == 0:
                 return
             self.query_schema_object_detail(cs, typestr, schema1.encode(self.str_encode), objname1.encode(self.str_encode), self.stcM1)
@@ -4473,11 +4483,11 @@ class dbm(wx.Frame):
                     return
                 finally:
                     del self.incompare
-                self.compare_text(schema1,objname1,schema2)
+                self.compare_text(schema1, objname1, schema2)
         elif L == 2:
             dbX = self.get_db2db_from_connect_string(self.choiceDb2.GetStringSelection())
             cs = dbX.cs
-            typestr,schema2,objname2 = treePath[1:4]
+            typestr, schema2, objname2 = treePath[1:4]
             if not cs or len(typestr) == 0 or len(schema2) == 0 or len(objname2) == 0:
                 return
             self.query_schema_object_detail(cs, typestr, schema2.encode(self.str_encode), objname2.encode(self.str_encode), self.stcM2)
@@ -4510,7 +4520,7 @@ class dbm(wx.Frame):
                     return
                 finally:
                     del self.incompare
-                self.compare_text(schema1,objname2,schema2)
+                self.compare_text(schema1, objname2, schema2)
         else:
             logging.info('unknow ')
 
@@ -4527,7 +4537,7 @@ class dbm(wx.Frame):
         if typestr in [DbObj.Tables, DbObj.Views, DbObj.Summary_Tables, DbObj.Nicknames, DbObj.Aliases]:
             if typeid == ShowObjType.Cols:
                 vt = """select COLNAME, TYPENAME, LENGTH, SCALE, DEFAULT, NULLS from SYSCAT.COLUMNS 
-                    where TABSCHEMA='%s' and TABNAME='%s' order by COLNAME""" % (schema.replace("'","''"), tabname.replace("'","''"))
+                    where TABSCHEMA='%s' and TABNAME='%s' order by COLNAME""" % (schema.replace("'", "''"), tabname.replace("'", "''"))
                 tabname = 'columns'
             elif typeid == ShowObjType.Datas:
                 vt = """select * from "%s"."%s" where 1=1""" % (schema, tabname)
@@ -4545,7 +4555,7 @@ class dbm(wx.Frame):
             if rese and len(data) == 0: raise rese
             description2 = self.getdesc(cs)
             self.new_page__show_data(data, description2, db2db, schema, tabname, vt, '', gridX)
-            gridX.MakeCellVisible(len(data)-1, 0)
+            gridX.MakeCellVisible(len(data) - 1, 0)
             if rese: raise rese
         except DB2.Error as dee:
             logging.error(traceback.format_exc())
@@ -4565,7 +4575,7 @@ class dbm(wx.Frame):
             event.Skip()
         except Exception as _ee: #' pubsub treeT1'
             logging.error(traceback.format_exc())
-            pos =self.nbM1.GetSelection()
+            pos = self.nbM1.GetSelection()
         if not hasattr(self, 'db_objects'):
             return
         self.nbchange = True
@@ -4577,7 +4587,7 @@ class dbm(wx.Frame):
         logging.debug('OnNbM1NotebookPageChanged %s pos:%d' % (str(treePath), pos))
         if not dbX or len(treePath) < 4:
             return
-        typestr,schema1,objname1 = treePath[1:4]
+        typestr, schema1, objname1 = treePath[1:4]
         if pos == 0:
             self.query_schema_object_detail_and_show(1, treePath)
         elif pos == 1:
@@ -4593,7 +4603,7 @@ class dbm(wx.Frame):
             event.Skip()
         except Exception as _ee: #' pubsub treeT2'
             logging.error(traceback.format_exc())
-            pos =self.nbM2.GetSelection()
+            pos = self.nbM2.GetSelection()
         if not hasattr(self, 'db_objects'):
             return
         self.nbchange = True
@@ -4605,7 +4615,7 @@ class dbm(wx.Frame):
         logging.debug('OnNbM2NotebookPageChanged  %s pos:%d' % (str(treePath), pos))
         if not dbX or len(treePath) < 4:
             return
-        typestr,schema1,objname1 = treePath[1:4]
+        typestr, schema1, objname1 = treePath[1:4]
         if pos == 0:
             self.query_schema_object_detail_and_show(2, treePath)
         elif pos == 1:
@@ -4655,7 +4665,7 @@ class dbm(wx.Frame):
             elif len(treePath) == 2:
                 logging.debug(' lstTx select root/1')
                 if treePath[-1] == DbObj.Tablespaces2:
-                    if L==1:
+                    if L == 1:
                         dbX = self.get_db2db_from_connect_string(self.choiceDb1.GetStringSelection())
                     else:
                         dbX = self.get_db2db_from_connect_string(self.choiceDb2.GetStringSelection())
@@ -4669,7 +4679,7 @@ class dbm(wx.Frame):
                     data, rese = self.fetchData(dbX.cs, '')
                     desc = self.getdesc(dbX.cs)
                     if not rese:
-                        if L==1:
+                        if L == 1:
                             self.nbM1.SetSelection(1)
                             self.new_page__show_data(data, desc, gridx=self.gridM11)
                         else:
@@ -4678,7 +4688,7 @@ class dbm(wx.Frame):
                     return
             else:
                 if len(treePath) == 4:
-                    if L==1:
+                    if L == 1:
                         self.OnNbM1NotebookPageChanged()
                     else:
                         self.OnNbM2NotebookPageChanged()
@@ -4721,10 +4731,10 @@ class dbm(wx.Frame):
         psz = self.splitterWindowObject1.GetSize()
         if wx.SPLIT_HORIZONTAL == self.splitterWindowObject1.GetSplitMode():
             self.splitterWindowObject1.SetSplitMode(wx.SPLIT_VERTICAL)
-            self.splitterWindowObject1.SetSashPosition(psz.x/2)
+            self.splitterWindowObject1.SetSashPosition(psz.x / 2)
         else:
             self.splitterWindowObject1.SetSplitMode(wx.SPLIT_HORIZONTAL)
-            self.splitterWindowObject1.SetSashPosition(psz.y/2)
+            self.splitterWindowObject1.SetSashPosition(psz.y / 2)
         self.splitterWindowObject1.UpdateSize()
         self.resize_p_objects(False)
 
@@ -4733,10 +4743,10 @@ class dbm(wx.Frame):
         psz = self.splitterWindowObject2.GetSize()
         if wx.SPLIT_HORIZONTAL == self.splitterWindowObject2.GetSplitMode():
             self.splitterWindowObject2.SetSplitMode(wx.SPLIT_VERTICAL)
-            self.splitterWindowObject2.SetSashPosition(psz.x/2)
+            self.splitterWindowObject2.SetSashPosition(psz.x / 2)
         else:
             self.splitterWindowObject2.SetSplitMode(wx.SPLIT_HORIZONTAL)
-            self.splitterWindowObject2.SetSashPosition(psz.y/2)
+            self.splitterWindowObject2.SetSashPosition(psz.y / 2)
         self.splitterWindowObject2.UpdateSize()
 
     def OnSplitterWindowObjectSplitterSashPosChanged(self, event):
@@ -4843,7 +4853,7 @@ class dbm(wx.Frame):
         '''
         self.stcPython.SetFocus()
         pystr = self.stcPython.GetSelectedText().strip().encode(self.str_encode)
-        pystr = pystr.replace('\r\n','\n').replace('\r','\n')
+        pystr = pystr.replace('\r\n', '\n').replace('\r', '\n')
         if pystr == '':
             return
 
@@ -4860,7 +4870,7 @@ class dbm(wx.Frame):
         dlg = None
         try:
             try:
-                msgs =  pystr[:80].decode(self.str_encode)
+                msgs = pystr[:80].decode(self.str_encode)
             except Exception as _ee:
                 logging.error(traceback.format_exc())
                 msgs = u' exec split er'
@@ -4893,7 +4903,7 @@ class dbm(wx.Frame):
         finally:
             self.last_dlg = llast_dlg
             if dlg: dlg.Destroy()
-            if hasattr(self,'stdii'):    # not use if self.python_exec_redirect_std:
+            if hasattr(self, 'stdii'):    # not use if self.python_exec_redirect_std:
                 sys.stdin, sys.stdout, sys.stderr = self.stdii, self.stdoo, self.stdee
                 del self.stdii, self.stdoo, self.stdee
             if self.write_ds.len > 0:
@@ -4905,7 +4915,7 @@ class dbm(wx.Frame):
         return False
 
     def pstdatty(self):
-        self.stcExecLog.AppendText(u' sys.stdin, out, err isatty: %s, %s, %s\n' % (sys.stdin.isatty(),sys.stdout.isatty(),sys.stderr.isatty()))
+        self.stcExecLog.AppendText(u' sys.stdin, out, err isatty: %s, %s, %s\n' % (sys.stdin.isatty(), sys.stdout.isatty(), sys.stderr.isatty()))
 
     def write(self, *args):
         ''' not call. used in exec string redirect stdout stderr messages.
@@ -5291,7 +5301,7 @@ class dbm(wx.Frame):
         logging.info(''' OnMenuFileItems_reloadMenu''')
 
     def OnMenuFileItem_exitMenu(self, event):
-        if wx.YES == wx.MessageBox(_tr('Exit program ?'), _tr('Ask'), wx.YES_NO|wx.ICON_QUESTION, self):
+        if wx.YES == wx.MessageBox(_tr('Exit program ?'), _tr('Ask'), wx.YES_NO | wx.ICON_QUESTION, self):
             self.Close()
 
     def func_getwinn(self, ctl):
@@ -5320,24 +5330,24 @@ class dbm(wx.Frame):
 
         try:
             if issubclass(ctl.__class__, wx.stc.StyledTextCtrl):
-                stcflags= 0
+                stcflags = 0
                 if flags & 2: stcflags &= wx.stc.STC_FIND_WHOLEWORD
                 if flags & 4: stcflags &= wx.stc.STC_FIND_MATCHCASE
                 oldpos = ctl.GetCurrentPos()
-                b,e = ctl.GetSelectionStart(),ctl.GetSelectionEnd()
+                b, e = ctl.GetSelectionStart(), ctl.GetSelectionEnd()
                 ctl.SearchAnchor()
                 if flags & 1:
                     ipos = ctl.SearchNext(stcflags, findTxt)    # bug?
                     if ipos == oldpos:
                         i = ctl.GetCurrentPos() + len(findTxt)
-                        ctl.SetSelection(i,i)
+                        ctl.SetSelection(i, i)
                         ctl.SearchAnchor()
                         ipos = ctl.SearchNext(stcflags, findTxt)
                 else:
                     ipos = ctl.SearchPrev(stcflags, findTxt)
                     if ipos == oldpos:
                         i = ctl.GetCurrentPos() - len(findTxt)
-                        ctl.SetSelection(i,i)
+                        ctl.SetSelection(i, i)
                         ctl.SearchAnchor()
                         ipos = ctl.SearchPrev(stcflags, findTxt)
                 if ipos != -1:
@@ -5355,14 +5365,14 @@ class dbm(wx.Frame):
             elif issubclass(ctl.GetParent().__class__, wx.grid.Grid):
                 gridX = ctl.GetParent()
                 row, col = gridX.GetGridCursorRow(), gridX.GetGridCursorCol()
-                if hasattr(gridX.GetTable(),'data'):
+                if hasattr(gridX.GetTable(), 'data'):
                     desc = gridX.description2[col]
-                    descstr = '"%s" (%s/%s)' % (desc[0],desc[1],desc[2])
+                    descstr = '"%s" (%s/%s)' % (desc[0], desc[1], desc[2])
                     descstr = descstr.decode(self.str_encode)
                 else:
                     descstr = gridX.GetColLabelValue(col)
-                if flags & 2:   s = findTxt.replace('*','.*').replace('?','.')
-                else:           s = '.*' + findTxt.replace('*','.*').replace('?','.') + '.*'
+                if flags & 2:   s = findTxt.replace('*', '.*').replace('?', '.')
+                else:           s = '.*' + findTxt.replace('*', '.*').replace('?', '.') + '.*'
                 if flags & 4:   f = 0
                 else:           f = re.IGNORECASE
                 for i in range(row + 1, gridX.GetNumberRows()):
@@ -5381,15 +5391,15 @@ class dbm(wx.Frame):
             elif issubclass(ctl.__class__, wx.ListCtrl):
                 pass
             elif issubclass(ctl.__class__, wx.ListBox):
-                s = '.*' + findTxt.replace('*','.*').replace('?','.') + '.*'
+                s = '.*' + findTxt.replace('*', '.*').replace('?', '.') + '.*'
                 ss = ctl.GetItems()
                 ic = ctl.GetSelection()
-                for i in range(ic+1, len(ss)):
+                for i in range(ic + 1, len(ss)):
                     if re.match(s, ss[i], re.IGNORECASE):
                         ctl.SetSelection(i)
                         wx.lib.pubsub.Publisher().sendMessage(ctl)
                         return
-                for i in range(0, ic+1):
+                for i in range(0, ic + 1):
                     if re.match(s, ss[i], re.IGNORECASE):
                         ctl.SetSelection(i)
                         wx.lib.pubsub.Publisher().sendMessage(ctl)
@@ -5450,7 +5460,7 @@ class dbm(wx.Frame):
             logging.info('un implemnet copy source control')
             
     def OnMenuEditItems_findMenu(self, event):
-        if hasattr(self,'fdlg') and self.fdlg:
+        if hasattr(self, 'fdlg') and self.fdlg:
             self.fdlg.SetFocus()
             return
         data = wx.FindReplaceData()
@@ -5463,7 +5473,7 @@ class dbm(wx.Frame):
         self.dis_find(False)
 
     def OnMenuEditItems_replaceMenu(self, event):
-        if hasattr(self,'fdlg') and self.fdlg:
+        if hasattr(self, 'fdlg') and self.fdlg:
             self.fdlg.SetFocus()
             return
         data = wx.FindReplaceData()
@@ -5485,7 +5495,7 @@ class dbm(wx.Frame):
         event.Enable(self.nbMainFrame.GetSelection() == G.iSQL  and \
             self.stcSQLs.GetSelectionStart() != self.stcSQLs.GetSelectionEnd() or \
             self.nbMainFrame.GetSelection() == G.iOBJECTS  and \
-            self.ctl in [self.stcM1, self.stcM2 ] )
+            self.ctl in [self.stcM1, self.stcM2 ])
 
     def OnMenuExecItems_exec_sqlsMenu(self, event):
         curpos = self.nbMainFrame.GetSelection()
@@ -5506,7 +5516,7 @@ class dbm(wx.Frame):
 
     def OnMenuExecItems_format_sqlMenu(self, event):
         stcc = self.ctl
-        if not stcc in [self.stcSQLs,self.stcM1,self.stcM2]: return
+        if not stcc in [self.stcSQLs, self.stcM1, self.stcM2]: return
         ss = stcc.GetSelectedText()
         if len(ss) == 0: return
         beee = stcc.GetSelectionStart()
@@ -5528,7 +5538,7 @@ class dbm(wx.Frame):
         info.Copyright = _tr("(C) 2010 Programmers and Coders Everywhere")
         info.Description = wx.lib.wordwrap.wordwrap(
             _tr('''A "db2 tool" program is a software program that IBM/DB2 utility tool''') +
-            '\n\nos: %s \tver: %s\npython: %s\nwxPython: %s' % 
+                u'\n\nos: %s \tver: %s\npython: %s\nwxPython: %s' %
             (os.name, platform.version(), sys.version, wx.version()),
             500, wx.ClientDC(self))
         #info.WebSite = ("emailto:windwiny.ubt@gmail.com", "emailto:")
@@ -5557,14 +5567,14 @@ class dbm(wx.Frame):
             logging.error(traceback.format_exc())
             pass
 
-    def sqlcr(self ,event):
+    def sqlcr(self , event):
         print '--sqlcr call'
         self.sqlss, be, ed, ti = self.get_sqls_from_stcSQLs()
         self.iXX = -1
         print be, ed, ti,
         print len(self.sqlss)
     
-    def sqlse(self ,event):
+    def sqlse(self , event):
         print '--sqlse call'
         if not hasattr(self, 'sqlss') or len(self.sqlss) == 0:
             print '---- no has sqlss -'

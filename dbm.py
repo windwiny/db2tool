@@ -87,7 +87,8 @@ try:
     import wx.stc
     import wx.lib.pubsub
     import wx.lib.wordwrap
-except Exception:
+    import wx.py.crust
+except ImportError:
     logging.error(''' *IMPORT WX EXCEPT* ''')
     logging.error(traceback.format_exc())
     sys.exit(2)
@@ -359,7 +360,8 @@ class ExecSqlsStatus():
 [wxID_DBMMENUWINDOWITEMS_H, wxID_DBMMENUWINDOWITEMS_V, 
 ] = [wx.NewId() for _init_coll_menuWindow_Items in range(2)]
 
-[wxID_DBMMENUHELPITEMS_HELP_ABOUT] = [wx.NewId() for _init_coll_menuHelp_Items in range(1)]
+[wxID_DBMMENUHELPITEMS_HELP_ABOUT, wxID_DBMMENUHELPITEMS_HELP_DEBUG, 
+] = [wx.NewId() for _init_coll_menuHelp_Items in range(2)]
 
 class dbm(wx.Frame):
     def _init_coll_menuWindow_Items(self, parent):
@@ -391,8 +393,12 @@ class dbm(wx.Frame):
 
         parent.Append(help='', id=wxID_DBMMENUHELPITEMS_HELP_ABOUT,
               kind=wx.ITEM_NORMAL, text=_(u'&About ...'))
+        parent.Append(help='', id=wxID_DBMMENUHELPITEMS_HELP_DEBUG,
+              kind=wx.ITEM_NORMAL, text=_(u'&Debug ...'))
         self.Bind(wx.EVT_MENU, self.OnMenuHelpItems_help_aboutMenu,
               id=wxID_DBMMENUHELPITEMS_HELP_ABOUT)
+        self.Bind(wx.EVT_MENU, self.OnMenuHelpItems_help_DebugMenu,
+              id=wxID_DBMMENUHELPITEMS_HELP_DEBUG)
 
     def _init_coll_menuFile_Items(self, parent):
         # generated method, don't edit
@@ -526,7 +532,7 @@ class dbm(wx.Frame):
     def _init_ctrls(self, prnt):
         # generated method, don't edit
         wx.Frame.__init__(self, id=wxID_DBM, name=u'dbm', parent=prnt,
-              pos=wx.Point(171, 37), size=wx.Size(1024, 666),
+              pos=wx.Point(171, 37), size=wx.Size(1032, 676),
               style=wx.DEFAULT_FRAME_STYLE, title=_(u'dbtool'))
         self._init_utils()
         self.SetClientSize(wx.Size(1016, 638))
@@ -1349,6 +1355,8 @@ class dbm(wx.Frame):
     def OnDbmClose(self, event):
         event.Skip()
         self.on_quit()
+        #may be app has other top window, ensure program exit
+        #wx.GetApp().ExitMainLoop()
         
     def on_quit(self):
         self.init_keys(False)
@@ -1960,6 +1968,7 @@ class dbm(wx.Frame):
                  % (dbname, dbuser, dbuser, node, dbname, comment), _('connect database ?'), wx.YES_NO | wx.ICON_QUESTION, self.last_dlg):
                 return
 
+            dlg = None
             try:
                 dlg = wx.ProgressDialog(_('connect ...'), u' db2 connect to %s user %s using ****' % (dbname, dbuser), 100, self, style=wx.PD_ELAPSED_TIME)
                 dlg.Update(50)
@@ -1985,7 +1994,7 @@ class dbm(wx.Frame):
                 wx.MessageBox(str(ee).decode(self.str_encode), _('Exception'), wx.OK | wx.ICON_ERROR, dlg)
                 return
             finally:
-                dlg.Destroy()
+                if dlg: dlg.Destroy()
 
             '''227,227,227, 207,235,248, 244,252,203, 253,202,241, 219,234,236, 243,211,220, 253,202,239'''
             id_db = id(db)
@@ -2012,6 +2021,7 @@ class dbm(wx.Frame):
                 return
 
             id_str = int(connstr.split(self.str_connectstr_split)[1])
+            dlg = None
             try:
                 dlg = wx.ProgressDialog(u' db2 connect reset [      ]', _('disconnect ...'), 100, self, style=wx.PD_ELAPSED_TIME)
                 for i in range(len(self.dbs_connected)):
@@ -2034,7 +2044,7 @@ class dbm(wx.Frame):
                         self.dbs_connected.pop(i)
                         break
             finally:
-                dlg.Destroy()
+                if dlg: dlg.Destroy()
             self.log_pg('\ndb2 connect reset  [%s]\n%s\n' % (id_str, '=='*50))
             gridX.SetCellValue(iRow, iConmsgCol, u'no connect')
 
@@ -2164,6 +2174,7 @@ class dbm(wx.Frame):
         ''' disconnect all
         - default used on process exit, no change choice_dbs values and button status
         '''
+        dlg = None
         try:
             dlg = wx.ProgressDialog(_('disconnect ...'), u'db2 connect reset [        ]',
                                     len(self.dbs_connected), self, style=wx.PD_ELAPSED_TIME)
@@ -2187,7 +2198,7 @@ class dbm(wx.Frame):
                     pass
             self.dbs_connected = []
         finally:
-            dlg.Destroy()
+            if dlg: dlg.Destroy()
         self.db_objects = {}
 
     def OnBtnFontButton(self, event):
@@ -2528,7 +2539,7 @@ class dbm(wx.Frame):
                 self.copy_text_to_clipboard(self.cptxt)
                 self.cptxt = None
         finally:
-            if dlg: dlg.Destroy()
+            dlg.Destroy()
         logging.info(' copy %d lines used time: %s' %( progress[1], time.time() - t1))
 
     def popup2_CopyLineSQL(self, event):
@@ -4057,6 +4068,7 @@ class dbm(wx.Frame):
                     (ff.name.encode(self.str_encode), ftype, gridX.sql, st.st_size, s_time[:s_time.find('.')+3])
         self.log_pg(msgs)
         if st.st_size <= 10 * 2**20:
+            dlg = None
             try:
                 if ftype == 'IXF': fn = ff.name + '.msg'
                 else: fn = ff.name
@@ -4066,7 +4078,7 @@ class dbm(wx.Frame):
             except Exception as _ee:
                 logging.error(traceback.format_exc())
             finally:
-                dlg.Destroy()
+                if dlg: dlg.Destroy()
         return True
 
     # ------------------------------------------------------------------------
@@ -5528,6 +5540,12 @@ class dbm(wx.Frame):
 
         wx.AboutBox(info)
 
+    def OnMenuHelpItems_help_DebugMenu(self, event):
+        self._frm = wx.py.crust.CrustFrame(self, title='db tool debug')
+        self._frm.shell.interp.locals['self'] = self
+        self._frm.shell.interp.locals['app'] = wx.GetApp()
+        self._frm.Show()
+
     def testmsg(self):
         d1 = _('testmsg')
         d2 = 'testmsg'
@@ -5575,5 +5593,5 @@ class dbm(wx.Frame):
         pass
 
 if __name__ == '__main__':
-    ap = wx.App(0)
+    app = wx.App(0)
     wx.MessageBox('No App', 'db2 tool', wx.OK)

@@ -1100,6 +1100,7 @@ class dbm(wx.Frame):
         self.Bind(wx.EVT_COMMAND_FIND_REPLACE, self.OnFind)
         self.Bind(wx.EVT_COMMAND_FIND_REPLACE_ALL, self.OnFind)
         self.Bind(wx.EVT_COMMAND_FIND_CLOSE, self.OnFindClose)
+        self.Bind(wx.EVT_WINDOW_DESTROY, self.OnDbmDestroy, id=wxID_DBM)
 
         self.init_ctrl(parent)
         self.init_keys()
@@ -1365,6 +1366,8 @@ class dbm(wx.Frame):
     def OnDbmClose(self, event):
         event.Skip()
         self.on_quit()
+
+    def OnDbmDestroy(self, event):
         #may be app has other top window, ensure program exit
         wx.GetApp().ExitMainLoop()
         

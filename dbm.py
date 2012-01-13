@@ -230,7 +230,7 @@ class dbGridTable(wx.grid.PyGridTableBase):
                     return self.nullstr
                 else:
                     dd = self.data[row][col]
-                    if type(dd) in [types.StringType, types.UnicodeType]:
+                    if type(dd) == types.StringType:
                         try: dd = unicode(self.data[row][col], self.str_encode)
                         except Exception as _ee:
                             logging.error(traceback.format_exc())
@@ -4152,9 +4152,9 @@ class dbm(wx.Frame):
             iY = [i[0].upper().strip() for i in desc].index('TABNAME')
             iZ = [i[0].upper().strip() for i in desc].index('TYPE')
             
-            for types in [DbObj.Summary_Tables, DbObj.Tables, DbObj.Views, DbObj.Aliases, DbObj.Nicknames]:
-                item1 = treeC.AppendItem(rootitem, types.decode(self.str_encode))
-                objects = [(x[iX], x[iY]) for x in data if x[iZ] == types[0]]
+            for typess in [DbObj.Summary_Tables, DbObj.Tables, DbObj.Views, DbObj.Aliases, DbObj.Nicknames]:
+                item1 = treeC.AppendItem(rootitem, typess.decode(self.str_encode))
+                objects = [(x[iX], x[iY]) for x in data if x[iZ] == typess[0]]
                 schemas = list(set([x[0] for x in objects]))
                 schemas.sort()
                 info = {}
@@ -4174,9 +4174,9 @@ class dbm(wx.Frame):
                         if t.upper() != t or t.lstrip() != t:
                             t = '"%s"' % t
                         treeC.AppendItem(item2, t.decode(self.str_encode))
-                    logging.debug('appenditem %3d -> %s.%s' % (len(tb), types, schema))
-                DbInfo[types] = info
-                logging.debug('appenditem %3d %s SUM' % (len(objects), types))
+                    logging.debug('appenditem %3d -> %s.%s' % (len(tb), typess, schema))
+                DbInfo[typess] = info
+                logging.debug('appenditem %3d %s SUM' % (len(objects), typess))
         except Exception as ee:
             logging.error(traceback.format_exc())
         finally:
@@ -4191,27 +4191,27 @@ class dbm(wx.Frame):
         (DbObj.Tablespaces,     r'''select %s from SYSCAT.TABLESPACES''',   'TBSPACE'),
 
         ]
-        for types, sql, name in vts:
-            item = treeC.AppendItem(rootitem, types.decode(self.str_encode))
+        for typess, sql, name in vts:
+            item = treeC.AppendItem(rootitem, typess.decode(self.str_encode))
             try:
                 treeC.Freeze()
-                if types + '_db' not in DbInfo:
+                if typess + '_db' not in DbInfo:
                     t1 = time.time()
                     dbX.cs.execute(sql % name)
                     dlg.Update(50, sql.decode(self.str_encode))
                     data = dbX.cs.fetchall()
                     desc = dbX.cs.description
                     sqltime.append(time.time() - t1)
-                    DbInfo[types + '_db'] = (data, desc)
+                    DbInfo[typess + '_db'] = (data, desc)
                 else:
-                    data, desc = DbInfo[types + '_db']
+                    data, desc = DbInfo[typess + '_db']
                 iX = [x[0].upper().strip() for x in desc].index(name.upper())
                 data = [x[iX] for x in data]
                 data.sort()
-                DbInfo[types] = data
+                DbInfo[typess] = data
                 for i in data:
                     treeC.AppendItem(item, i.decode(self.str_encode))
-                logging.debug('appenditem %3d %s' % (len(data), types))
+                logging.debug('appenditem %3d %s' % (len(data), typess))
             except Exception as ee:
                 logging.error(traceback.format_exc())
             finally:
@@ -4221,13 +4221,13 @@ class dbm(wx.Frame):
         treeC.AppendItem(rootitem, DbObj.Tablespaces2)
 
         # some
-        for types in [DbObj.Functions, DbObj.Procedures, DbObj.Triggers]:
+        for typess in [DbObj.Functions, DbObj.Procedures, DbObj.Triggers]:
             try:
                 treeC.Freeze()
-                ty1 = types[:4].upper()
+                ty1 = typess[:4].upper()
                 if ty1 + '_db' not in DbInfo:
                     t1 = time.time()
-                    sql = r'''select %sSCHEMA,%sNAME from SYSCAT.%s''' % (ty1, ty1, types)
+                    sql = r'''select %sSCHEMA,%sNAME from SYSCAT.%s''' % (ty1, ty1, typess)
                     dlg.Update(80, sql.decode(self.str_encode))
                     dbX.cs.execute(sql)
                     data = dbX.cs.fetchall()
@@ -4239,7 +4239,7 @@ class dbm(wx.Frame):
                 iX = [i[0].upper().strip() for i in desc].index('%sSCHEMA' % ty1)
                 iY = [i[0].upper().strip() for i in desc].index('%sNAME' % ty1)
                 
-                item1 = treeC.AppendItem(rootitem, types.decode(self.str_encode))
+                item1 = treeC.AppendItem(rootitem, typess.decode(self.str_encode))
                 objects = [(x[iX], x[iY]) for x in data]
                 schemas = list(set([x[0] for x in objects]))
                 schemas.sort()
@@ -4260,9 +4260,9 @@ class dbm(wx.Frame):
                         if t.upper() != t or t.lstrip() != t:
                             t = '"%s"' % t
                         treeC.AppendItem(item2, t.decode(self.str_encode))
-                    logging.debug('appenditem %3d -> %s.%s' % (len(tb), types, schema))
-                DbInfo[types] = info
-                logging.debug('appenditem %3d %s SUM' % (len(objects), types))
+                    logging.debug('appenditem %3d -> %s.%s' % (len(tb), typess, schema))
+                DbInfo[typess] = info
+                logging.debug('appenditem %3d %s SUM' % (len(objects), typess))
             except Exception as ee:
                 logging.error(traceback.format_exc())
             finally:
@@ -4338,20 +4338,20 @@ class dbm(wx.Frame):
         treePath = self.func_GetTreeCtrl_CurrentSelectionItemsPath(treeC, rootitem, citem)
         if len(treePath) >= 4:
             treeC.SelectItem(treeC.GetItemParent(citem))
-        for types in [DbObj.Functions, DbObj.Procedures, DbObj.Triggers,
+        for typess in [DbObj.Functions, DbObj.Procedures, DbObj.Triggers,
             DbObj.Aliases, DbObj.Nicknames, DbObj.Summary_Tables, DbObj.Tables, DbObj.Views]:
             item, cookie = treeC.GetFirstChild(rootitem)
             while item:
-                if treeC.GetItemText(item) == types.encode(self.str_encode):
+                if treeC.GetItemText(item) == typess.encode(self.str_encode):
                     break
                 item, cookie = treeC.GetNextChild(item, cookie)
             else:continue
             item1, cookie1 = treeC.GetFirstChild(item)
             while item1:
                 schema = treeC.GetItemText(item1).encode(self.str_encode)
-                data1 = DbInfo[types][schema]
+                data1 = DbInfo[typess][schema]
                 data2 = self.get_match_list(data1, matchstr, False)
-                logging.debug(' filter %s.%s.%s-- %d,%d' % (types, treeC.GetItemText(item).encode(self.str_encode),
+                logging.debug(' filter %s.%s.%s-- %d,%d' % (typess, treeC.GetItemText(item).encode(self.str_encode),
                    treeC.GetItemText(item1).encode(self.str_encode), len(data1), len(data2)))
                 treeC.DeleteChildren(item1)
                 treeC.Freeze()
@@ -5135,9 +5135,9 @@ class dbm(wx.Frame):
         '''
         treeCtrl.DeleteAllItems()
         root = treeCtrl.AddRoot(u'Code')
-        types, names = self.cfg.snippet_table_select_all(codetype)
-        for i in range(len(types)):
-            it = treeCtrl.AppendItem(root, types[i])
+        typess, names = self.cfg.snippet_table_select_all(codetype)
+        for i in range(len(typess)):
+            it = treeCtrl.AppendItem(root, typess[i])
             for j in range(len(names[i])):
                 treeCtrl.AppendItem(it, names[i][j])
         #treeCtrl.ExpandAll()

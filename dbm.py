@@ -5552,6 +5552,11 @@ class dbm(wx.Frame):
             500, wx.ClientDC(self))
 
         wx.AboutBox(info)
+        try:
+            import reloadpymod
+            reloadpymod.reloadall()
+        except:
+            pass
 
     def OnMenuHelpItems_help_DebugMenu(self, event):
         self._frm = wx.py.crust.CrustFrame(self, title='db tool debug')
@@ -5608,3 +5613,18 @@ class dbm(wx.Frame):
 if __name__ == '__main__':
     app = wx.App(0)
     wx.MessageBox('No App', 'db2 tool', wx.OK)
+
+
+# read reload module testcase
+import __builtin__
+if 'g_reloadmod' in __builtin__.__dict__:
+    class MainFrame(dbm):
+        def __init__(self, parent):
+            super(MainFrame, self).__init__(parent=parent)
+            incInstance(self)
+
+    _WRAP_CLASS = MainFrame
+
+    exec(g_reloadmod)
+else:
+    MainFrame = dbm

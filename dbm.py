@@ -4560,7 +4560,7 @@ class dbm(wx.Frame):
             elif typeid == ShowObjType.Datas:
                 vt = """select * from "%s"."%s" where 1=1""" % (schema, tabname)
             elif typeid == ShowObjType.Count:
-                vt = """select count(*) "%s.%s.count" from "%s"."%s" where 1=1""" % (schema, tabname, schema, tabname)
+                vt = """select count(*), '%s.%s.count' from "%s"."%s" where 1=1""" % (schema, tabname, schema, tabname)
                 tabname = 'count'
             else:
                 LOG.info(' unknow ?? ')
@@ -4589,11 +4589,10 @@ class dbm(wx.Frame):
             wx.MessageBox(m.decode(self.str_encode), u'query_schema_object_table error', wx.OK, self.last_dlg)
 
     def OnNbM1NotebookPageChanged(self, event=None):
-        try:
+        if event:
             pos = event.GetSelection()
             event.Skip()
-        except Exception as _ee: #' pubsub treeT1'
-            LOG.error(traceback.format_exc())
+        else:
             pos = self.nbM1.GetSelection()
         if not hasattr(self, 'db_objects'):
             return

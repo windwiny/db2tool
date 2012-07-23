@@ -3225,7 +3225,7 @@ class dbm(wx.Frame):
         @param time_out:
         @param show_dlg_time:
         '''
-        LOG.warn(sql)
+        LOG.debug(sql)
         try:
             if type(sql) == types.StringType:
                 sql = sql.encode(self.str_encode)
@@ -4568,7 +4568,6 @@ class dbm(wx.Frame):
         else:
             return
         try:
-            print ('-----xxx %s yyy----' % vt )
             self.execSQL(cs, vt, self.getts()[0])
             data, rese = self.fetchData(cs, vt)
             if rese and len(data) == 0: raise rese

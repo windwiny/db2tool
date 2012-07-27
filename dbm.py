@@ -49,6 +49,11 @@ class G:
     iSQL = 5
     iPYTHON = 6
 
+    INT = ("INTEGER", "INT", "SMALLINT","BIGINT",)
+    FLOAT = ("FLOAT", "REAL", "DOUBLE", "DECFLOAT", "DECIMAL", "DEC", "NUMERIC", "NUM",)
+    NUM = INT + FLOAT
+    TIME = ("TIME","TIMESTAMP",)
+
 try:
     pth1, fn = os.path.split(__file__)
     pth = '%s/mods/db2/%s/%s' % (pth1, os.name, sys.version.split(' ', 1)[0])
@@ -260,7 +265,7 @@ class dbGridTable(wx.grid.PyGridTableBase):
                     ks = self.desc2[i][0]
                 else:
                     ks = '"%s"' % self.desc2[i][0]
-                if self.desc2[i][1] in ['INTEGER', 'SMALLINT', 'BIGINT', 'INT', 'DECIMAL', 'REAL', 'DOUBLE']:
+                if self.desc2[i][1] in G.NUM:
                     kv = self.data[row][i]
                 else:
                     kv = "'%s'" % self.data[row][i]
@@ -269,7 +274,7 @@ class dbGridTable(wx.grid.PyGridTableBase):
                     vs = self.desc2[col][0]
                 else:
                     vs = '"%s"' % self.desc2[col][0]
-                if self.desc2[col][1] in ['INTEGER', 'SMALLINT', 'BIGINT', 'INT', 'DECIMAL', 'REAL', 'DOUBLE']:
+                if self.desc2[col][1] in G.NUM:
                     vv = self.data[row][col]
                 else:
                     vv = "'%s'" % self.data[row][col]
@@ -2603,13 +2608,15 @@ class dbm(wx.Frame):
             progress[0] += 1
             v = []
             for col in range(cols):
-                if not data[row][col] is None:
-                    if desc[col][1] in ['INTEGER', 'SMALLINT', 'BIGINT', 'INT']:
-                        v.append('%d' % data[row][col])
-                    elif desc[col][1] in ['DECIMAL', 'REAL', 'DOUBLE']:
-                        v.append('%f' % data[row][col])
+                if not data[row][col] is None:  #same as export_sql
+                    if desc[col][1] in G.INT:
+                            v.append('%d' % data[row][col])
+                    elif desc[col][1] in G.FLOAT: #bug2
+                        v.append('%f' % data[row][col])        # %s > %f
+                    elif desc[col][1] in G.TIME:
+                        v.append("'%s'" % str(data[row][col])[:-3])
                     else:
-                        v.append("""'%s'""" % str(data[row][col]).replace("'", "''"))
+                        v.append("""'%s'""" % str(data[row][col]).replace("'", "''")) #bug3
                 else:
                     v.append('NULL')
             inssqls.write(inss % ', '.join(v))
@@ -2638,7 +2645,7 @@ class dbm(wx.Frame):
         if True:
             data = gridX.GetTable().data
             colname = gridX.description2[col][0]
-            colisnum = gridX.description2[col][1] in ['INTEGER', 'SMALLINT', 'BIGINT', 'INT', 'DECIMAL', 'REAL', 'DOUBLE']
+            colisnum = gridX.description2[col][1] in G.NUM
             progress[1] = len(rowss)
             for i in rowss:
                 if progress[2]: break
@@ -3119,7 +3126,7 @@ class dbm(wx.Frame):
         @param sql:
         @param dbuser:
         '''
-        assert type(sql) == types.StringType
+        #assert type(sql) == types.StringType
         az = sqld.QueryTokenizer()
         sql = az.removeAllCommentsFromQuery(sql)
         sql = az.removeAllQuoteString(sql, True)
@@ -3227,7 +3234,7 @@ class dbm(wx.Frame):
         '''
         LOG.debug(sql)
         try:
-            if type(sql) == types.StringType:
+            if type(sql) == types.UnicodeType:
                 sql = sql.encode(self.str_encode)
         except UnicodeError as ee:
             LOG.error(traceback.format_exc())
@@ -3943,12 +3950,14 @@ class dbm(wx.Frame):
             for row in rowss:
                 v = []
                 for col in colss:
-                    if not data[row][col] is None:
-                        if 'INT'in desc[col][1] or 'NUM' in desc[col][1] or \
-                            desc[col][1] in ['INTEGER', 'SMALLINT', 'BIGINT', 'INT', 'NUM']:
+                    if not data[row][col] is None: # same as copy_line_sql
+                        if 'INT' in desc[col][1] or 'NUM' in desc[col][1] or \
+                            desc[col][1] in G.INT:
                             v.append('%d' % data[row][col])
-                        elif desc[col][1] in ['DECIMAL', 'REAL', 'DOUBLE']: #bug2
+                        elif desc[col][1] in G.FLOAT: #bug2
                             v.append('%f' % data[row][col])        # %s > %f
+                        elif desc[col][1] in G.TIME:
+                            v.append("'%s'" % str(data[row][col])[:-3])
                         else:
                             v.append("'%s'" % str(data[row][col]).replace("'", "''")) #bug3
                     else:
@@ -3978,9 +3987,9 @@ class dbm(wx.Frame):
                 v = []
                 for col in colss:
                     if not data[row][col] is None:
-                        if desc[col][1] in ['INTEGER', 'SMALLINT', 'BIGINT', 'INT']:
+                        if desc[col][1] in G.INT:
                             v.append('%d' % data[row][col])
-                        elif desc[col][1] in ['DECIMAL', 'REAL', 'DOUBLE']:
+                        elif desc[col][1] in G.FLOAT:
                             v.append('%f' % data[row][col])
                         else:
                             v.append('''"%s"''' % str(data[row][col]).replace('"', '""'))
@@ -4013,7 +4022,7 @@ class dbm(wx.Frame):
             desc = gridX.description2
             colss = []
             for i in range(len(desc)):
-                if not desc[i][1] in ['TIMESTAMP', ]:
+                if not desc[i][1] in G.TIME:
                     colss.append(i)
             dlg = wx.MultiChoiceDialog(self.last_dlg, _tr('Please choose export columns:'), _tr('Please choose'),
                                        ['\t'.join([str(j) for j in i]).expandtabs(24) for i in desc])

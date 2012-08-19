@@ -21,9 +21,18 @@ import gettext
 import traceback
 import types
 
+odir = os.getcwd()
+try:
+    fdir = os.path.dirname(__file__)
+except:
+    fdir = os.path.dirname(sys.path[0]) if os.path.isfile(sys.path[0]) else sys.path[0]
+if odir != fdir: os.chdir(fdir)
+
 import logging.config
 logging.config.fileConfig("logging.conf")
 LOG = logging.getLogger('db2tool')
+
+if odir != fdir: os.chdir(odir)
 
 from mods import config2
 from mods import sqld
@@ -67,7 +76,7 @@ try:
     G.usePyDB2 = False
     G.useIBMDB = True
     
-    import db2ext
+    #import db2ext
 except ImportError:
     LOG.error('''  Not import DB2 mod %s''')
     LOG.error(traceback.format_exc())
@@ -83,6 +92,7 @@ except ImportError:
 
 try:
     import wx
+    wx.MINOR_VERSION=8
     import wx.grid
     import wx.stc
     import wx.lib.pubsub
@@ -2610,11 +2620,11 @@ class dbm(wx.Frame):
             for col in range(cols):
                 if not data[row][col] is None:  #same as export_sql
                     if desc[col][1] in G.INT:
-                            v.append('%d' % data[row][col])
+                        v.append('%d' % data[row][col])
                     elif desc[col][1] in G.FLOAT: #bug2
                         v.append('%f' % data[row][col])        # %s > %f
-                    elif desc[col][1] in G.TIME:
-                        v.append("'%s'" % str(data[row][col])[:-3])
+#                    elif desc[col][1] in G.TIME and '.' in str(data[row][col])[-6:]:
+#                        v.append("'%s'" % str(data[row][col])[:-3])
                     else:
                         v.append("""'%s'""" % str(data[row][col]).replace("'", "''")) #bug3
                 else:
@@ -3951,15 +3961,14 @@ class dbm(wx.Frame):
                 v = []
                 for col in colss:
                     if not data[row][col] is None: # same as copy_line_sql
-                        if 'INT' in desc[col][1] or 'NUM' in desc[col][1] or \
-                            desc[col][1] in G.INT:
+                        if desc[col][1] in G.INT:
                             v.append('%d' % data[row][col])
                         elif desc[col][1] in G.FLOAT: #bug2
                             v.append('%f' % data[row][col])        # %s > %f
-                        elif desc[col][1] in G.TIME:
-                            v.append("'%s'" % str(data[row][col])[:-3])
+#                        elif desc[col][1] in G.TIME and '.' in str(data[row][col])[-6:]:
+#                            v.append("'%s'" % str(data[row][col])[:-3])
                         else:
-                            v.append("'%s'" % str(data[row][col]).replace("'", "''")) #bug3
+                            v.append("""'%s'""" % str(data[row][col]).replace("'", "''")) #bug3
                     else:
                         v.append('NULL')
                 #v = str(data[i])  # encoding problem
